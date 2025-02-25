@@ -5,6 +5,8 @@ import LoadingIcon from '@/components/icons/LoadingIcon.vue';
 import TimesIcon from '@/components/icons/TimesIcon.vue';
 import { DashboardTransport } from '@/transport/dashboard';
 import { computed, onBeforeMount, ref, watch } from 'vue';
+declare const Telegram: any
+
 
 enum TaskStatus {
     Forming = 'Формируется',
@@ -135,7 +137,7 @@ watch(currentPeriod, async () => {
     progressRequestProducer.start(async () => {
         let tasks;
         try {
-            tasks = await DashboardTransport.getTasksOfEmployee('corray9', Math.floor(periodStart.getTime() / 1000), Math.floor(periodEnd.getTime() / 1000))
+            tasks = await DashboardTransport.getTasksOfEmployee(Telegram.WebApp.initDataUnsafe.user.username, Math.floor(periodStart.getTime() / 1000), Math.floor(periodEnd.getTime() / 1000))
         } catch (error) {
             console.error(error)
         }
