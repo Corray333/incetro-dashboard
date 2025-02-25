@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  notion-manager-api:
+    build: 
+      context: ./notion-manager-api
+      dockerfile: Dockerfile
+    volumes:
+      - ./notion-manager-api:/app
+      - .env:/app/.env
+      - ./configs/notion-manager-api:/app/configs
+      - ./secrets:/app/secrets
+    command: make run
+
+  app:
+    image: node:latest
+    command: npm run dev 
+    volumes:
+      - ./app:/app
+      - .env:/app/.env
+    working_dir: /app
+    ports:
+      - 3000:3000
+    environment:
+      - HOST=0.0.0.0
+  
+  nginx:
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./configs/nginx/nginx-local.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - notion-manager-api
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - 5432:5432
