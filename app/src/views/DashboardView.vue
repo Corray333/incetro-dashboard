@@ -63,6 +63,7 @@ const quarterTasksDone = computed(() => querterTasks.value.filter(task => getCat
 
 
 onBeforeMount(async () => {
+    countUserProgress()
     querterTasks.value = await DashboardTransport.getQuarterTasks()
 
     const daysInCurrentQuarter = new Date(new Date().getFullYear(), (currentQuarter - 1) * 3, 0).getDate();
@@ -112,7 +113,7 @@ const userTasks = ref<Task[]>([])
 
 const userPercents = ref(0)
 
-watch(currentPeriod, async () => {
+const countUserProgress = async () => {
     let periodStart: Date;
     let periodEnd: Date;
 
@@ -152,12 +153,14 @@ watch(currentPeriod, async () => {
 
         const percentOfTasksDone = (userTasks.value.filter(task => getCategoryByStatus(task.status) === TaskStatusCategory.Done).length / userTasks.value.length) * 100 || 0;
 
-        console.log(percentOfDaysGone, percentOfTasksDone);
+
         userPercents.value = percentOfTasksDone - percentOfDaysGone;
 
     })
 
-})
+}
+
+watch(currentPeriod, countUserProgress)
 
 class RequestProducer {
     state = ref({
