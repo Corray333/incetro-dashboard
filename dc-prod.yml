@@ -15,6 +15,7 @@ services:
     image: node:latest
     volumes:
       - ./app:/app
+      - .env:/app/.env
     working_dir: /app
     command: bash -c "npm install && npm run build"
   
