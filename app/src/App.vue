@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeMount, ref } from 'vue';
 import { DashboardTransport } from './transport/dashboard';
+declare const Telegram: any
 
 const authorized = ref(false)
 
@@ -8,6 +9,14 @@ onBeforeMount(async()=>{
   try {
     await DashboardTransport.authorize()
     authorized.value = true
+
+    const tg = Telegram.WebApp
+
+    tg.expand()
+    tg.isVerticalSwipesEnabled = false
+    tg.disableVerticalSwipes()
+    tg.ready()
+
   } catch (error) {
     console.log(error)
   }
