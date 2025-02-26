@@ -424,6 +424,9 @@ const salaryNotify = async () => {
 .message.error>.msg-icon {
     @apply text-danger bg-red-500 bg-opacity-25;
 }
+.message.success>.msg-icon {
+    @apply text-success bg-green-500 bg-opacity-25;
+}
 
 
 .fade-slide-enter-active,
