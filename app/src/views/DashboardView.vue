@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import ArrowTopIcon from '@/components/icons/ArrowTopIcon.vue';
+import CheckIcon from '@/components/icons/CheckIcon.vue';
 import LinkIcon from '@/components/icons/LinkIcon.vue';
 import LoadingIcon from '@/components/icons/LoadingIcon.vue';
 import TimesIcon from '@/components/icons/TimesIcon.vue';
@@ -266,6 +267,7 @@ const salaryNotify = async () => {
                 @click="Message.removeMessage(message.id)" :class="message.type">
                 <div class="msg-icon">
                     <TimesIcon v-if="message.type === MessageType.Error" class=" text-danger" />
+                    <CheckIcon v-else-if="message.type === MessageType.Success" class=" text-success" />
                 </div>
                 <p>{{ message.text }}</p>
             </div>
