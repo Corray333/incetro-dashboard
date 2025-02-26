@@ -37,7 +37,7 @@ type repository interface {
 	GetTasksOfEmployee(employee_id string, period_start, period_end int64) ([]entities.Task, error)
 	GetQuarterTasks(quarter int) (tasks []entities.Task, err error)
 	GetEmployeesByNotificationFlag(ctx context.Context, flag entities.NotificationFlag) (employees []entities.Employee, err error)
-	GetUserRole(username string) entities.DashboardRole
+	GetUserRole(username string, userID int64) entities.DashboardRole
 }
 
 type external interface {
@@ -85,8 +85,8 @@ func (s *Service) Run() {
 
 const CheckAfter = 1727740840
 
-func (s *Service) GetUserRole(username string) entities.DashboardRole {
-	return s.repo.GetUserRole(username)
+func (s *Service) GetUserRole(username string, userID int64) entities.DashboardRole {
+	return s.repo.GetUserRole(username, userID)
 }
 
 func (s *Service) CheckInvalid() {

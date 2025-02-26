@@ -85,12 +85,26 @@ func (s *Storage) GetQuarterTasks(quarter int) (tasks []entities.Task, err error
 	return tasks, nil
 }
 
-func (s *Storage) GetUserRole(username string) entities.DashboardRole {
+func (s *Storage) GetUserRole(username string, userID int64) entities.DashboardRole {
 	if user, ok := s.dashboardUsers[username]; ok {
+		if user.TelegramID == 0 {
+			user.TelegramID = userID
+			s.dashboardUsers[username] = user
+
+		}
 		return user.Role
 	}
 
 	return entities.DashboardRoleUnknown
+}
+
+func (s *Storage) SetEmployeeTelegramID(username string, telegramID int64) error {
+	if _, err := s.db.Exec("UPDATE employees SET tg_id = $1 WHERE tg_username = $2", telegramID, username); err != nil {
+		slog.Error("Error settimg tg id of employee", slog.String("error", err.Error()))
+		return err
+	}
+
+	return nil
 }
 
 func (s *Storage) SetEmployees(employees []entities.Employee) error {

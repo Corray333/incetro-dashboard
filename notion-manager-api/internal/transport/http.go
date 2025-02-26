@@ -44,7 +44,7 @@ type service interface {
 
 	NotifyEmployeesAboutSalary(ctx context.Context) error
 
-	GetUserRole(username string) entities.DashboardRole
+	GetUserRole(username string, userID int64) entities.DashboardRole
 }
 
 func New(service service) *Transport {
@@ -257,7 +257,7 @@ func (t *Transport) NewDashboardAuthMiddleware() func(next http.Handler) http.Ha
 				return
 			}
 
-			role := t.service.GetUserRole(creds.GetUsername())
+			role := t.service.GetUserRole(creds.GetUsername(), creds.GetUserID())
 
 			r = r.WithContext(context.WithValue(r.Context(), entities.ContextKeyUserRole, role))
 			next.ServeHTTP(w, r)
