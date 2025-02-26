@@ -391,7 +391,7 @@ const salaryNotify = async () => {
                 </div>
             </div>
 
-            <div class="card feedback" @click="testMsg">
+            <div class="card feedback">
                 <div class="card-header">
                     <p>Есть идеи?</p>
                     <LinkIcon class="text-2xl" />
@@ -407,7 +407,7 @@ const salaryNotify = async () => {
 
 <style scoped>
 .messages {
-    @apply fixed bottom-4 w-full h-fit flex flex-col items-center;
+    @apply fixed z-50 bottom-4 w-full h-fit flex flex-col items-center;
 }
 
 .message {
