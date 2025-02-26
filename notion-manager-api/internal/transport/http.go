@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/Corray333/employee_dashboard/internal/entities"
+	"github.com/Corray333/employee_dashboard/pkg/auth"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -42,6 +43,8 @@ type service interface {
 	GetQuarterTasks() ([]entities.Task, error)
 
 	NotifyEmployeesAboutSalary(ctx context.Context) error
+
+	GetUserRole(username string) entities.DashboardRole
 }
 
 func New(service service) *Transport {
@@ -73,20 +76,29 @@ func (s *Transport) Run() {
 	panic(http.ListenAndServe("0.0.0.0:"+viper.GetString("server.port"), s.router))
 }
 
-func (s *Transport) RegisterRoutes() {
+func (t *Transport) RegisterRoutes() {
 
-	s.router.Get("/api/tasks/employee/{employee_username}", s.getTasksOfEmployee)
-	s.router.Post("/api/update-sheets", s.updateGoogleSheets)
-	s.router.Post("/api/mindmap", s.parseMindmap)
-	s.router.Get("/api/quarter-tasks", s.getQuarterTasks)
-	s.router.Post("/api/salary-notify", s.notifyEmployeesAboutSalary)
+	t.router.Group(func(r chi.Router) {
+		r.Use(auth.NewTelegramCredentialsMiddleware())
+		r.Use(t.NewDashboardAuthMiddleware())
+		r.Use(t.NewDashboardAdminAuthMiddleware())
 
-	s.router.Group(func(r chi.Router) {
-		r.Use(NewAuthMiddleware())
-		r.Get("/api/tracker/employees", s.getEmployees)
-		r.Get("/api/tracker/projects", s.getProjects)
-		r.Get("/api/tracker/tasks", s.getTasks)
-		r.Post("/api/tracker/time", s.writeOfTime)
+		r.Get("/api/access", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+		r.Get("/api/tasks/employee/{employee_username}", t.getTasksOfEmployee)
+		r.Post("/api/update-sheets", t.updateGoogleSheets)
+		r.Post("/api/mindmap", t.parseMindmap)
+		r.Get("/api/quarter-tasks", t.getQuarterTasks)
+		r.Post("/api/salary-notify", t.notifyEmployeesAboutSalary)
+	})
+
+	t.router.Group(func(r chi.Router) {
+		r.Use(NewTaskTrackerAuthMiddleware())
+		r.Get("/api/tracker/employees", t.getEmployees)
+		r.Get("/api/tracker/projects", t.getProjects)
+		r.Get("/api/tracker/tasks", t.getTasks)
+		r.Post("/api/tracker/time", t.writeOfTime)
 	})
 
 	// s.router.Get("/tracker/swagger/*", httpSwagger.WrapHandler)
@@ -210,12 +222,65 @@ func (t *Transport) writeOfTime(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func NewAuthMiddleware() func(next http.Handler) http.Handler {
+func NewTaskTrackerAuthMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			authToken := r.Header.Get("Authorization")
 			authToken = strings.TrimPrefix(authToken, "Bearer ")
 			if authToken != os.Getenv("AUTH_TOKEN") {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+type UserCredentials interface {
+	GetUserID() int64
+	GetUsername() string
+}
+
+func (t *Transport) NewDashboardAuthMiddleware() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			credsI := r.Context().Value(entities.ContextKeyUserCredentials)
+			if credsI == nil {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			creds, ok := credsI.(UserCredentials)
+			if !ok {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			role := t.service.GetUserRole(creds.GetUsername())
+
+			r = r.WithContext(context.WithValue(r.Context(), entities.ContextKeyUserRole, role))
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func (t *Transport) NewDashboardAdminAuthMiddleware() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			roleI := r.Context().Value(entities.ContextKeyUserRole)
+			if roleI == nil {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			role, ok := roleI.(entities.DashboardRole)
+			if !ok {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			if role != entities.DashboardRoleAdmin {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -266,8 +331,6 @@ func (t *Transport) getTasksOfEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error getting tasks: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Println("Test: ", tasks)
 
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding tasks: %s", err.Error()), http.StatusInternalServerError)

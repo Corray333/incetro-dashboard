@@ -2,20 +2,20 @@ package app
 
 import (
 	"github.com/Corray333/employee_dashboard/internal/external"
-	"github.com/Corray333/employee_dashboard/internal/repository"
+	"github.com/Corray333/employee_dashboard/internal/repositories"
 	"github.com/Corray333/employee_dashboard/internal/service"
 	"github.com/Corray333/employee_dashboard/internal/transport"
 )
 
 type app struct {
-	store     *repository.Storage
+	store     *repositories.Storage
 	service   *service.Service
 	transport *transport.Transport
 }
 
 func New() *app {
 
-	storage := repository.New()
+	storage := repositories.New()
 	external := external.New()
 	service := service.New(storage, external)
 

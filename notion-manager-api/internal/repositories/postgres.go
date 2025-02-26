@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"context"
@@ -15,6 +15,8 @@ import (
 
 type Storage struct {
 	db *sqlx.DB
+
+	dashboardUsers map[string]entities.DashboardRole
 }
 
 func New() *Storage {
@@ -29,7 +31,8 @@ func New() *Storage {
 	}
 
 	return &Storage{
-		db: db,
+		db:             db,
+		dashboardUsers: map[string]entities.DashboardRole{},
 	}
 }
 
@@ -82,6 +85,14 @@ func (s *Storage) GetQuarterTasks(quarter int) (tasks []entities.Task, err error
 	return tasks, nil
 }
 
+func (s *Storage) GetUserRole(username string) entities.DashboardRole {
+	if role, ok := s.dashboardUsers[username]; ok {
+		return role
+	}
+
+	return entities.DashboardRoleUnknown
+}
+
 func (s *Storage) SetEmployees(employees []entities.Employee) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
@@ -91,6 +102,7 @@ func (s *Storage) SetEmployees(employees []entities.Employee) error {
 	defer tx.Rollback()
 
 	for _, employee := range employees {
+		s.dashboardUsers[employee.Telegram] = entities.DashboardRoleAdmin
 		_, err := tx.Exec("INSERT INTO employees (employee_id, username, email, icon, profile_id, tg_username) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (employee_id) DO UPDATE SET username = $2, email = $3, icon = $4, profile_id = $5, tg_username = $6", employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram)
 		if err != nil {
 			slog.Error("error setting employees: " + err.Error())
