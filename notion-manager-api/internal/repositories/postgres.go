@@ -90,7 +90,10 @@ func (s *Storage) GetUserRole(username string, userID int64) entities.DashboardR
 		if user.TelegramID == 0 {
 			user.TelegramID = userID
 			s.dashboardUsers[username] = user
-
+			if err := s.SetEmployeeTelegramID(username, userID); err != nil {
+				slog.Error("Error setting tg id of employee", slog.String("error", err.Error()))
+				return entities.DashboardRoleUnknown
+			}
 		}
 		return user.Role
 	}
