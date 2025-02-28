@@ -17,6 +17,20 @@ func New() *app {
 
 	storage := repositories.New()
 	external := external.New()
+	// people, err := storage.GetEmployees()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// projects, err := storage.GetProjects("")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// srv, err := external.NewSheetsClient()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(external.UpdatePeopleSheet(srv, people))
+	// fmt.Println(external.UpdateProjectsSheet(srv, projects))
 	service := service.New(storage, external)
 
 	transport := transport.New(service)

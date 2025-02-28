@@ -118,6 +118,33 @@ type Employee struct {
 				PlainText string `json:"plain_text"`
 			} `json:"rich_text"`
 		} `json:"Telegram"`
+		Location struct {
+			MultiSelect []struct {
+				Name string `json:"name"`
+			} `json:"multi_select"`
+		} `json:"Местоположение"`
+		Expertise struct {
+			ID       string `json:"id"`
+			Type     string `json:"type"`
+			Relation []struct {
+				ID string `json:"id"`
+			} `json:"relation"`
+			HasMore bool `json:"has_more"`
+		} `json:"Экспертиза"`
+		Status struct {
+			ID     string `json:"id"`
+			Type   string `json:"type"`
+			Status struct {
+				ID    string `json:"id"`
+				Name  string `json:"name"`
+				Color string `json:"color"`
+			} `json:"status"`
+		} `json:"Статус"`
+		PhoneNumber struct {
+			ID    string `json:"id"`
+			Type  string `json:"type"`
+			Phone string `json:"phone_number"`
+		} `json:"Номер телефона"`
 	}
 }
 
@@ -278,6 +305,26 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 				}
 				return strings.TrimPrefix(result, "@")
 			}(),
+			Geo: func() string {
+				if len(w.Properties.Location.MultiSelect) == 0 {
+					return ""
+				}
+				locations := []string{}
+				for _, loc := range w.Properties.Location.MultiSelect {
+					locations = append(locations, loc.Name)
+				}
+				return strings.Join(locations, ",")
+			}(),
+			Expertise: func() string {
+				var expertiseIDs []string
+				for _, relation := range w.Properties.Expertise.Relation {
+					expertiseIDs = append(expertiseIDs, relation.ID)
+				}
+				return strings.Join(expertiseIDs, ", ")
+			}(),
+			Direction: w.Properties.Direction.Select.Name,
+			Status:    w.Properties.Status.Status.Name,
+			Phone:     w.Properties.PhoneNumber.Phone,
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)
@@ -623,14 +670,35 @@ type Project struct {
 		} `json:"Name"`
 		Status struct {
 			Status struct {
-				Name string `json:"name"`
+				Name  string `json:"name"`
+				ID    string `json:"id"`
+				Color string `json:"color"`
 			} `json:"status"`
 		} `json:"Статус"`
-		Internal struct {
+		ProjectType struct {
+			ID     string `json:"id"`
+			Type   string `json:"type"`
+			Select struct {
+				Name string `json:"name"`
+			} `json:"select"`
+		} `json:"Тип проекта"`
+		Manager struct {
+			ID       string `json:"id"`
+			Type     string `json:"type"`
 			Relation []struct {
 				ID string `json:"id"`
 			} `json:"relation"`
-		} `json:"internal"`
+			HasMore bool `json:"has_more"`
+		} `json:"Менеджер"`
+		ManagerLink struct {
+			ID     string `json:"id"`
+			Type   string `json:"type"`
+			Rollup struct {
+				Type     string        `json:"type"`
+				Array    []interface{} `json:"array"` // Определите структуру при необходимости
+				Function string        `json:"function"`
+			} `json:"rollup"`
+		} `json:"Менеджер Link"`
 	} `json:"properties"`
 }
 
@@ -698,6 +766,13 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 			}(),
 			IconType: w.Icon.Type,
 			Status:   w.Properties.Status.Status.Name,
+			ManagerID: func() string {
+				if len(w.Properties.Manager.Relation) == 0 {
+					return ""
+				}
+				return w.Properties.Manager.Relation[0].ID
+			}(),
+			Type: w.Properties.ProjectType.Select.Name,
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)

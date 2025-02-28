@@ -46,7 +46,7 @@ func (s *Storage) GetEmployees() (employees []entities.Employee, err error) {
 }
 
 func (s *Storage) GetProjects(userID string) (projects []entities.Project, err error) {
-	if err := s.db.Select(&projects, "SELECT * FROM projects"); err != nil {
+	if err := s.db.Select(&projects, "SELECT projects.*, username as manager FROM projects JOIN employees ON projects.manager_id = employees.profile_id"); err != nil {
 		slog.Error("error getting projects: " + err.Error())
 		return nil, err
 	}
@@ -122,13 +122,17 @@ func (s *Storage) SetEmployees(employees []entities.Employee) error {
 
 		var tgID int64 // Use pointer to handle NULL values
 
-		query := `INSERT INTO employees (employee_id, username, email, icon, profile_id, tg_username) 
-				  VALUES ($1, $2, $3, $4, $5, $6) 
+		// fmt.Println()
+		// fmt.Println(employee)
+		// fmt.Println()
+
+		query := `INSERT INTO employees (employee_id, username, email, icon, profile_id, tg_username, geo, expertise, direction, status, phone) 
+				  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
 				  ON CONFLICT (employee_id) 
-				  DO UPDATE SET username = $2, email = $3, icon = $4, profile_id = $5, tg_username = $6 
+				  DO UPDATE SET username = $2, email = $3, icon = $4, profile_id = $5, tg_username = $6, geo = $7, expertise = $8, direction = $9, status = $10, phone = $11
 				  RETURNING tg_id`
 
-		err := tx.QueryRow(query, employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram).Scan(&tgID)
+		err := tx.QueryRow(query, employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram, employee.Geo, employee.Expertise, employee.Direction, employee.Status, employee.Phone).Scan(&tgID)
 		if err != nil {
 			slog.Error("error setting employees: " + err.Error())
 			return err
@@ -216,7 +220,7 @@ func (s *Storage) SetProjects(projects []entities.Project) error {
 	defer tx.Rollback()
 
 	for _, project := range projects {
-		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5", project.ID, project.Name, project.Icon, project.IconType, project.Status)
+		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID)
 		if err != nil {
 			slog.Error("Error setting projects", slog.String("error", err.Error()))
 			return err

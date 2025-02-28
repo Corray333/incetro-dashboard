@@ -10,6 +10,7 @@ import (
 	"github.com/Corray333/employee_dashboard/internal/entities"
 	"github.com/Corray333/employee_dashboard/pkg/mindmap"
 	"github.com/go-co-op/gocron"
+	"google.golang.org/api/sheets/v4"
 )
 
 type repository interface {
@@ -53,9 +54,13 @@ type external interface {
 	GetNotCorrectPersonTimes() (times []entities.Time, lastUpdate int64, err error)
 	SetProfileInTime(timeID, profileID string) error
 
-	UpdateGoogleSheets() error
+	NewSheetsClient() (*sheets.Service, error)
 	CreateMindmapTasks(projectName string, tasks []mindmap.Task) error
 	SendSalaryNotification(ctx context.Context, employeeID int64) error
+
+	UpdateTimeSheet(srv *sheets.Service) error
+	UpdateProjectsSheet(srv *sheets.Service, projects []entities.Project) error
+	UpdatePeopleSheet(srv *sheets.Service, employees []entities.Employee) error
 }
 
 type Service struct {
@@ -127,7 +132,30 @@ func (s *Service) CheckInvalid() {
 }
 
 func (s *Service) UpdateGoogleSheets() error {
-	return s.external.UpdateGoogleSheets()
+	projects, err := s.repo.GetProjects("")
+	if err != nil {
+		return err
+	}
+
+	srv, err := s.external.NewSheetsClient()
+	if err != nil {
+		return err
+	}
+
+	if err := s.external.UpdateProjectsSheet(srv, projects); err != nil {
+		return err
+	}
+
+	employees, err := s.repo.GetEmployees()
+	if err != nil {
+		return err
+	}
+	if err := s.external.UpdatePeopleSheet(srv, employees); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (s *Service) GetTasksOfEmployee(employee_username string, period_start, period_end int64) ([]entities.Task, error) {

@@ -60,16 +60,26 @@ type Project struct {
 	Icon     string `json:"icon" db:"icon" example:"https://prod-files-secure.s3.us-west-2.amazonaws.com/9a2e0635-b9d4-4178-a529-cf6b3bdce29d/7d460da2-42b7-4d5b-8d31-97a327675bc4/behance-1.svg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45HZZMZUHI%2F20241014%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20241014T055949Z&X-Amz-Expires=3600&X-Amz-Signature=c67998b0c68723e6efb6268baf917f6ae9e4902238a2b146cb054a6cda51c7cf&X-Amz-SignedHeaders=host&x-id=GetObject"`
 	IconType string `json:"iconType" db:"icon_type" example:"file"`
 	Status   string `json:"status" db:"status" example:"В работе"`
+	Type     string `json:"type" db:"type" example:"Личный"`
+	Manager  string `json:"manager" db:"manager" example:"Mark"`
+
+	ManagerID string `json:"managerID" db:"manager_id"`
 }
 
 type Employee struct {
-	ID                string        `json:"id" db:"employee_id" example:"790bdb23-c2d3-4154-8497-2ef5f1e6d2ad"`
-	Username          string        `json:"username" db:"username" example:"Mark"`
-	Icon              string        `json:"icon" db:"icon" example:"https://prod-files-secure.s3.us-west-2.amazonaws.com/9a2e0635-b9d4-4178-a529-cf6b3bdce29d/f2f425d1-efde-46ee-a724-78dcd401bff0/Frame_3.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45HZZMZUHI%2F20241014%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20241014T062630Z&X-Amz-Expires=3600&X-Amz-Signature=195ddfb2599f4d4e6162d1e467966af275d2bad346414fdb574f61049757e40f&X-Amz-SignedHeaders=host&x-id=GetObject"`
-	Email             string        `json:"email" db:"email" example:"s0177180@edu.kubsu.ru"`
-	ProfileID         string        `json:"profileID" db:"profile_id"`
-	Telegram          string        `json:"telegramUsername" db:"tg_username"`
-	TelegramID        int64         `json:"telegramID" db:"tg_id"`
+	ID         string `json:"id" db:"employee_id" example:"790bdb23-c2d3-4154-8497-2ef5f1e6d2ad"`
+	Username   string `json:"username" db:"username" example:"Mark"`
+	Icon       string `json:"icon" db:"icon" example:"https://prod-files-secure.s3.us-west-2.amazonaws.com/9a2e0635-b9d4-4178-a529-cf6b3bdce29d/f2f425d1-efde-46ee-a724-78dcd401bff0/Frame_3.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45HZZMZUHI%2F20241014%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20241014T062630Z&X-Amz-Expires=3600&X-Amz-Signature=195ddfb2599f4d4e6162d1e467966af275d2bad346414fdb574f61049757e40f&X-Amz-SignedHeaders=host&x-id=GetObject"`
+	Email      string `json:"email" db:"email" example:"s0177180@edu.kubsu.ru"`
+	ProfileID  string `json:"profileID" db:"profile_id"`
+	Telegram   string `json:"telegramUsername" db:"tg_username"`
+	TelegramID int64  `json:"telegramID" db:"tg_id"`
+	Geo        string `json:"geo" db:"geo"`
+	Expertise  string `json:"expertise" db:"expertise"`
+	Direction  string `json:"direction" db:"direction"`
+	Status     string `json:"status" db:"status"`
+	Phone      string `json:"phone" db:"phone"`
+
 	NotificationFlags []string      `json:"notificationFlags"`
 	Role              DashboardRole `json:"role"`
 }
