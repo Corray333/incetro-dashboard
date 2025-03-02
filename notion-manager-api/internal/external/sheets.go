@@ -24,7 +24,7 @@ const (
 
 func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error) {
 
-	readRange := "Time!X2"
+	readRange := "Time!S2"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	if err != nil {
 		slog.Error("Error getting Google Sheets", slog.String("error", err.Error()))
@@ -46,7 +46,7 @@ func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error)
 }
 
 func SetLastSyncedTime(lastSyncedTimestamp int64, srv *sheets.Service, spreadsheetId string) error {
-	writeRange := "Time!X2"
+	writeRange := "Time!S2"
 
 	lastSynced := time.Unix(lastSyncedTimestamp, 0)
 
