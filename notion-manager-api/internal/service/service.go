@@ -142,6 +142,10 @@ func (s *Service) UpdateGoogleSheets() error {
 		return err
 	}
 
+	if err := s.external.UpdateTimeSheet(srv); err != nil {
+		return err
+	}
+
 	if err := s.external.UpdateProjectsSheet(srv, projects); err != nil {
 		return err
 	}
