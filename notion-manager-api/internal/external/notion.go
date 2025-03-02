@@ -84,13 +84,13 @@ type Employee struct {
 			Number int    `json:"number"`
 		} `json:"Ставка в час"`
 		Direction struct {
-			ID     string `json:"id"`
-			Type   string `json:"type"`
-			Select struct {
-				ID    string `json:"id"`
-				Name  string `json:"name"`
-				Color string `json:"color"`
-			} `json:"select"`
+			Rollup struct {
+				Array []struct {
+					Select struct {
+						Name string `json:"name"`
+					} `json:"select"`
+				} `json:"array"`
+			} `json:"rollup"`
 		} `json:"Направление"`
 		Name struct {
 			ID    string `json:"id"`
@@ -322,9 +322,14 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 				}
 				return strings.Join(expertiseIDs, ", ")
 			}(),
-			Direction: w.Properties.Direction.Select.Name,
-			Status:    w.Properties.Status.Status.Name,
-			Phone:     w.Properties.PhoneNumber.Phone,
+			Direction: func() string {
+				if len(w.Properties.Direction.Rollup.Array) == 0 {
+					return ""
+				}
+				return w.Properties.Direction.Rollup.Array[0].Select.Name
+			}(),
+			Status: w.Properties.Status.Status.Name,
+			Phone:  w.Properties.PhoneNumber.Phone,
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)
