@@ -200,14 +200,20 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
 	fmt.Println(employeeUsername, period_start, period_end)
 	tasks := []entities.Task{}
 	query := `
-		SELECT tasks.* FROM tasks JOIN employees ON tasks.employee_id = employees.employee_id 
-		WHERE tg_username = $1
-		AND (start_time <= $3 AND end_time >= $2)
-	`
+    SELECT tasks.* 
+    FROM tasks 
+    JOIN employees ON tasks.employee_id = employees.employee_id 
+    WHERE tg_username = $1
+    AND (
+        (start_time <= $3 AND end_time >= $2) -- Полное пересечение
+        OR (start_time <= $3 AND end_time = 0) -- Задачи без end_time, но попадающие в период
+    )
+`
 	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end); err != nil {
 		slog.Error("error getting tasks of employee: " + err.Error())
 		return nil, err
 	}
+
 	fmt.Println(tasks)
 	return tasks, nil
 }
