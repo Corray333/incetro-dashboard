@@ -120,21 +120,30 @@ const countUserProgress = async () => {
 
     const now = new Date();
     switch (currentPeriod.value) {
-        case Period.Quarter:
-            periodStart = new Date(now.getFullYear(), (currentQuarter - 1) * 3, 1);
-            periodEnd = new Date(now.getFullYear(), currentQuarter * 3, 0);
-            break;
-        case Period.Month:
-            periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-            periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            break;
-        case Period.Week:
-            const day = now.getDay();
-            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-            periodStart = new Date(now.setDate(diff));
-            periodEnd = new Date(now.setDate(diff + 6));
-            break;
+    case Period.Quarter: {
+        const quarterStartMonth = (currentQuarter - 1) * 3;
+        periodStart = new Date(now.getFullYear(), quarterStartMonth, 1, 0, 0, 0);
+        periodEnd = new Date(now.getFullYear(), quarterStartMonth + 3, 0, 23, 59, 59);
+        break;
     }
+    case Period.Month:
+        periodStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+        periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        break;
+    case Period.Week: {
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        periodStart = new Date(now);
+        periodStart.setDate(diff);
+        periodStart.setHours(0, 0, 0, 0);
+
+        periodEnd = new Date(periodStart);
+        periodEnd.setDate(periodEnd.getDate() + 6);
+        periodEnd.setHours(23, 59, 59, 999);
+        break;
+    }
+}
+
 
     let tasks;
     try {
