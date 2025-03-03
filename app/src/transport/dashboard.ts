@@ -18,6 +18,7 @@ api.interceptors.request.use((config) => {
 export class DashboardTransport {
     static async getTasksOfEmployee(employeeUsername: string, period_start: number, period_end: number) {
         const response = await api.get(`/tasks/employee/${employeeUsername}`, { params: { period_start, period_end } })
+        console.log(response.data)
         return response.data
     }
 

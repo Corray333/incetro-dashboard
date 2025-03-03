@@ -197,9 +197,10 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 }
 
 func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64) ([]entities.Task, error) {
+	fmt.Println(employeeUsername, period_start, period_end)
 	tasks := []entities.Task{}
 	query := `
-		SELECT tasks.* FROM tasks NATURAL JOIN employees
+		SELECT tasks.* FROM tasks JOIN employees ON tasks.employee_id = employees.employee_id 
 		WHERE tg_username = $1
 		AND (start_time <= $3 AND end_time >= $2)
 	`
