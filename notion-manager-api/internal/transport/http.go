@@ -336,8 +336,6 @@ func (t *Transport) getTasksOfEmployee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(tasks)
-
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding tasks: %s", err.Error()), http.StatusInternalServerError)
 		return

@@ -197,7 +197,6 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 }
 
 func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64) ([]entities.Task, error) {
-	fmt.Println(employeeUsername, period_start, period_end)
 	tasks := []entities.Task{}
 	query := `
     SELECT tasks.* 
@@ -214,7 +213,6 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
 		return nil, err
 	}
 
-	fmt.Println(tasks)
 	return tasks, nil
 }
 
