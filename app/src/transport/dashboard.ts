@@ -28,17 +28,15 @@ export class DashboardTransport {
     static async getQuarterTasks() {
         try {
             const response = await api.get(`/quarter-tasks`)
-            console.log("Quarter tasks: ", response.data)
             return response.data
         
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
 
     static async updateGoogleSheets(){
         const response = await api.post(`/update-sheets`)
-        console.log(response.data)
         return response.data
     }
 

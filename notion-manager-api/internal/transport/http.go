@@ -79,9 +79,13 @@ func (s *Transport) Run() {
 func (t *Transport) RegisterRoutes() {
 
 	t.router.Group(func(r chi.Router) {
-		r.Use(auth.NewTelegramCredentialsMiddleware())
-		r.Use(t.NewDashboardAuthMiddleware())
-		r.Use(t.NewDashboardAdminAuthMiddleware())
+		env := os.Getenv("ENV")
+
+		if env == "prod" {
+			r.Use(auth.NewTelegramCredentialsMiddleware())
+			r.Use(t.NewDashboardAuthMiddleware())
+			r.Use(t.NewDashboardAdminAuthMiddleware())
+		}
 
 		r.Get("/api/access", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)

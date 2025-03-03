@@ -136,28 +136,24 @@ const countUserProgress = async () => {
             break;
     }
 
-    progressRequestProducer.start(async () => {
-        let tasks;
-        try {
-            tasks = await DashboardTransport.getTasksOfEmployee(Telegram.WebApp.initDataUnsafe.user.username, Math.floor(periodStart.getTime() / 1000), Math.floor(periodEnd.getTime() / 1000))
-        } catch (error) {
-            console.error(error)
-        }
-        userTasks.value = tasks
+    let tasks;
+    try {
+        tasks = await DashboardTransport.getTasksOfEmployee(Telegram.WebApp.initDataUnsafe.user.username, Math.floor(periodStart.getTime() / 1000), Math.floor(periodEnd.getTime() / 1000))
+    } catch (error) {
+        console.error(error)
+    }
+    userTasks.value = tasks
 
 
-        const now = new Date();
-        const totalDaysInPeriod = (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24);
-        const daysGoneFromPeriodStart = (now.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24);
+    const totalDaysInPeriod = (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24);
+    const daysGoneFromPeriodStart = (now.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24);
 
-        const percentOfDaysGone = (daysGoneFromPeriodStart / totalDaysInPeriod) * 100;
+    const percentOfDaysGone = (daysGoneFromPeriodStart / totalDaysInPeriod) * 100;
 
-        const percentOfTasksDone = (userTasks.value.filter(task => getCategoryByStatus(task.status) === TaskStatusCategory.Done).length / userTasks.value.length) * 100 || 0;
+    const percentOfTasksDone = (userTasks.value.filter(task => getCategoryByStatus(task.status) === TaskStatusCategory.Done).length / userTasks.value.length) * 100 || 0;
 
 
-        userPercents.value = percentOfTasksDone - percentOfDaysGone;
-
-    })
+    userPercents.value = percentOfTasksDone - percentOfDaysGone;
 
 }
 
@@ -241,6 +237,7 @@ const enum ProgressStatus {
     Neutral = 'neutral'
 }
 const progressToStatus = (num: number) => {
+    num = Math.round(num)
     if (num < 0) return ProgressStatus.Bad
     if (num > 0) return ProgressStatus.Good
     return ProgressStatus.Neutral
@@ -336,22 +333,18 @@ const salaryNotify = async () => {
             </div>
 
             <div class="card progress">
-                <Transition name="fade">
-                    <div v-if="progressRequestProducer.state.value.loading" class="card-loader">
-                        <div class=" p-2 rounded-xl bg-blue-400 bg-opacity-25">
-                            <LoadingIcon class="text-4xl text-primary" />
-                        </div>
-                        <h4 class="text-center">Бот работает, ожидайте</h4>
-                    </div>
-                </Transition>
-
                 <div class="card-header">
                     <div class=" flex gap-1 items-center">
                         <p>Мой прогресс</p>
-                        <p class=" flex items-center" :class="progressToStatus(userPercents)">
-                            <ArrowTopIcon class="arrow" /> {{ Math.round(Math.abs(userPercents)) }}%
-                        </p>
                     </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <h3>{{ userTasks.filter(t => getCategoryByStatus(t.status) === TaskStatusCategory.Done).length }}/{{ userTasks.length }}</h3>
+
+                    <p class=" flex items-center" :class="progressToStatus(userPercents)">
+                        <ArrowTopIcon class="arrow" /> {{ Math.round(Math.abs(userPercents)) }}%
+                    </p>
                 </div>
 
                 <div class="period-picker">
@@ -373,36 +366,39 @@ const salaryNotify = async () => {
                 <input type="file" ref="fileInput" @change="handleFileUpload" accept=".md" style="display: none;" />
             </div>
 
-            <div class="card mindmap-loader" @click="triggerFileUpload">
-                <Transition name="fade">
-                    <div v-if="mindmapLoaderRequestProducer.state.value.loading" class="card-loader">
-                        <div class=" p-2 rounded-xl bg-blue-400 bg-opacity-25">
-                            <LoadingIcon class="text-4xl text-primary" />
+            <div class="row" id="row1">
+                <div class="card mindmap-loader" @click="triggerFileUpload">
+                    <Transition name="fade">
+                        <div v-if="mindmapLoaderRequestProducer.state.value.loading" class="card-loader">
+                            <div class=" p-2 rounded-xl bg-blue-400 bg-opacity-25">
+                                <LoadingIcon class="text-4xl text-primary" />
+                            </div>
+                            <h4 class="text-center">Бот работает,<br>ожидайте</h4>
                         </div>
-                        <h4 class="text-center">Бот работает,<br>ожидайте</h4>
+                    </Transition>
+    
+                    <div class="card-header">
+                        <p>Майндкарты</p>
+                        <LinkIcon class="text-2xl" />
                     </div>
-                </Transition>
-
-                <div class="card-header">
-                    <p>Майндкарты</p>
-                    <LinkIcon class="text-2xl" />
+    
+                    <div class="footer">
+                        <h3>Загрузить</h3>
+                    </div>
                 </div>
-
-                <div class="footer">
-                    <h3>Загрузить</h3>
-                </div>
-            </div>
-
-            <div class="card feedback">
-                <div class="card-header">
-                    <p>Есть идеи?</p>
-                    <LinkIcon class="text-2xl" />
-                </div>
-
-                <div class="footer">
-                    <h3>Фидбэк</h3>
+    
+                <div class="card feedback">
+                    <div class="card-header">
+                        <p>Есть идеи?</p>
+                        <LinkIcon class="text-2xl" />
+                    </div>
+    
+                    <div class="footer">
+                        <h3>Фидбэк</h3>
+                    </div>
                 </div>
             </div>
+
         </div>
     </main>
 </template>
@@ -467,9 +463,24 @@ main {
     @apply grid grid-cols-2 w-full gap-small;
 }
 
-.dashboard-grid>.card {
+.dashboard-grid .card {
     @apply rounded-2xl overflow-hidden relative bg-white p-default flex flex-col justify-between gap-8 min-h-40;
 }
+
+.row{
+    @apply w-full;
+    grid-column: 1/4;
+}
+.row#row1{
+    @apply flex gap-small;
+}
+.row#row1>div:first-child{
+    @apply w-full;
+}
+.row#row1>div:last-child{
+    @apply aspect-square h-40 w-40 min-w-40;
+}
+
 
 .dashboard-grid>.card>.card-loader {
     @apply absolute w-full h-full bg-white bg-opacity-75 flex flex-col gap-4 justify-center items-center top-0 left-0;
@@ -485,7 +496,7 @@ main {
     grid-row: 1/3;
     background-image: url(../assets/images/dashboard/bg-waves.png);
     background-size: 125%;
-    @apply bg-right-bottom bg-no-repeat;
+    @apply bg-right-bottom bg-no-repeat bg-cover;
 }
 
 .salary-notify {
@@ -545,7 +556,7 @@ main {
 }
 
 .period-picker>.period-picker-button {
-    @apply w-full flex items-center justify-center p-2 rounded-full bg-transparent text-gray-400;
+    @apply w-full flex items-center justify-center p-1 rounded-full bg-transparent text-gray-400;
 }
 
 .period-picker>.period-picker-button.active {
