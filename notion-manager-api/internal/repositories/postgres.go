@@ -196,19 +196,19 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 	return tx.Commit()
 }
 
-func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64) ([]entities.Task, error) {
+func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64, quarter int) ([]entities.Task, error) {
 	tasks := []entities.Task{}
 	query := `
-    SELECT tasks.* 
+    SELECT DISTINCT tasks.* 
     FROM tasks 
-    JOIN employees ON tasks.employee_id = employees.employee_id 
+    JOIN employees ON tasks.employee_id = employees.employee_id  JOIN task_tag ON tasks.task_id = task_tag.task_id
     WHERE tg_username = $1
     AND (
 		(start_time >= $2 AND start_time <= $3)
 		OR (end_time >= $2 AND end_time <= $3)
-    )
+    ) AND tag = $4
 `
-	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end); err != nil {
+	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end, "Q"+strconv.Itoa(quarter)); err != nil {
 		slog.Error("error getting tasks of employee: " + err.Error())
 		return nil, err
 	}

@@ -35,7 +35,7 @@ type repository interface {
 
 	GetEmployeeByID(employeeID string) (employee entities.Employee, err error)
 
-	GetTasksOfEmployee(employee_id string, period_start, period_end int64) ([]entities.Task, error)
+	GetTasksOfEmployee(employee_id string, period_start, period_end int64, quarter int) ([]entities.Task, error)
 	GetQuarterTasks(quarter int) (tasks []entities.Task, err error)
 	GetEmployeesByNotificationFlag(ctx context.Context, flag entities.NotificationFlag) (employees []entities.Employee, err error)
 	GetUserRole(username string, userID int64) entities.DashboardRole
@@ -163,7 +163,8 @@ func (s *Service) UpdateGoogleSheets() error {
 }
 
 func (s *Service) GetTasksOfEmployee(employee_username string, period_start, period_end int64) ([]entities.Task, error) {
-	return s.repo.GetTasksOfEmployee(employee_username, period_start, period_end)
+	currentQuarter := (time.Now().Month() + 1) / 3
+	return s.repo.GetTasksOfEmployee(employee_username, period_start, period_end, int(currentQuarter))
 }
 
 func (s *Service) GetQuarterTasks() ([]entities.Task, error) {
