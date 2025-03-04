@@ -153,6 +153,11 @@ const countUserProgress = async () => {
     }
     userTasks.value = tasks
 
+    if (userTasks.value.length === 0) {
+        userPercents.value = 0
+        return
+    }
+
 
     const totalDaysInPeriod = (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24);
     const daysGoneFromPeriodStart = (now.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24);
