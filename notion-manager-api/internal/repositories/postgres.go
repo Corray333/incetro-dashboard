@@ -204,8 +204,8 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
     JOIN employees ON tasks.employee_id = employees.employee_id 
     WHERE tg_username = $1
     AND (
-        (start_time <= $3 AND end_time >= $2) -- Полное пересечение
-        OR (start_time <= $3 AND start_time >= $2 AND end_time = 0) -- Задачи без end_time, но попадающие в период
+		OR (start_time >= $2 AND start_time <= $3)
+		OR (end_time >= $2 AND end_time <= $3)
     )
 `
 	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end); err != nil {
