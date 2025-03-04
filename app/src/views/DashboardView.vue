@@ -337,7 +337,7 @@ const sendFeedback = ()=>{
                 </div>
 
                 <div class="footer">
-                    <h3>{{ quarterTasksDone }}/{{ querterTasks.length }}</h3>
+                    <h3>{{ quarterTasksDone }} / {{ querterTasks.length }}</h3>
                     <div class="progress-bar mt-2">
                         <div :style="{ width: `${(quarterTasksDone / querterTasks.length) * 100}%` }"></div>
                     </div>
@@ -353,7 +353,7 @@ const sendFeedback = ()=>{
                 </div>
 
                 <div class="flex items-center gap-2 mt-2 mb-4">
-                    <h3>{{ userTasks.filter(t => getCategoryByStatus(t.status) === TaskStatusCategory.Done).length }}/{{ userTasks.length }}</h3>
+                    <h3>{{ userTasks.filter(t => getCategoryByStatus(t.status) === TaskStatusCategory.Done).length }} / {{ userTasks.length }}</h3>
 
                     <p class=" flex items-center" :class="progressToStatus(userPercents)">
                         <ArrowTopIcon class="arrow" /> {{ Math.round(Math.abs(userPercents)) }}%
