@@ -480,6 +480,10 @@ main {
     @apply rounded-2xl overflow-hidden relative bg-white p-default flex flex-col justify-between gap-8 min-h-40;
 }
 
+.card.progress {
+    @apply gap-0;
+}
+
 .row{
     @apply w-full;
     grid-column: 1/4;
