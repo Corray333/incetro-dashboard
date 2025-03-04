@@ -215,7 +215,7 @@ func (e *External) UpdateProjectsSheet(srv *sheets.Service, projects []entities.
 
 	}
 
-	writeRange := "Projects!A3:S3"
+	writeRange := "Projects!A2:S2"
 
 	_, err := srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
 		ValueInputOption: "USER_ENTERED",
@@ -268,7 +268,7 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 
 	}
 
-	writeRange := "People!A3:S3"
+	writeRange := "People!A2:S2"
 
 	_, err := srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
 		ValueInputOption: "USER_ENTERED",

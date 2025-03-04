@@ -264,6 +264,10 @@ const salaryNotify = async () => {
     }
 }
 
+const sendFeedback = ()=>{
+    Telegram.WebApp.openTelegramLink('https://t.me/incetro')
+}
+
 </script>
 
 <template>
@@ -334,7 +338,7 @@ const salaryNotify = async () => {
 
                 <div class="footer">
                     <h3>{{ quarterTasksDone }}/{{ querterTasks.length }}</h3>
-                    <div class="progress-bar">
+                    <div class="progress-bar mt-2">
                         <div :style="{ width: `${(quarterTasksDone / querterTasks.length) * 100}%` }"></div>
                     </div>
                 </div>
@@ -348,7 +352,7 @@ const salaryNotify = async () => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 mt-2 mb-4">
                     <h3>{{ userTasks.filter(t => getCategoryByStatus(t.status) === TaskStatusCategory.Done).length }}/{{ userTasks.length }}</h3>
 
                     <p class=" flex items-center" :class="progressToStatus(userPercents)">
@@ -396,7 +400,7 @@ const salaryNotify = async () => {
                     </div>
                 </div>
     
-                <div class="card feedback">
+                <div class="card feedback" @click="sendFeedback">
                     <div class="card-header">
                         <p>Есть идеи?</p>
                         <LinkIcon class="text-2xl" />
@@ -519,6 +523,7 @@ main {
 }
 
 .progress {
+    @apply gap-0;
     grid-column: 1/3;
     grid-row: 3/4;
     min-height: auto !important;
@@ -556,12 +561,9 @@ main {
     @apply bg-cover text-white;
 }
 
-.card.progress {
-    @apply gap-2;
-}
 
 .period-picker {
-    @apply flex gap-1 p-1 bg-gray-200 rounded-full;
+    @apply flex gap-1 p-0.5 bg-gray-200 rounded-full;
 }
 
 .period-picker>.period-picker-button {
