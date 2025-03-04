@@ -204,7 +204,7 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
     JOIN employees ON tasks.employee_id = employees.employee_id 
     WHERE tg_username = $1
     AND (
-		OR (start_time >= $2 AND start_time <= $3)
+		(start_time >= $2 AND start_time <= $3)
 		OR (end_time >= $2 AND end_time <= $3)
     )
 `
