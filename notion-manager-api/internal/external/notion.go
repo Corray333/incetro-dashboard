@@ -1230,9 +1230,9 @@ type Expertise struct {
 			} `json:"title"`
 		} `json:"Name"`
 		Tag struct {
-			MultiSelect []struct {
+			Select struct {
 				Name string `json:"name"`
-			} `json:"multi_select"`
+			} `json:"select"`
 		} `json:"Tag"`
 		Description struct {
 			RichText []struct {
@@ -1266,14 +1266,7 @@ func (e *External) GetExpertise() (expertises []entities.Expertise, err error) {
 				}
 				return w.Properties.Name.Title[0].PlainText
 			}(),
-			Direction: func() string {
-				tags := ""
-				for _, tag := range w.Properties.Tag.MultiSelect {
-					tags += tag.Name + ", "
-				}
-
-				return strings.TrimSuffix(tags, ", ")
-			}(),
+			Direction: w.Properties.Tag.Select.Name,
 			Description: func() string {
 				if len(w.Properties.Description.RichText) == 0 {
 					return ""
