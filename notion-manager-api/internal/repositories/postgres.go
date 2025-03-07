@@ -382,7 +382,7 @@ func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Exper
 	defer tx.Rollback()
 
 	for _, expertise := range expertises {
-		_, err := tx.ExecContext(ctx, "INSERT INTO expertises (name, direction, description) VALUES ($1, $2, $3) ON CONFLICT (name) DO UPDATE SET direction = $2, description = $3", expertise.Name, expertise.Direction, expertise.Description)
+		_, err := tx.ExecContext(ctx, "INSERT INTO expertise (name, direction, description) VALUES ($1, $2, $3) ON CONFLICT (name) DO UPDATE SET direction = $2, description = $3", expertise.Name, expertise.Direction, expertise.Description)
 		if err != nil {
 			slog.Error("error setting expertises: " + err.Error())
 			return err
@@ -393,7 +393,7 @@ func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Exper
 }
 
 func (s *Storage) GetExpertises() (expertises []entities.Expertise, err error) {
-	if err := s.db.Select(&expertises, "SELECT * FROM expertises"); err != nil {
+	if err := s.db.Select(&expertises, "SELECT * FROM expertise"); err != nil {
 		slog.Error("error getting expertises: " + err.Error())
 		return nil, err
 	}
