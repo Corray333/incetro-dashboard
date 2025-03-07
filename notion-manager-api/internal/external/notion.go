@@ -1220,3 +1220,68 @@ func createCheckboxes(tasks []mindmap.Task) []map[string]interface{} {
 
 	return content
 }
+
+type Expertise struct {
+	ID         string `json:"id"`
+	Properties struct {
+		Name struct {
+			Title []struct {
+				PlainText string `json:"plain_text"`
+			} `json:"title"`
+		} `json:"Name"`
+		Tag struct {
+			MultiSelect []struct {
+				Name string `json:"name"`
+			} `json:"multi_select"`
+		} `json:"Tag"`
+		Description struct {
+			RichText []struct {
+				PlainText string `json:"plain_text"`
+			} `json:"rich_text"`
+		} `json:"Описание"`
+	} `json:"properties"`
+}
+
+func (e *External) GetExpertise() (expertises []entities.Expertise, err error) {
+	filter := map[string]interface{}{}
+
+	resp, err := notion.SearchPages(viper.GetString("notion.databases.expertise"), filter)
+	if err != nil {
+		return nil, err
+	}
+	expertiseResults := struct {
+		Results []Expertise `json:"results"`
+	}{}
+	if err := json.Unmarshal(resp, &expertiseResults); err != nil {
+		slog.Error("Error unmarshalling expertise", slog.String("error", err.Error()))
+		return nil, err
+	}
+
+	expertises = []entities.Expertise{}
+	for _, w := range expertiseResults.Results {
+		expertises = append(expertises, entities.Expertise{
+			Name: func() string {
+				if len(w.Properties.Name.Title) == 0 {
+					return ""
+				}
+				return w.Properties.Name.Title[0].PlainText
+			}(),
+			Direction: func() string {
+				tags := ""
+				for _, tag := range w.Properties.Tag.MultiSelect {
+					tags += tag.Name + ", "
+				}
+
+				return strings.TrimSuffix(tags, ", ")
+			}(),
+			Description: func() string {
+				if len(w.Properties.Description.RichText) == 0 {
+					return ""
+				}
+				return w.Properties.Description.RichText[0].PlainText
+			}(),
+		})
+
+	}
+	return expertises, nil
+}

@@ -39,6 +39,9 @@ type repository interface {
 	GetQuarterTasks(quarter int) (tasks []entities.Task, err error)
 	GetEmployeesByNotificationFlag(ctx context.Context, flag entities.NotificationFlag) (employees []entities.Employee, err error)
 	GetUserRole(username string, userID int64) entities.DashboardRole
+
+	SetExpertises(ctx context.Context, expertises []entities.Expertise) error
+	GetExpertises() (expertises []entities.Expertise, err error)
 }
 
 type external interface {
@@ -61,6 +64,9 @@ type external interface {
 	UpdateTimeSheet(srv *sheets.Service) error
 	UpdateProjectsSheet(srv *sheets.Service, projects []entities.Project) error
 	UpdatePeopleSheet(srv *sheets.Service, employees []entities.Employee) error
+	UpdateExpertiseSheet(srv *sheets.Service, people []entities.Expertise) error
+
+	GetExpertise() (expertises []entities.Expertise, err error)
 }
 
 type Service struct {
@@ -158,6 +164,15 @@ func (s *Service) UpdateGoogleSheets() error {
 		return err
 	}
 
+	expertises, err := s.repo.GetExpertises()
+	if err != nil {
+		return err
+	}
+
+	if err := s.external.UpdateExpertiseSheet(srv, expertises); err != nil {
+		return err
+	}
+
 	return nil
 
 }
@@ -245,6 +260,16 @@ func (s *Service) Actualize() (updated bool, err error) {
 	// 	return false, err
 	// }
 	// fmt.Println("Times last update: ", timesLastUpdate)
+
+	fmt.Println("Getting expertise")
+	expertises, err := s.external.GetExpertise()
+	if err != nil {
+		return false, err
+	}
+
+	if err := s.repo.SetExpertises(context.Background(), expertises); err != nil {
+		return false, err
+	}
 
 	fmt.Println("Getting employees")
 	employees, _, err := s.external.GetEmployees(system.EmployeeDBLastSynced)

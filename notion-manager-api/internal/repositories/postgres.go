@@ -372,3 +372,31 @@ func (s *Storage) GetEmployeeByID(employeeID string) (employee entities.Employee
 
 	return employee, nil
 }
+
+func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Expertise) error {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		slog.Error("error starting transaction: " + err.Error())
+		return err
+	}
+	defer tx.Rollback()
+
+	for _, expertise := range expertises {
+		_, err := tx.ExecContext(ctx, "INSERT INTO expertises (name, direction, description) VALUES ($1, $2, $3) ON CONFLICT (name) DO UPDATE SET direction = $2, description = $3", expertise.Name, expertise.Direction, expertise.Description)
+		if err != nil {
+			slog.Error("error setting expertises: " + err.Error())
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (s *Storage) GetExpertises() (expertises []entities.Expertise, err error) {
+	if err := s.db.Select(&expertises, "SELECT * FROM expertises"); err != nil {
+		slog.Error("error getting expertises: " + err.Error())
+		return nil, err
+	}
+
+	return expertises, nil
+}

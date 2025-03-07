@@ -298,6 +298,54 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 	return nil
 }
 
+func (e *External) UpdateExpertiseSheet(srv *sheets.Service, expertises []entities.Expertise) error {
+
+	var vr sheets.ValueRange
+
+	var updateVr []*sheets.ValueRange
+
+	for _, expertise := range expertises {
+
+		myval := []interface{}{
+			expertise.Name,
+			expertise.Direction,
+			expertise.Description,
+		}
+
+		vr.Values = append(vr.Values, myval)
+
+	}
+
+	writeRange := "Expertise!A2:C2"
+
+	_, err := srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
+		ValueInputOption: "USER_ENTERED",
+		Data:             updateVr,
+	}).Do()
+
+	if err != nil {
+		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
+		return err
+	}
+
+	// Clear all old values
+	clearRange := "Expertise!A2:C"
+	clearValues := &sheets.ClearValuesRequest{}
+	_, err = srv.Spreadsheets.Values.Clear(spreadsheetId, clearRange, clearValues).Do()
+	if err != nil {
+		slog.Error("Error clearing old values", slog.String("error", err.Error()))
+		return err
+	}
+
+	_, err = srv.Spreadsheets.Values.Append(spreadsheetId, writeRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
+	if err != nil {
+		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
+		return err
+	}
+
+	return nil
+}
+
 const spreadsheetId = "1dStGuMfFU2Vq2V2xgXLyKUq_j3zYBeP15LA0eUQtTAQ"
 
 func (e *External) NewSheetsClient() (*sheets.Service, error) {

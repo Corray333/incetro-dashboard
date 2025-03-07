@@ -111,3 +111,9 @@ func (t Time) ToRow() Row {
 		EmployeeID:  t.EmployeeID,
 	}
 }
+
+type Expertise struct {
+	Name        string `json:"name" db:"name"`
+	Direction   string `json:"direction" db:"direction"`
+	Description string `json:"description" db:"description"`
+}

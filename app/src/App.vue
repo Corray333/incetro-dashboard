@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, onMounted, ref } from 'vue';
 import { DashboardTransport } from './transport/dashboard';
 declare const Telegram: any
 
@@ -21,6 +21,7 @@ onBeforeMount(async()=>{
     console.log(error)
   }
 })
+
 
 </script>
 
