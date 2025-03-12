@@ -17,6 +17,10 @@ func New() *app {
 
 	storage := repositories.New()
 	external := external.New()
+	// data, _ := external.GetSheetsTimes(1741718524, "", "")
+	// for i := range data {
+	// 	fmt.Println(data[i].Properties.WhatDid.Title, data[i].Properties.BHGS.Formula.String)
+	// }
 	service := service.New(storage, external)
 
 	transport := transport.New(service)

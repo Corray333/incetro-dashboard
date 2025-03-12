@@ -142,12 +142,6 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service) error {
 			timeRaw.Properties.EstimateHours.Formula.String,
 			lastSyncedRaw.Format(TimeLayout),
 			func() string {
-				if timeRaw.Properties.Payment.Checkbox {
-					return "TRUE"
-				}
-				return "FALSE"
-			}(),
-			func() string {
 				if len(timeRaw.Properties.Project.Rollup.Array) == 0 || len(timeRaw.Properties.Project.Rollup.Array[0].Relation) == 0 {
 					return ""
 				}
