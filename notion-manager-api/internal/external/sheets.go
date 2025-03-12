@@ -193,8 +193,6 @@ func (e *External) UpdateProjectsSheet(srv *sheets.Service, projects []entities.
 
 	var vr sheets.ValueRange
 
-	var updateVr []*sheets.ValueRange
-
 	for _, project := range projects {
 		title := project.Name
 
@@ -209,28 +207,12 @@ func (e *External) UpdateProjectsSheet(srv *sheets.Service, projects []entities.
 
 	}
 
-	writeRange := "Projects!A2:S2"
+	rowCount := len(projects)
+	writeRange := fmt.Sprintf("Projects!A2:D%d", 1+rowCount) // A2 до последней строки
 
-	_, err := srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
-		ValueInputOption: "USER_ENTERED",
-		Data:             updateVr,
-	}).Do()
-
-	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
-		return err
-	}
-
-	// Clear all old values
-	clearRange := "Projects!A2:D"
-	clearValues := &sheets.ClearValuesRequest{}
-	_, err = srv.Spreadsheets.Values.Clear(spreadsheetId, clearRange, clearValues).Do()
-	if err != nil {
-		slog.Error("Error clearing old values", slog.String("error", err.Error()))
-		return err
-	}
-
-	_, err = srv.Spreadsheets.Values.Append(spreadsheetId, writeRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
+	_, err := srv.Spreadsheets.Values.Update(spreadsheetId, writeRange, &vr).
+		ValueInputOption("USER_ENTERED").
+		Do()
 	if err != nil {
 		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
 		return err
