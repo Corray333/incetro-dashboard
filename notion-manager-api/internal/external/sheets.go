@@ -254,7 +254,7 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 			person.Status,
 			person.Email,
 			person.Geo,
-			person.Phone,
+			"'" + person.Phone,
 			fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://t.me/%s", person.Telegram), person.Telegram),
 		}
 
