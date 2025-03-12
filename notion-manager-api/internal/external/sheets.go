@@ -243,8 +243,6 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 
 	var vr sheets.ValueRange
 
-	var updateVr []*sheets.ValueRange
-
 	for _, person := range people {
 
 		myval := []interface{}{
@@ -262,28 +260,12 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 
 	}
 
-	writeRange := "People!A2:S2"
+	rowCount := len(people)
+	writeRange := fmt.Sprintf("People!A2:H%d", 1+rowCount) // A2 до последней строки
 
-	_, err := srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
-		ValueInputOption: "USER_ENTERED",
-		Data:             updateVr,
-	}).Do()
-
-	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
-		return err
-	}
-
-	// Clear all old values
-	clearRange := "People!A2:H"
-	clearValues := &sheets.ClearValuesRequest{}
-	_, err = srv.Spreadsheets.Values.Clear(spreadsheetId, clearRange, clearValues).Do()
-	if err != nil {
-		slog.Error("Error clearing old values", slog.String("error", err.Error()))
-		return err
-	}
-
-	_, err = srv.Spreadsheets.Values.Append(spreadsheetId, writeRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
+	_, err := srv.Spreadsheets.Values.Update(spreadsheetId, writeRange, &vr).
+		ValueInputOption("USER_ENTERED").
+		Do()
 	if err != nil {
 		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
 		return err
@@ -295,8 +277,6 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 func (e *External) UpdateExpertiseSheet(srv *sheets.Service, expertises []entities.Expertise) error {
 
 	var vr sheets.ValueRange
-
-	var updateVr []*sheets.ValueRange
 
 	for _, expertise := range expertises {
 
@@ -312,20 +292,10 @@ func (e *External) UpdateExpertiseSheet(srv *sheets.Service, expertises []entiti
 
 	writeRange := "Expertise!A2:C2"
 
-	_, err := srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
-		ValueInputOption: "USER_ENTERED",
-		Data:             updateVr,
-	}).Do()
-
-	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
-		return err
-	}
-
 	// Clear all old values
 	clearRange := "Expertise!A2:C"
 	clearValues := &sheets.ClearValuesRequest{}
-	_, err = srv.Spreadsheets.Values.Clear(spreadsheetId, clearRange, clearValues).Do()
+	_, err := srv.Spreadsheets.Values.Clear(spreadsheetId, clearRange, clearValues).Do()
 	if err != nil {
 		slog.Error("Error clearing old values", slog.String("error", err.Error()))
 		return err
