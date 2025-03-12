@@ -248,7 +248,7 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 	for _, person := range people {
 
 		myval := []interface{}{
-			fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", person.ID), person.Username),
+			fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", person.ProfileID), person.Username),
 			person.ExpertiseName,
 			person.Direction,
 			person.Status,
