@@ -75,10 +75,12 @@ type Employee struct {
 	Telegram   string `json:"telegramUsername" db:"tg_username"`
 	TelegramID int64  `json:"telegramID" db:"tg_id"`
 	Geo        string `json:"geo" db:"geo"`
-	Expertise  string `json:"expertise" db:"expertise"`
-	Direction  string `json:"direction" db:"direction"`
-	Status     string `json:"status" db:"status"`
-	Phone      string `json:"phone" db:"phone"`
+
+	ExpertiseID   string `json:"expertiseID" db:"expertise_id"`
+	ExpertiseName string `json:"expertiseName" db:"expertise_name"`
+	Direction     string `json:"direction" db:"direction"`
+	Status        string `json:"status" db:"status"`
+	Phone         string `json:"phone" db:"phone"`
 
 	NotificationFlags []string      `json:"notificationFlags"`
 	Role              DashboardRole `json:"role"`
@@ -113,6 +115,7 @@ func (t Time) ToRow() Row {
 }
 
 type Expertise struct {
+	ID          string `json:"id" db:"expertise_id"`
 	Name        string `json:"name" db:"name"`
 	Direction   string `json:"direction" db:"direction"`
 	Description string `json:"description" db:"description"`

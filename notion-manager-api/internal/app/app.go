@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/Corray333/employee_dashboard/internal/external"
 	"github.com/Corray333/employee_dashboard/internal/repositories"
 	"github.com/Corray333/employee_dashboard/internal/service"
@@ -21,6 +23,8 @@ func New() *app {
 	// for i := range data {
 	// 	fmt.Println(data[i].Properties.WhatDid.Title, data[i].Properties.BHGS.Formula.String)
 	// }
+	val, _ := storage.GetEmployees()
+	fmt.Printf("%+v\n", val)
 	service := service.New(storage, external)
 
 	transport := transport.New(service)

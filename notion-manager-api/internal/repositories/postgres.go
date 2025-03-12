@@ -37,7 +37,7 @@ func New() *Storage {
 }
 
 func (s *Storage) GetEmployees() (employees []entities.Employee, err error) {
-	if err := s.db.Select(&employees, "SELECT * FROM employees"); err != nil {
+	if err := s.db.Select(&employees, "SELECT employees.*, expertise.name as expertise_name FROM employees NATURAL JOIN expertise"); err != nil {
 		slog.Error("error getting employees: " + err.Error())
 		return nil, err
 	}
@@ -126,13 +126,13 @@ func (s *Storage) SetEmployees(employees []entities.Employee) error {
 		// fmt.Println(employee)
 		// fmt.Println()
 
-		query := `INSERT INTO employees (employee_id, username, email, icon, profile_id, tg_username, geo, expertise, direction, status, phone) 
+		query := `INSERT INTO employees (employee_id, username, email, icon, profile_id, tg_username, geo, expertise_id, direction, status, phone) 
 				  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
 				  ON CONFLICT (employee_id) 
-				  DO UPDATE SET username = $2, email = $3, icon = $4, profile_id = $5, tg_username = $6, geo = $7, expertise = $8, direction = $9, status = $10, phone = $11
+				  DO UPDATE SET username = $2, email = $3, icon = $4, profile_id = $5, tg_username = $6, geo = $7, expertise_id = $8, direction = $9, status = $10, phone = $11
 				  RETURNING tg_id`
 
-		err := tx.QueryRow(query, employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram, employee.Geo, employee.Expertise, employee.Direction, employee.Status, employee.Phone).Scan(&tgID)
+		err := tx.QueryRow(query, employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram, employee.Geo, employee.ExpertiseID, employee.Direction, employee.Status, employee.Phone).Scan(&tgID)
 		if err != nil {
 			slog.Error("error setting employees: " + err.Error())
 			return err
@@ -382,7 +382,7 @@ func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Exper
 	defer tx.Rollback()
 
 	for _, expertise := range expertises {
-		_, err := tx.ExecContext(ctx, "INSERT INTO expertise (name, direction, description) VALUES ($1, $2, $3) ON CONFLICT (name) DO UPDATE SET direction = $2, description = $3", expertise.Name, expertise.Direction, expertise.Description)
+		_, err := tx.ExecContext(ctx, "INSERT INTO expertise (expertise_id, name, direction, description) VALUES ($1, $2, $3, $4) ON CONFLICT (expertise_id) DO UPDATE SET direction = $3, description = $4", expertise.ID, expertise.Name, expertise.Direction, expertise.Description)
 		if err != nil {
 			slog.Error("error setting expertises: " + err.Error())
 			return err

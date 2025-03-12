@@ -315,7 +315,7 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 				}
 				return strings.Join(locations, ",")
 			}(),
-			Expertise: func() string {
+			ExpertiseID: func() string {
 				var expertiseIDs []string
 				for _, relation := range w.Properties.Expertise.Relation {
 					expertiseIDs = append(expertiseIDs, relation.ID)
@@ -1260,6 +1260,7 @@ func (e *External) GetExpertise() (expertises []entities.Expertise, err error) {
 	expertises = []entities.Expertise{}
 	for _, w := range expertiseResults.Results {
 		expertises = append(expertises, entities.Expertise{
+			ID: w.ID,
 			Name: func() string {
 				if len(w.Properties.Name.Title) == 0 {
 					return ""
