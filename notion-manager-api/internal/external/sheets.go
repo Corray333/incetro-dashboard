@@ -236,6 +236,7 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 			person.Geo,
 			"'" + person.Phone,
 			fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://t.me/%s", person.Telegram), person.Telegram),
+			person.FIO,
 		}
 
 		vr.Values = append(vr.Values, myval)
