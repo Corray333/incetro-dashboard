@@ -93,26 +93,15 @@ type Employee struct {
 			} `json:"rollup"`
 		} `json:"Направление"`
 		Name struct {
-			ID    string `json:"id"`
-			Type  string `json:"type"`
 			Title []struct {
-				Type string `json:"type"`
-				Text struct {
-					Content string      `json:"content"`
-					Link    interface{} `json:"link"`
-				} `json:"text"`
-				Annotations struct {
-					Bold          bool   `json:"bold"`
-					Italic        bool   `json:"italic"`
-					Strikethrough bool   `json:"strikethrough"`
-					Underline     bool   `json:"underline"`
-					Code          bool   `json:"code"`
-					Color         string `json:"color"`
-				} `json:"annotations"`
-				PlainText string      `json:"plain_text"`
-				Href      interface{} `json:"href"`
+				PlainText string `json:"plain_text"`
 			} `json:"title"`
 		} `json:"Имя"`
+		FIO struct {
+			RichText []struct {
+				PlainText string `json:"plain_text"`
+			} `json:"rich_text"`
+		} `json:"ФИО"`
 		Telegram struct {
 			RichText []struct {
 				PlainText string `json:"plain_text"`
@@ -294,6 +283,16 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 					flags = append(flags, flag.Name)
 				}
 				return flags
+			}(),
+			FIO: func() string {
+				if len(w.Properties.FIO.RichText) == 0 {
+					return ""
+				}
+				result := ""
+				for _, text := range w.Properties.FIO.RichText {
+					result += text.PlainText
+				}
+				return result
 			}(),
 			Telegram: func() string {
 				if len(w.Properties.Telegram.RichText) == 0 {

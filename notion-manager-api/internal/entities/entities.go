@@ -75,6 +75,7 @@ type Employee struct {
 	Telegram   string `json:"telegramUsername" db:"tg_username"`
 	TelegramID int64  `json:"telegramID" db:"tg_id"`
 	Geo        string `json:"geo" db:"geo"`
+	FIO        string `json:"fio" db:"fio"`
 
 	ExpertiseID   string `json:"expertiseID" db:"expertise_id"`
 	ExpertiseName string `json:"expertiseName" db:"expertise_name"`

@@ -353,11 +353,25 @@ var forbiddenWords = []string{
 	"Разобраться",
 }
 
+var allowedWords = []string{
+	"отправка",
+	"отправки",
+}
+
 func containsForbiddenWord(input string) (string, bool) {
 	lowerInput := strings.ToLower(input)
 	for _, word := range forbiddenWords {
 		if strings.Contains(lowerInput, strings.ToLower(word)) {
-			return word, true
+			forbidden := true
+			for _, allowedWord := range allowedWords {
+				if strings.Contains(lowerInput, strings.ToLower(allowedWord)) {
+					forbidden = false
+					break
+				}
+			}
+			if forbidden {
+				return word, true
+			}
 		}
 	}
 	return "", false
