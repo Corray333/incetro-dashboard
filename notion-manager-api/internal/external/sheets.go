@@ -244,7 +244,7 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 	}
 
 	rowCount := len(people)
-	writeRange := fmt.Sprintf("People!A2:H%d", 1+rowCount) // A2 до последней строки
+	writeRange := fmt.Sprintf("People!A2:I%d", 1+rowCount) // A2 до последней строки
 
 	_, err := srv.Spreadsheets.Values.Update(spreadsheetId, writeRange, &vr).
 		ValueInputOption("USER_ENTERED").
