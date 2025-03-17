@@ -78,7 +78,7 @@ type Employee struct {
 	FIO        string `json:"fio" db:"fio"`
 
 	ExpertiseID   string `json:"expertiseID" db:"expertise_id"`
-	ExpertiseName string `json:"expertiseName" db:"expertise_name"`
+	ExpertiseName string `json:"expertiseName" db:"expertise"`
 	Direction     string `json:"direction" db:"direction"`
 	Status        string `json:"status" db:"status"`
 	Phone         string `json:"phone" db:"phone"`
