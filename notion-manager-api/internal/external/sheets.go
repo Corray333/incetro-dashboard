@@ -67,6 +67,22 @@ func SetLastSyncedTime(lastSyncedTimestamp int64, srv *sheets.Service, spreadshe
 	return nil
 }
 
+func (e *External) removeTimeDuplicates(times []Time) []Time {
+	seen := make(map[string]bool)
+	var result []Time
+
+	for _, time := range times {
+		if !seen[time.ID] {
+			seen[time.ID] = true
+			result = append(result, time)
+		}
+	}
+
+	fmt.Printf("Removed %d duplicates\n", len(times)-len(result))
+
+	return result
+}
+
 func (e *External) UpdateTimeSheet(srv *sheets.Service) error {
 	lastSynced, err := GetLastSyncedTime(srv, spreadsheetId)
 	if err != nil {
@@ -87,6 +103,8 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service) error {
 		slog.Error("Error getting times from Notion", slog.String("error", err.Error()))
 		return err
 	}
+
+	times = e.removeTimeDuplicates(times)
 
 	var updateVr []*sheets.ValueRange
 
@@ -140,7 +158,14 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service) error {
 			}(),
 			timeRaw.Properties.Direction.Select.Name,
 			timeRaw.Properties.EstimateHours.Formula.String,
-			lastSyncedRaw.Format(TimeLayout),
+			// lastSyncedRaw.Format(TimeLayout),
+			func() string {
+				creadetTime, err := time.Parse(notion.TIME_LAYOUT_IN, timeRaw.CreatedTime)
+				if err != nil {
+					return ""
+				}
+				return creadetTime.Format(TimeLayout)
+			}(),
 			func() string {
 				if len(timeRaw.Properties.Project.Rollup.Array) == 0 || len(timeRaw.Properties.Project.Rollup.Array[0].Relation) == 0 {
 					return ""
