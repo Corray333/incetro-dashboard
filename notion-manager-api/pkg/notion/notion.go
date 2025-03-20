@@ -28,7 +28,7 @@ func GetHTTPClient() *http.Client {
 
 	transport := &http.Transport{}
 
-	proxy := os.Getenv("HTTP_PROXY")
+	proxy := os.Getenv("PROXY_URL")
 	if proxy != "" {
 		proxyURL, err := url.Parse(proxy)
 		if err != nil {
