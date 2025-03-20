@@ -323,6 +323,9 @@ func (s *Service) Actualize() (updated bool, err error) {
 
 func (s *Service) SetProfileInTimes(times []entities.Time) error {
 	for _, time := range times {
+		if time.EmployeeID == "" {
+			continue
+		}
 		employee, err := s.repo.GetEmployeeByID(time.EmployeeID)
 		if err != nil {
 			return err
