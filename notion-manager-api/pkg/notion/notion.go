@@ -30,6 +30,7 @@ func GetHTTPClient() *http.Client {
 
 	proxy := os.Getenv("PROXY_URL")
 	if proxy != "" {
+		fmt.Println(proxy)
 		proxyURL, err := url.Parse(proxy)
 		if err != nil {
 			slog.Error("Failed to parse proxy URL", slog.String("error", err.Error()))
@@ -184,6 +185,7 @@ func CreatePage(dbid string, properties interface{}, content interface{}, icon s
 }
 
 func UpdatePage(pageid string, properties interface{}) ([]byte, error) {
+	fmt.Println(pageid, os.Getenv("NOTION_SECRET"))
 	url := "https://api.notion.com/v1/pages/" + pageid
 
 	reqBody := map[string]interface{}{
