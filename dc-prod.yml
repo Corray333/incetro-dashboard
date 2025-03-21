@@ -9,6 +9,7 @@ services:
       - ./notion-manager-api:/app
       - .env:/app/.env
       - ./configs/notion-manager-api:/app/configs
+      - ./secrets:/app/secrets
     command: make run
   
   app:
