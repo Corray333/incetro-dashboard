@@ -358,14 +358,13 @@ func findRowIndexByID(table *sheets.ValueRange, id string) (int, error) {
 
 	// Ищем строку с нужным значением
 	for i, row := range table.Values {
-		if len(row) > 0 && row[0] == id {
+		// 17 == R
+		if len(row) >= 17 && row[17] == id {
 			// Возвращаем индекс строки (в Google Sheets строки индексируются с 1)
-			fmt.Println("Found: ", i+1)
+			fmt.Println("Found: ", row)
 			return i + 1, nil
 		}
 	}
-
-	fmt.Println("Not found")
 	// Если значение не найдено, возвращаем -1
 	return -1, nil
 }
