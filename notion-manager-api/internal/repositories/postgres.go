@@ -397,3 +397,12 @@ func (s *Storage) GetExpertises() (expertises []entities.Expertise, err error) {
 
 	return expertises, nil
 }
+
+func (s *Storage) GetExtertiseByID(ctx context.Context, id string) (expertise entities.Expertise, err error) {
+	if err := s.db.Get(&expertise, "SELECT * FROM expertise WHERE expertise_id = $1", id); err != nil {
+		slog.Error("error getting expertise by id: " + err.Error())
+		return entities.Expertise{}, err
+	}
+
+	return expertise, nil
+}

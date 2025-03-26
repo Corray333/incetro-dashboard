@@ -24,7 +24,7 @@ const (
 
 func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error) {
 
-	readRange := "Time!S2"
+	readRange := "Time!V2"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	if err != nil {
 		slog.Error("Error getting Google Sheets", slog.String("error", err.Error()))
@@ -46,7 +46,7 @@ func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error)
 }
 
 func SetLastSyncedTime(lastSyncedTimestamp int64, srv *sheets.Service, spreadsheetId string) error {
-	writeRange := "Time!S2"
+	writeRange := "Time!V2"
 
 	lastSynced := time.Unix(lastSyncedTimestamp, 0)
 
@@ -83,7 +83,7 @@ func (e *External) removeTimeDuplicates(times []Time) []Time {
 	return result
 }
 
-func (e *External) UpdateTimeSheet(srv *sheets.Service) error {
+func (e *External) UpdateTimeSheet(srv *sheets.Service, getExpertise func(string) string) error {
 	lastSynced, err := GetLastSyncedTime(srv, spreadsheetId)
 	if err != nil {
 		slog.Error("Error getting last synced time", slog.String("error", err.Error()))
@@ -178,12 +178,21 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service) error {
 			timeRaw.Properties.BHGS.Formula.String,
 			timeRaw.Properties.ProjectStatus.Formula.String,
 			timeRaw.ID,
+			func() string {
+				if len(timeRaw.Properties.Expertise.Rollup.Array) == 0 {
+					return ""
+				}
+
+				return getExpertise(timeRaw.Properties.Expertise.Rollup.Array[0].Relation[0].ID)
+			}(),
+			timeRaw.Properties.PH.Formula.Number,
+			timeRaw.Properties.Overtime.Checkbox,
 		}...)
 
 		if rawId != -1 {
 			uvr := sheets.ValueRange{
 				Values: [][]interface{}{myval},
-				Range:  fmt.Sprintf("Time!A%d:S%d", rawId, rawId),
+				Range:  fmt.Sprintf("Time!A%d:U%d", rawId, rawId),
 			}
 			updateVr = append(updateVr, &uvr)
 			continue
@@ -193,7 +202,7 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service) error {
 
 	}
 
-	writeRange := "Time!A3:S3"
+	writeRange := "Time!A3:U3"
 
 	_, err = srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
 		ValueInputOption: "USER_ENTERED",

@@ -42,6 +42,8 @@ type repository interface {
 
 	SetExpertises(ctx context.Context, expertises []entities.Expertise) error
 	GetExpertises() (expertises []entities.Expertise, err error)
+
+	GetExtertiseByID(ctx context.Context, id string) (expertise entities.Expertise, err error)
 }
 
 type external interface {
@@ -61,7 +63,7 @@ type external interface {
 	CreateMindmapTasks(projectName string, tasks []mindmap.Task) error
 	SendSalaryNotification(ctx context.Context, employeeID int64) error
 
-	UpdateTimeSheet(srv *sheets.Service) error
+	UpdateTimeSheet(srv *sheets.Service, getExpertise func(string) string) error
 	UpdateProjectsSheet(srv *sheets.Service, projects []entities.Project) error
 	UpdatePeopleSheet(srv *sheets.Service, employees []entities.Employee) error
 	UpdateExpertiseSheet(srv *sheets.Service, people []entities.Expertise) error
@@ -148,7 +150,15 @@ func (s *Service) UpdateGoogleSheets() error {
 		return err
 	}
 
-	if err := s.external.UpdateTimeSheet(srv); err != nil {
+	getExpertise := func(id string) string {
+		expertise, err := s.repo.GetExtertiseByID(context.Background(), id)
+		if err != nil {
+			return ""
+		}
+		return expertise.Name
+	}
+
+	if err := s.external.UpdateTimeSheet(srv, getExpertise); err != nil {
 		return err
 	}
 

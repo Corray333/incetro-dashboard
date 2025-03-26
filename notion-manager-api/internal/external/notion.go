@@ -957,6 +957,78 @@ type Time struct {
 				Number float64 `json:"number"`
 			} `json:"formula"`
 		} `json:"Номер месяца"`
+		// Добавленные поля:
+		PH struct {
+			Formula struct {
+				Number float64 `json:"number"`
+			} `json:"formula"`
+		} `json:"PH"`
+		Expertise struct {
+			Rollup struct {
+				Array []struct {
+					Relation []struct {
+						ID string `json:"id"`
+					} `json:"relation"`
+				} `json:"array"`
+			} `json:"rollup"`
+		} `json:"Экспертиза"`
+		Overtime struct {
+			Checkbox bool `json:"checkbox"`
+		} `json:"Сверхурочные"`
+		PCB struct {
+			Formula struct {
+				Boolean bool `json:"boolean"`
+			} `json:"formula"`
+		} `json:"PC-B"`
+		TaskEstimate struct {
+			Formula struct {
+				String string `json:"string"`
+			} `json:"formula"`
+		} `json:"Оценка задачи"`
+		Person struct {
+			Relation []struct {
+				ID string `json:"id"`
+			} `json:"relation"`
+		} `json:"Person"`
+		IDField struct {
+			UniqueID struct {
+				Prefix string `json:"prefix"`
+				Number int    `json:"number"`
+			} `json:"unique_id"`
+		} `json:"ID"`
+		ET struct {
+			Formula struct {
+				String string `json:"string"`
+			} `json:"formula"`
+		} `json:"ET"`
+		Priority struct {
+			Rollup struct {
+				Array []struct {
+					Select struct {
+						Name string `json:"name"`
+					} `json:"select"`
+				} `json:"array"`
+			} `json:"rollup"`
+		} `json:"Приоритет"`
+		MainTask struct {
+			Rollup struct {
+				Array []struct {
+					Formula struct {
+						String string `json:"string"`
+					} `json:"formula"`
+				} `json:"array"`
+			} `json:"rollup"`
+		} `json:"Главная задача"`
+		TargetTask struct {
+			Formula struct {
+				String string `json:"string"`
+			} `json:"formula"`
+		} `json:"Целевая задача"`
+		CR struct {
+			Formula struct {
+				Boolean bool `json:"boolean"`
+			} `json:"formula"`
+		} `json:"CR"`
 	} `json:"properties"`
 	URL string `json:"url"`
 }
