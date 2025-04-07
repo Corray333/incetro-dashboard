@@ -12,6 +12,16 @@ services:
       - ./secrets:/app/secrets
     command: make run
   
+  tg-task-parser:
+    build: 
+      context: ./tg-task-parser
+      dockerfile: Dockerfile
+    volumes:
+      - ./tg-task-parser:/app
+      - .env:/app/.env
+      - ./configs/notion-manager-api:/app/configs
+    command: make run
+  
   app:
     image: node:latest
     volumes:
