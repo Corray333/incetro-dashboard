@@ -38,22 +38,24 @@ func TaskFromMessage(mainText, replyText string) (*Task, error) {
 		fullText = replyText + " " + mainText
 	}
 
-	hashtags := hashtagRegex.FindAllString(fullText, -1)
-	fmt.Println(fullText, hashtags)
+	// Найдем все хэштэги и упоминания без префиксов
+	hashtags := hashtagRegex.FindAllStringSubmatch(fullText, -1)
 	for _, hashtag := range hashtags {
-		task.Hashtags = append(task.Hashtags, Hashtag(hashtag))
+		task.Hashtags = append(task.Hashtags, Hashtag(hashtag[1])) // Добавляем без "#"
 	}
 
-	mentions := mentionRegex.FindAllString(fullText, -1)
+	mentions := mentionRegex.FindAllStringSubmatch(fullText, -1)
 	for _, mention := range mentions {
-		task.Mentions = append(task.Mentions, Mention(mention))
+		task.Mentions = append(task.Mentions, Mention(mention[1])) // Добавляем без "@"
 	}
 
+	// Обработка основного текста без хэштэгов и упоминаний
 	taskText := replyText
 	if taskText == "" {
 		taskText = mainText
 	}
 
+	// Убираем хэштэги и упоминания из текста
 	taskText = hashtagRegex.ReplaceAllString(taskText, "")
 	taskText = mentionRegex.ReplaceAllString(taskText, "")
 	taskText = strings.TrimSpace(taskText)

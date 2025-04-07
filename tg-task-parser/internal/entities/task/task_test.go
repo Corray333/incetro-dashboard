@@ -28,8 +28,8 @@ func TestTaskFromMessage(t *testing.T) {
 			replyText: "",
 			wantTask: &Task{
 				Text:     "Нужно исправить баг",
-				Hashtags: []Hashtag{"#golang"},
-				Mentions: []Mention{"@user1"},
+				Hashtags: []Hashtag{"golang"},
+				Mentions: []Mention{"user1"},
 			},
 		},
 		{
@@ -38,8 +38,8 @@ func TestTaskFromMessage(t *testing.T) {
 			replyText: "Нужно исправить баг #golang #задача @user1",
 			wantTask: &Task{
 				Text:     "Нужно исправить баг",
-				Hashtags: []Hashtag{"#golang", "#задача"},
-				Mentions: []Mention{"@user1", "@user2"},
+				Hashtags: []Hashtag{"golang", "задача"},
+				Mentions: []Mention{"user1", "user2"},
 			},
 		},
 		{

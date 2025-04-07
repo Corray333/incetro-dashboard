@@ -7,7 +7,7 @@ import (
 )
 
 type app struct {
-	store     *repositories.Storage
+	store     *repositories.Repository
 	service   *service.Service
 	transport *transport.Transport
 }
@@ -15,7 +15,7 @@ type app struct {
 func New() *app {
 
 	storage := repositories.New()
-	service := service.New(storage)
+	service := service.New(service.WithRepository(storage))
 
 	transport := transport.New(service)
 
@@ -29,6 +29,5 @@ func New() *app {
 }
 
 func (app *app) Run() {
-	go app.service.Run()
 	app.transport.Run()
 }
