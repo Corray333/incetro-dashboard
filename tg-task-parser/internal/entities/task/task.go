@@ -12,6 +12,10 @@ import (
 
 type Hashtag string
 
+const (
+	HashtagTask = Hashtag("задача")
+)
+
 type Mention string
 
 type Task struct {

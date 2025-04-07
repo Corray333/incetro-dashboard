@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"log/slog"
+	"slices"
 
 	"github.com/corray333/tg-task-parser/internal/entities/task"
 )
@@ -16,6 +17,10 @@ func (s *Service) CreateTask(ctx context.Context, message string, replyMessage s
 	if err != nil {
 		slog.Error("error while creating task from message", "error", err)
 		return err
+	}
+
+	if !slices.Contains(newTask.Hashtags, task.HashtagTask) {
+		return nil
 	}
 	if err := s.taskCreator.CreateTask(ctx, newTask); err != nil {
 		slog.Error("error while creating task in repository", "error", err)
