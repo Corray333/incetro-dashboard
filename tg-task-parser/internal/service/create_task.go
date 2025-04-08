@@ -6,23 +6,32 @@ import (
 	"slices"
 
 	"github.com/corray333/tg-task-parser/internal/entities/task"
+	"github.com/google/uuid"
 )
 
 type taskCreator interface {
-	CreateTask(ctx context.Context, task *task.Task) error
+	CreateTask(ctx context.Context, task *task.Task, projectID uuid.UUID) error
 }
 
-func (s *Service) CreateTask(ctx context.Context, message string, replyMessage string) error {
+type projectByChatIDGetter interface {
+	GetProjectByChatID(ctx context.Context, chatID int64) (uuid.UUID, error)
+}
+
+func (s *Service) CreateTask(ctx context.Context, chatID int64, message string, replyMessage string) error {
+	projectID, err := s.projectByChatIDGetter.GetProjectByChatID(ctx, chatID)
+	if err != nil {
+		return err
+	}
+
 	newTask, err := task.TaskFromMessage(message, replyMessage)
 	if err != nil {
-		slog.Error("error while creating task from message", "error", err)
 		return err
 	}
 
 	if !slices.Contains(newTask.Hashtags, task.HashtagTask) {
 		return nil
 	}
-	if err := s.taskCreator.CreateTask(ctx, newTask); err != nil {
+	if err := s.taskCreator.CreateTask(ctx, newTask, projectID); err != nil {
 		slog.Error("error while creating task in repository", "error", err)
 		return err
 	}

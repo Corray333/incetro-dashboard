@@ -1,8 +1,3 @@
-// @title Task Tracker API
-// @version 1.0
-// @description API for task tracking using notion
-// @BasePath /tracker
-
 package transport
 
 import (
@@ -11,7 +6,9 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/corray333/tg-task-parser/internal/entities/project"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/google/uuid"
 )
 
 type Transport struct {
@@ -20,7 +17,9 @@ type Transport struct {
 }
 
 type service interface {
-	CreateTask(ctx context.Context, message string, replyMessage string) error
+	CreateTask(ctx context.Context, chatID int64, message string, replyMessage string) error
+	GetProjects(ctx context.Context) ([]project.Project, error)
+	LinkChatToProject(ctx context.Context, chatID int64, projectID uuid.UUID) error
 }
 
 func New(service service) *Transport {
@@ -48,16 +47,35 @@ func (t *Transport) Run() {
 	slog.Info("Listening for updates...")
 
 	for update := range updates {
-		go t.handleMessage(update.Message)
+		go t.handleMessage(update)
 	}
 }
 
-func (t *Transport) handleMessage(message *tgbotapi.Message) {
+func (t *Transport) handleMessage(update tgbotapi.Update) {
+	if update.CallbackQuery != nil {
+		t.handleCallbackQuery(update)
+		return
+	}
+
+	message := update.Message
 	if message == nil {
 		return
 	}
 
-	// Получаем текст основного сообщения и текста-реплая (если есть)
+	if message.NewChatMembers != nil {
+		for _, member := range message.NewChatMembers {
+			if member.ID == t.bot.Self.ID {
+				t.handleBotAddedToChat(message.Chat.ID)
+				return
+			}
+		}
+		return
+	}
+
+	if message.Text == "" {
+		return
+	}
+
 	mainText := message.Text
 	var replyText string
 	if message.ReplyToMessage != nil {
@@ -65,7 +83,7 @@ func (t *Transport) handleMessage(message *tgbotapi.Message) {
 	}
 
 	// Создаем задачу
-	err := t.service.CreateTask(context.Background(), mainText, replyText)
+	err := t.service.CreateTask(context.Background(), message.Chat.ID, mainText, replyText)
 	if err != nil {
 		slog.Error("Error creating task", "error", err)
 		// Отправляем сообщение об ошибке в Telegram
@@ -75,5 +93,71 @@ func (t *Transport) handleMessage(message *tgbotapi.Message) {
 			slog.Error("Error sending error message", "error", err)
 		}
 		return
+	}
+}
+
+func (t *Transport) handleBotAddedToChat(chatID int64) {
+	projects, err := t.service.GetProjects(context.Background())
+	if err != nil {
+		slog.Error("Error getting projects", "error", err)
+		msg := tgbotapi.NewMessage(chatID, "Error getting projects")
+		t.bot.Send(msg)
+		return
+	}
+
+	var keyboard [][]tgbotapi.InlineKeyboardButton
+	var row []tgbotapi.InlineKeyboardButton
+
+	for i, project := range projects {
+		button := tgbotapi.NewInlineKeyboardButtonData(project.Name, project.ID.String())
+		row = append(row, button)
+
+		// Add a row every 2 buttons or at the end
+		if len(row) == 2 || i == len(projects)-1 {
+			keyboard = append(keyboard, row)
+			row = nil // Reset row
+		}
+	}
+
+	msg := tgbotapi.NewMessage(chatID, "Выберете проект:")
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
+
+	_, err = t.bot.Send(msg)
+	if err != nil {
+		slog.Error("Error sending message with inline keyboard", "error", err)
+	}
+}
+
+func (t *Transport) handleCallbackQuery(update tgbotapi.Update) {
+	callbackQuery := update.CallbackQuery
+	if callbackQuery == nil {
+		return
+	}
+
+	projectIDStr := callbackQuery.Data
+	projectID, err := uuid.Parse(projectIDStr)
+	if err != nil {
+		slog.Error("Error parsing project ID", "error", err)
+		return
+	}
+
+	err = t.service.LinkChatToProject(context.Background(), callbackQuery.Message.Chat.ID, projectID)
+	if err != nil {
+		slog.Error("Error setting project in chat", "error", err)
+		return
+	}
+
+	// Delete message and send callback answer
+	msg := tgbotapi.NewDeleteMessage(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID)
+	_, err = t.bot.Request(msg)
+	if err != nil {
+		slog.Error("Error deleting message", "error", err)
+		return
+	}
+
+	callback := tgbotapi.NewCallback(callbackQuery.ID, "Проект выбран")
+	_, err = t.bot.Request(callback)
+	if err != nil {
+		slog.Error("Error sending callback", "error", err)
 	}
 }

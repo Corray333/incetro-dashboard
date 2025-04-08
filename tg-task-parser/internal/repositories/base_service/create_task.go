@@ -1,43 +1,20 @@
-package repositories
+package base_service
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/corray333/tg-task-parser/internal/entities/task"
 	"github.com/corray333/tg-task-parser/pkg/notion"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
-
-type Repository struct {
-	db *sqlx.DB
-}
-
-func New() *Repository {
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"), os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_DB_NAME"))
-	db, err := sqlx.Open("postgres", connStr)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := db.Ping(); err != nil {
-		panic(err)
-	}
-
-	return &Repository{
-		db: db,
-	}
-}
 
 type PageCreated struct {
 	ID string `json:"id"`
 }
 
-func (r *Repository) CreateTask(ctx context.Context, task *task.Task) error {
+func (r *BaseService) CreateTask(ctx context.Context, task *task.Task, projectID uuid.UUID) error {
 	req := map[string]interface{}{
 		"Task": map[string]interface{}{
 			"type": "title",
@@ -78,6 +55,14 @@ func (r *Repository) CreateTask(ctx context.Context, task *task.Task) error {
 				}
 				return tags
 			}(),
+		},
+		"Продукт": map[string]interface{}{
+			"type": "relation",
+			"relation": []map[string]interface{}{
+				{
+					"id": projectID.String(),
+				},
+			},
 		},
 	}
 
