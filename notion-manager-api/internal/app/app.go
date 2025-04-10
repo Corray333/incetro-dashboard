@@ -24,6 +24,7 @@ func New() *app {
 	// val, _ := storage.GetEmployees()
 	// fmt.Printf("%+v\n", val)
 	service := service.New(storage, external)
+	// fmt.Println(service.UpdateProjectsEstimates(context.Background()))
 
 	transport := transport.New(service)
 	transport.RegisterRoutes()

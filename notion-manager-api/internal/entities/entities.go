@@ -39,6 +39,7 @@ type Task struct {
 	Tags       []string `json:"tags" db:"tags"`
 	StartTime  int64    `json:"startTime" db:"start_time"`
 	EndTime    int64    `json:"endTime" db:"end_time"`
+	Estimate   float64  `json:"estimate" db:"estimate"`
 }
 
 func (t Task) ToMsg() string {
@@ -64,6 +65,10 @@ type Project struct {
 	Manager  string `json:"manager" db:"manager" example:"Mark"`
 
 	ManagerID string `json:"managerID" db:"manager_id"`
+
+	TotalHours       float64 `json:"-" db:"total_hours"`
+	ManagementTaskID string  `json:"-" db:"management_task_id"`
+	TestingTaskID    string  `json:"-" db:"testing_task_id"`
 }
 
 type Employee struct {

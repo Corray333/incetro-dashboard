@@ -44,6 +44,7 @@ type repository interface {
 	GetExpertises() (expertises []entities.Expertise, err error)
 
 	GetExtertiseByID(ctx context.Context, id string) (expertise entities.Expertise, err error)
+	GetProjectsWithHoursSums(ctx context.Context) ([]entities.Project, error)
 }
 
 type external interface {
@@ -69,6 +70,8 @@ type external interface {
 	UpdateExpertiseSheet(srv *sheets.Service, people []entities.Expertise) error
 
 	GetExpertise() (expertises []entities.Expertise, err error)
+
+	UpdateTaskEstimate(ctx context.Context, taskID string, estimate float64) error
 }
 
 type Service struct {
@@ -328,6 +331,10 @@ func (s *Service) Actualize() (updated bool, err error) {
 		return false, err
 	}
 
+	if err := s.updateProjectsEstimates(context.Background()); err != nil {
+		return false, err
+	}
+
 	return len(employees) > 0 || len(projects) > 0 || len(tasks) > 0, nil
 }
 
@@ -445,5 +452,30 @@ func (s *Service) CreateMindmapTasks(mindmapData string) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *Service) updateProjectsEstimates(ctx context.Context) error {
+	projects, err := s.repo.GetProjectsWithHoursSums(ctx)
+	if err != nil {
+		slog.Error("Error getting projects with hours sums", slog.String("error", err.Error()))
+		return err
+	}
+
+	for _, project := range projects {
+		fmt.Println(project.ManagementTaskID, project.TestingTaskID, project.TotalHours)
+		if project.ManagementTaskID != "" {
+			if err := s.external.UpdateTaskEstimate(ctx, project.ManagementTaskID, (project.TotalHours*0.2*100)/100); err != nil {
+				slog.Error("Error updating task estimate", slog.String("error", err.Error()))
+				return err
+			}
+		}
+		if project.TestingTaskID != "" {
+			if err := s.external.UpdateTaskEstimate(ctx, project.TestingTaskID, (project.TotalHours*0.15*100)/100); err != nil {
+				slog.Error("Error updating task estimate", slog.String("error", err.Error()))
+				return err
+			}
+		}
+	}
 	return nil
 }

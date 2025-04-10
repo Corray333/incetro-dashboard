@@ -1,6 +1,7 @@
 package external
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -499,6 +500,7 @@ func (e *External) GetTasks(timeFilterType string, lastSynced int64, startCursor
 				}
 				return endTime.Unix()
 			}(),
+			Estimate: w.Properties.Estimated.Number,
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)
@@ -520,6 +522,20 @@ func (e *External) GetTasks(timeFilterType string, lastSynced int64, startCursor
 	}
 
 	return tasks, lastUpdate, nil
+}
+
+func (e *External) UpdateTaskEstimate(ctx context.Context, taskID string, estimate float64) error {
+	req := map[string]interface{}{
+		"Оценка": map[string]interface{}{
+			"number": estimate,
+		},
+	}
+
+	_, err := notion.UpdatePage(taskID, req)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (e *External) GetNotCorrectPersonTimes() (times []entities.Time, lastUpdate int64, err error) {

@@ -54,6 +54,36 @@ func (s *Storage) GetProjects(userID string) (projects []entities.Project, err e
 	return projects, nil
 }
 
+func (s *Storage) GetProjectsWithHoursSums(ctx context.Context) ([]entities.Project, error) {
+	projects := []entities.Project{}
+	if err := s.db.Select(&projects, `
+		SELECT
+			p.project_id,
+			SUM(t.estimate) FILTER (
+				WHERE t.title NOT IN (
+					'Менеджмент ' || p.name,
+					'Тестирование ' || p.name
+				)
+			) AS total_hours,
+			COALESCE(MAX(t.task_id) FILTER (
+				WHERE t.title = 'Менеджмент ' || p.name
+			)::text, '') AS management_task_id,
+			COALESCE(MAX(t.task_id) FILTER (
+				WHERE t.title = 'Тестирование ' || p.name
+			)::text, '') AS testing_task_id
+		FROM
+			projects p
+		JOIN
+			tasks t ON p.project_id = t.project_id
+		GROUP BY
+			p.project_id, p.name;
+	`); err != nil {
+		slog.Error("Error while getting projects with hours sums", "error", err)
+		return nil, err
+	}
+	return projects, nil
+}
+
 func (s *Storage) GetActiveTasks(userID string, projectID string) (tasks []entities.Task, err error) {
 	statuses := []string{"Формируется", "Можно делать", "На паузе", "Ожидание", "В работе", "Надо обсудить", "Код-ревью", "Внутренняя проверка"}
 	query := `
@@ -176,7 +206,7 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 	defer tx.Rollback()
 
 	for _, task := range tasks {
-		_, err := tx.Exec("INSERT INTO tasks (task_id, project_id, employee_id, title, status, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (task_id) DO UPDATE SET title = $4, status = $5, employee_id = $3, project_id = $2, start_time = $6, end_time = $7", task.ID, task.ProjectID, task.EmployeeID, task.Title, task.Status, task.StartTime, task.EndTime)
+		_, err := tx.Exec("INSERT INTO tasks (task_id, project_id, employee_id, title, status, start_time, end_time, estimate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (task_id) DO UPDATE SET title = $4, status = $5, employee_id = $3, project_id = $2, start_time = $6, end_time = $7, estimate = $8", task.ID, task.ProjectID, task.EmployeeID, task.Title, task.Status, task.StartTime, task.EndTime, task.Estimate)
 		if err != nil {
 			slog.Error("Error setting tasks", slog.String("error", err.Error()))
 			return err
