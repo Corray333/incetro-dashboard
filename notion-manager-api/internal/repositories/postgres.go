@@ -59,12 +59,12 @@ func (s *Storage) GetProjectsWithHoursSums(ctx context.Context) ([]entities.Proj
 	if err := s.db.Select(&projects, `
 		SELECT
 			p.project_id,
-			SUM(t.estimate) FILTER (
+			COALESCE(SUM(t.estimate) FILTER (
 				WHERE t.title NOT IN (
 					'Менеджмент ' || p.name,
 					'Тестирование ' || p.name
 				)
-			) AS total_hours,
+			), 0) AS total_hours,
 			COALESCE(MAX(t.task_id) FILTER (
 				WHERE t.title = 'Менеджмент ' || p.name
 			)::text, '') AS management_task_id,
