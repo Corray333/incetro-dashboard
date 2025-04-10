@@ -463,7 +463,6 @@ func (s *Service) updateProjectsEstimates(ctx context.Context) error {
 	}
 
 	for _, project := range projects {
-		fmt.Println(project.ManagementTaskID, project.TestingTaskID, project.TotalHours)
 		if project.ManagementTaskID != "" {
 			if err := s.external.UpdateTaskEstimate(ctx, project.ManagementTaskID, (project.TotalHours*0.2*100)/100); err != nil {
 				slog.Error("Error updating task estimate", slog.String("error", err.Error()))
