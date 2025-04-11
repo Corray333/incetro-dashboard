@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/pressly/goose/v3"
 )
 
 type Repository struct {
@@ -26,13 +25,13 @@ func NewRepository() *Repository {
 		panic(err)
 	}
 
-	if err := goose.SetDialect("postgres"); err != nil {
-		panic(err)
-	}
+	// if err := goose.SetDialect("postgres"); err != nil {
+	// 	panic(err)
+	// }
 
-	if err := goose.Up(db.DB, "../migrations"); err != nil {
-		panic(err)
-	}
+	// if err := goose.Up(db.DB, "../migrations"); err != nil {
+	// 	panic(err)
+	// }
 
 	return &Repository{
 		db: db,
@@ -49,7 +48,6 @@ func (r *Repository) LinkChatToProject(ctx context.Context, chatID int64, projec
 
 func (r *Repository) GetProjectByChatID(ctx context.Context, chatID int64) (uuid.UUID, error) {
 	var projectID uuid.UUID
-	fmt.Println(chatID)
 	if err := r.db.Get(&projectID, "SELECT project_id FROM chats WHERE chat_id = $1", chatID); err != nil {
 		slog.Error("Error while getting project by chat ID", "error", err)
 		return uuid.Nil, err

@@ -2,9 +2,11 @@ package transport
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/corray333/tg-task-parser/internal/entities/project"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -17,7 +19,7 @@ type Transport struct {
 }
 
 type service interface {
-	CreateTask(ctx context.Context, chatID int64, message string, replyMessage string) error
+	CreateTask(ctx context.Context, chatID int64, message string, replyMessage string) (string, error)
 	GetProjects(ctx context.Context) ([]project.Project, error)
 	LinkChatToProject(ctx context.Context, chatID int64, projectID uuid.UUID) error
 }
@@ -83,15 +85,24 @@ func (t *Transport) handleMessage(update tgbotapi.Update) {
 	}
 
 	// Создаем задачу
-	err := t.service.CreateTask(context.Background(), message.Chat.ID, mainText, replyText)
+	pageID, err := t.service.CreateTask(context.Background(), message.Chat.ID, mainText, replyText)
 	if err != nil {
 		slog.Error("Error creating task", "error", err)
 		// Отправляем сообщение об ошибке в Telegram
-		msg := tgbotapi.NewMessage(message.Chat.ID, "Error creating task")
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Не удалось создать задачу")
 		_, err := t.bot.Send(msg)
 		if err != nil {
 			slog.Error("Error sending error message", "error", err)
 		}
+		return
+	}
+	if pageID == "" {
+		return
+	}
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("Задача создана: https://notion.so/%s", strings.ReplaceAll(pageID, "-", "")))
+	if _, err := t.bot.Send(msg); err != nil {
+		slog.Error("Error sending error message", "error", err)
 		return
 	}
 }

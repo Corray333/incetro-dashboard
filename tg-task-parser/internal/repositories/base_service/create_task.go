@@ -2,6 +2,7 @@ package base_service
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/corray333/tg-task-parser/internal/entities/task"
@@ -14,7 +15,7 @@ type PageCreated struct {
 	ID string `json:"id"`
 }
 
-func (r *BaseService) CreateTask(ctx context.Context, task *task.Task, projectID uuid.UUID) error {
+func (r *BaseService) CreateTask(ctx context.Context, task *task.Task, projectID uuid.UUID) (string, error) {
 	req := map[string]interface{}{
 		"Task": map[string]interface{}{
 			"type": "title",
@@ -67,11 +68,17 @@ func (r *BaseService) CreateTask(ctx context.Context, task *task.Task, projectID
 	}
 
 	// Создаем страницу задачи в Notion
-	_, err := notion.CreatePage(viper.GetString("notion.databases.tasks"), req, nil, "")
+	res, err := notion.CreatePage(viper.GetString("notion.databases.tasks"), req, nil, "")
 	if err != nil {
 		slog.Error("Notion error while creating task: " + err.Error())
-		return err
+		return "", err
 	}
 
-	return nil
+	var pageCreated PageCreated
+	if err := json.Unmarshal(res, &pageCreated); err != nil {
+		slog.Error("Error while unmarshaling page created: " + err.Error())
+		return "", err
+	}
+
+	return pageCreated.ID, nil
 }
