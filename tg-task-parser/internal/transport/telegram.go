@@ -3,19 +3,23 @@ package transport
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"strings"
 
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
+
 	"github.com/corray333/tg-task-parser/internal/entities/project"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 )
 
 type Transport struct {
-	service service
-	bot     *tgbotapi.BotAPI
+	service    service
+	bot        *gotgbot.Bot
+	dispatcher *ext.Dispatcher
+	updater    *ext.Updater
 }
 
 type service interface {
@@ -26,149 +30,143 @@ type service interface {
 
 func New(service service) *Transport {
 	token := os.Getenv("TASK_PARSER_BOT_TOKEN")
-
-	bot, err := tgbotapi.NewBotAPI(token)
+	bot, err := gotgbot.NewBot(token, nil)
 	if err != nil {
-		log.Fatal("Failed to create bot: ", err)
+		panic("failed to create bot: " + err.Error())
 	}
 
-	bot.Debug = true
+	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{
+		Error: func(bot *gotgbot.Bot, ctx *ext.Context, err error) ext.DispatcherAction {
+			slog.Error("Handler error", "error", err)
+			return ext.DispatcherActionNoop
+		},
+	})
 
-	return &Transport{
-		service: service,
-		bot:     bot,
+	updater := ext.NewUpdater(dispatcher, nil)
+
+	tr := &Transport{
+		service:    service,
+		bot:        bot,
+		dispatcher: dispatcher,
+		updater:    updater,
 	}
+
+	tr.registerHandlers()
+
+	return tr
+}
+
+func (t *Transport) registerHandlers() {
+	// Хендлер сообщений
+	t.dispatcher.AddHandler(handlers.NewMessage(nil, func(bot *gotgbot.Bot, ctx *ext.Context) error {
+		msg := ctx.EffectiveMessage
+		if msg == nil {
+			return nil
+		}
+
+		if msg.NewChatMembers != nil {
+			for _, member := range msg.NewChatMembers {
+				if member.Id == bot.User.Id {
+					return t.handleBotAddedToChat(bot, ctx)
+				}
+			}
+			return nil
+		}
+
+		var reply string
+		if msg.ReplyToMessage != nil {
+			reply = msg.ReplyToMessage.Text
+		}
+
+		pageID, err := t.service.CreateTask(context.Background(), msg.Chat.Id, msg.Text, reply)
+		if err != nil {
+			slog.Error("Error creating task", "error", err)
+			_, _ = msg.Reply(bot, "Не удалось создать задачу", nil)
+			return nil
+		}
+
+		if pageID == "" {
+			return nil
+		}
+
+		_, err = msg.Reply(bot, fmt.Sprintf("Задача создана: https://notion.so/%s", strings.ReplaceAll(pageID, "-", "")), nil)
+		if err != nil {
+			slog.Error("Error sending confirmation", "error", err)
+		}
+		return nil
+	}))
+
+	// Хендлер callback-кнопок
+	t.dispatcher.AddHandler(handlers.NewCallback(nil, func(bot *gotgbot.Bot, ctx *ext.Context) error {
+		cb := ctx.CallbackQuery
+		projectID, err := uuid.Parse(cb.Data)
+		if err != nil {
+			slog.Error("Invalid project UUID", "data", cb.Data)
+			return nil
+		}
+
+		err = t.service.LinkChatToProject(context.Background(), cb.Message.GetChat().Id, projectID)
+		if err != nil {
+			slog.Error("Error linking chat to project", "error", err)
+			return nil
+		}
+
+		_, _ = bot.DeleteMessage(cb.Message.GetChat().Id, cb.Message.GetMessageId(), nil)
+		_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+			Text: "Проект выбран",
+		})
+		return nil
+	}))
 }
 
 func (t *Transport) Run() {
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates := t.bot.GetUpdatesChan(u)
-
-	slog.Info("Listening for updates...")
-
-	for update := range updates {
-		go t.handleMessage(update)
-	}
-}
-
-func (t *Transport) handleMessage(update tgbotapi.Update) {
-	if update.CallbackQuery != nil {
-		t.handleCallbackQuery(update)
-		return
-	}
-
-	message := update.Message
-	if message == nil {
-		return
-	}
-
-	if message.NewChatMembers != nil {
-		for _, member := range message.NewChatMembers {
-			if member.ID == t.bot.Self.ID {
-				t.handleBotAddedToChat(message.Chat.ID)
-				return
-			}
-		}
-		return
-	}
-
-	if message.Text == "" {
-		return
-	}
-
-	mainText := message.Text
-	var replyText string
-	if message.ReplyToMessage != nil {
-		replyText = message.ReplyToMessage.Text
-	}
-
-	// Создаем задачу
-	pageID, err := t.service.CreateTask(context.Background(), message.Chat.ID, mainText, replyText)
+	slog.Info("Bot is running...")
+	err := t.updater.StartPolling(t.bot, &ext.PollingOpts{
+		DropPendingUpdates: true,
+		GetUpdatesOpts: &gotgbot.GetUpdatesOpts{
+			Timeout: 10,
+		},
+	})
 	if err != nil {
-		slog.Error("Error creating task", "error", err)
-		// Отправляем сообщение об ошибке в Telegram
-		msg := tgbotapi.NewMessage(message.Chat.ID, "Не удалось создать задачу")
-		_, err := t.bot.Send(msg)
-		if err != nil {
-			slog.Error("Error sending error message", "error", err)
-		}
-		return
+		panic("failed to start polling: " + err.Error())
 	}
-	if pageID == "" {
-		return
-	}
-
-	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("Задача создана: https://notion.so/%s", strings.ReplaceAll(pageID, "-", "")))
-	if _, err := t.bot.Send(msg); err != nil {
-		slog.Error("Error sending error message", "error", err)
-		return
-	}
+	t.updater.Idle()
 }
 
-func (t *Transport) handleBotAddedToChat(chatID int64) {
+func (t *Transport) handleBotAddedToChat(bot *gotgbot.Bot, ctx *ext.Context) error {
 	projects, err := t.service.GetProjects(context.Background())
 	if err != nil {
-		slog.Error("Error getting projects", "error", err)
-		msg := tgbotapi.NewMessage(chatID, "Error getting projects")
-		t.bot.Send(msg)
-		return
+		slog.Error("Failed to get projects", "error", err)
+		_, _ = ctx.EffectiveMessage.Reply(bot, "Ошибка при получении проектов", nil)
+		return nil
 	}
 
-	var keyboard [][]tgbotapi.InlineKeyboardButton
-	var row []tgbotapi.InlineKeyboardButton
+	var keyboard [][]gotgbot.InlineKeyboardButton
+	var row []gotgbot.InlineKeyboardButton
 
-	for i, project := range projects {
-		button := tgbotapi.NewInlineKeyboardButtonData(project.Name, project.ID.String())
-		row = append(row, button)
-
-		// Add a row every 2 buttons or at the end
-		if len(row) == 2 || i == len(projects)-1 {
+	for _, p := range projects {
+		btn := gotgbot.InlineKeyboardButton{
+			Text:         p.Name,
+			CallbackData: p.ID.String(),
+		}
+		row = append(row, btn)
+		if len(row) == 2 {
 			keyboard = append(keyboard, row)
-			row = nil // Reset row
+			row = nil
 		}
 	}
+	if len(row) > 0 {
+		keyboard = append(keyboard, row)
+	}
 
-	msg := tgbotapi.NewMessage(chatID, "Выберете проект:")
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
+	_, err = ctx.EffectiveMessage.Reply(bot, "Выберете проект:", &gotgbot.SendMessageOpts{
+		ReplyMarkup: &gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: keyboard,
+		},
+	})
 
-	_, err = t.bot.Send(msg)
 	if err != nil {
-		slog.Error("Error sending message with inline keyboard", "error", err)
+		slog.Error("Failed to send inline keyboard", "error", err)
 	}
-}
-
-func (t *Transport) handleCallbackQuery(update tgbotapi.Update) {
-	callbackQuery := update.CallbackQuery
-	if callbackQuery == nil {
-		return
-	}
-
-	projectIDStr := callbackQuery.Data
-	projectID, err := uuid.Parse(projectIDStr)
-	if err != nil {
-		slog.Error("Error parsing project ID", "error", err)
-		return
-	}
-
-	err = t.service.LinkChatToProject(context.Background(), callbackQuery.Message.Chat.ID, projectID)
-	if err != nil {
-		slog.Error("Error setting project in chat", "error", err)
-		return
-	}
-
-	// Delete message and send callback answer
-	msg := tgbotapi.NewDeleteMessage(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID)
-	_, err = t.bot.Request(msg)
-	if err != nil {
-		slog.Error("Error deleting message", "error", err)
-		return
-	}
-
-	callback := tgbotapi.NewCallback(callbackQuery.ID, "Проект выбран")
-	_, err = t.bot.Request(callback)
-	if err != nil {
-		slog.Error("Error sending callback", "error", err)
-	}
+	return nil
 }
