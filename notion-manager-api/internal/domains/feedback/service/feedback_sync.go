@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/Corray333/employee_dashboard/internal/domains/feedback/entities/feedback"
-	"github.com/spf13/viper"
 )
 
 type feedbackLastUpdateTimeGetter interface {
@@ -26,11 +26,14 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("Updating feedback", "time", lastUpdateTime)
 
 	feedbacks, err := s.feedbacksRawLister.ListFeedback(ctx, lastUpdateTime)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Feedbacks: ", feedbacks)
 
 	for _, feedback := range feedbacks {
 		if err := s.feedbackSetter.SetFeedback(ctx, &feedback); err != nil {
@@ -46,7 +49,7 @@ func (s *FeedbackService) FeedbackSync(ctx context.Context) {
 		slog.Error("Notion feedback sync error", "error", err)
 	}
 
-	ticker := time.NewTicker(viper.GetDuration("notion.sync_interval"))
+	ticker := time.NewTicker(time.Minute)
 	for {
 		select {
 		case <-ticker.C:
