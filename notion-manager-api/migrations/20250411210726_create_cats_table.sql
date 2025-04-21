@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE chats (
+CREATE TABLE IF NOT EXISTS chats (
     chat_id BIGINT NOT NULL,
     project_id UUID NOT NULL
 );
