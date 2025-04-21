@@ -409,7 +409,7 @@ func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Exper
 	defer tx.Rollback()
 
 	for _, expertise := range expertises {
-		_, err := tx.ExecContext(ctx, "INSERT INTO expertise (expertise_id, name, direction, description) VALUES ($1, $2, $3, $4) ON CONFLICT (expertise_id) DO UPDATE SET direction = $3, description = $4", expertise.ID, expertise.Name, expertise.Direction, expertise.Description)
+		_, err := tx.Exec("INSERT INTO expertise (expertise_id, name, direction, description) VALUES ($1, $2, $3, $4) ON CONFLICT (expertise_id) DO UPDATE SET direction = $3, description = $4", expertise.ID, expertise.Name, expertise.Direction, expertise.Description)
 		if err != nil {
 			slog.Error("error setting expertises: " + err.Error())
 			return err

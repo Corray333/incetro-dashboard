@@ -31,7 +31,7 @@ func (r *FeedbackPostgresRepository) ListFeedbacks(ctx context.Context, filter *
 	}
 
 	var feedbacks []feedbackPostgres
-	err = r.DB().SelectContext(ctx, &feedbacks, sqlQuery, args...)
+	err = r.DB().Select(&feedbacks, sqlQuery, args...)
 	if err != nil {
 		slog.Error("Error executing SQL query", "error", err)
 		return nil, err
