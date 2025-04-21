@@ -31,7 +31,7 @@ func (r *NotionRepository) AnswerFeedback(ctx context.Context, feedbackID uuid.U
 	return nil
 }
 
-func (r *NotionRepository) NewFeedback(ctx context.Context, feedback string) (uuid.UUID, error) {
+func (r *NotionRepository) NewFeedback(ctx context.Context, projectID uuid.UUID, feedback string) (uuid.UUID, error) {
 
 	newPageProperties := map[string]interface{}{
 		"Name": map[string]interface{}{
@@ -41,6 +41,13 @@ func (r *NotionRepository) NewFeedback(ctx context.Context, feedback string) (uu
 					"text": map[string]string{
 						"content": feedback,
 					},
+				},
+			},
+		},
+		"Проект": map[string]interface{}{
+			"relation": []map[string]interface{}{
+				{
+					"id": projectID.String(),
 				},
 			},
 		},
