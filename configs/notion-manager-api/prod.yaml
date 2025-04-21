@@ -21,9 +21,11 @@ cors:
   max_age: 300
 
 notion:
+  sync_interval: 5m
   databases:
     projects: "fabaf12623a84b958b7d9fd780e0f7b8"
     tasks: "42fcf76e4ea2407ca3b8d71674a3fef8"
     times: "36b8bd637246476db6fb51fce18e795f"
     employees: "6807e199ff4247daac765cd9f29c184d"
     expertise: "f86c3388749c412c801e6edf1a8dfc22"
+    feedback: "1ca27b05040480a79afbf179126afd10"

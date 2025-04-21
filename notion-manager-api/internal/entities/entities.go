@@ -1,6 +1,9 @@
 package entities
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type MsgCreator interface {
 	ToMsg() string
@@ -93,11 +96,12 @@ type Employee struct {
 }
 
 type System struct {
-	ID                   int   `json:"id" db:"id"`
-	ProjectsDBLastSynced int64 `json:"projectsDBLastSynced" db:"projects_db_last_sync"`
-	TasksDBLastSynced    int64 `json:"tasksDBLastSynced" db:"tasks_db_last_sync"`
-	EmployeeDBLastSynced int64 `json:"employeeDBLastSynced" db:"employee_db_last_sync"`
-	TimesDBLastSynced    int64 `json:"timesDBLastSynced" db:"times_db_last_sync"`
+	ID                   int       `json:"id" db:"id"`
+	ProjectsDBLastSynced int64     `json:"projectsDBLastSynced" db:"projects_db_last_sync"`
+	TasksDBLastSynced    int64     `json:"tasksDBLastSynced" db:"tasks_db_last_sync"`
+	EmployeeDBLastSynced int64     `json:"employeeDBLastSynced" db:"employee_db_last_sync"`
+	TimesDBLastSynced    int64     `json:"timesDBLastSynced" db:"times_db_last_sync"`
+	FeedbackDBLastSynced time.Time `json:"feedbackDBLastSynced" db:"feedback_db_last_sync"`
 }
 
 type Time struct {

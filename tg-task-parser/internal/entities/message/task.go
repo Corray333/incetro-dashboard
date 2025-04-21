@@ -1,8 +1,7 @@
-package task
+package message
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
@@ -13,19 +12,22 @@ import (
 type Hashtag string
 
 const (
-	HashtagTask = Hashtag("задача")
+	HashtagTask     = Hashtag("задача")
+	HashtagFeedback = Hashtag("ос")
 )
 
 type Mention string
 
-type Task struct {
+type Message struct {
 	Text     string    `json:"text"`
 	Hashtags []Hashtag `json:"hashtags"`
 	Mentions []Mention `json:"mentions"`
+
+	Raw string `json:"raw"`
 }
 
-func TaskFromMessage(mainText, replyText string) (*Task, error) {
-	task := &Task{}
+func ParseMessage(mainText, replyText string) (*Message, error) {
+	task := &Message{}
 
 	hashtagRegex, err := regexp.Compile(`#([\p{L}\d_]+)`)
 	if err != nil {
@@ -73,7 +75,7 @@ func TaskFromMessage(mainText, replyText string) (*Task, error) {
 
 	task.Text = taskText
 
-	fmt.Printf("|%s|", task.Text)
+	task.Raw = fullText
 
 	return task, nil
 }

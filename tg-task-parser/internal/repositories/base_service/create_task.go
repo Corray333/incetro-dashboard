@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/corray333/tg-task-parser/internal/entities/task"
+	"github.com/corray333/tg-task-parser/internal/entities/message"
 	"github.com/corray333/tg-task-parser/pkg/notion"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
@@ -15,7 +15,7 @@ type PageCreated struct {
 	ID string `json:"id"`
 }
 
-func (r *BaseService) CreateTask(ctx context.Context, task *task.Task, projectID uuid.UUID) (string, error) {
+func (r *BaseService) CreateTask(ctx context.Context, task *message.Message, projectID uuid.UUID) (string, error) {
 	req := map[string]interface{}{
 		"Task": map[string]interface{}{
 			"type": "title",

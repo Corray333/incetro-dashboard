@@ -5,6 +5,8 @@ services:
     build: 
       context: ./notion-manager-api
       dockerfile: Dockerfile
+    ports:
+      - 50051:50051
     volumes:
       - ./notion-manager-api:/app
       - .env:/app/.env

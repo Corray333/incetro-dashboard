@@ -2,9 +2,11 @@ package app
 
 import (
 	"github.com/corray333/tg-task-parser/internal/repositories/base_service"
+	"github.com/corray333/tg-task-parser/internal/repositories/notion"
 	"github.com/corray333/tg-task-parser/internal/repositories/storage"
 	"github.com/corray333/tg-task-parser/internal/service"
 	"github.com/corray333/tg-task-parser/internal/transport"
+	notion_api "github.com/corray333/tg-task-parser/pkg/notion/v2"
 )
 
 type app struct {
@@ -17,7 +19,9 @@ func New() *app {
 
 	baseService := base_service.NewBaseService()
 	repository := storage.NewRepository()
-	service := service.New(service.WithBaseService(baseService), service.WithRepository(repository))
+	notionClient := notion_api.NewClient()
+	notionRepo := notion.NewNotionRepository(notionClient)
+	service := service.New(service.WithBaseService(baseService), service.WithRepository(repository), service.WithNotionRepo(notionRepo))
 
 	transport := transport.New(service)
 

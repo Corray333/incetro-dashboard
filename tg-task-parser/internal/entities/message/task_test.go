@@ -1,4 +1,4 @@
-package task
+package message
 
 import (
 	"reflect"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func sortTaskFields(task *Task) {
+func sortTaskFields(task *Message) {
 	sort.Slice(task.Hashtags, func(i, j int) bool {
 		return task.Hashtags[i] < task.Hashtags[j]
 	})
@@ -20,13 +20,13 @@ func TestTaskFromMessage(t *testing.T) {
 		name      string
 		mainText  string
 		replyText string
-		wantTask  *Task
+		wantTask  *Message
 	}{
 		{
 			name:      "basic task with hashtag and mention from main text",
 			mainText:  "Нужно исправить баг #golang @user1",
 			replyText: "",
-			wantTask: &Task{
+			wantTask: &Message{
 				Text:     "Нужно исправить баг",
 				Hashtags: []Hashtag{"golang"},
 				Mentions: []Mention{"user1"},
@@ -36,7 +36,7 @@ func TestTaskFromMessage(t *testing.T) {
 			name:      "task from reply text",
 			mainText:  "комментарий @user2",
 			replyText: "Нужно исправить баг #golang #задача @user1",
-			wantTask: &Task{
+			wantTask: &Message{
 				Text:     "Нужно исправить баг",
 				Hashtags: []Hashtag{"golang", "задача"},
 				Mentions: []Mention{"user1", "user2"},
@@ -46,7 +46,7 @@ func TestTaskFromMessage(t *testing.T) {
 			name:      "no hashtags or mentions",
 			mainText:  "Просто задача без тегов",
 			replyText: "",
-			wantTask: &Task{
+			wantTask: &Message{
 				Text:     "Просто задача без тегов",
 				Hashtags: nil,
 				Mentions: nil,
@@ -56,7 +56,7 @@ func TestTaskFromMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTask, err := TaskFromMessage(tt.mainText, tt.replyText)
+			gotTask, err := ParseMessage(tt.mainText, tt.replyText)
 			if err != nil {
 				t.Fatalf("TaskFromMessage() returned unexpected error: %v", err)
 			}

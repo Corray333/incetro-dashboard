@@ -1,44 +1,85 @@
 package app
 
 import (
+	"log/slog"
+	"net"
+
+	"github.com/Corray333/employee_dashboard/internal/domains/feedback"
 	"github.com/Corray333/employee_dashboard/internal/external"
+	"github.com/Corray333/employee_dashboard/internal/postgres"
 	"github.com/Corray333/employee_dashboard/internal/repositories"
 	"github.com/Corray333/employee_dashboard/internal/service"
 	"github.com/Corray333/employee_dashboard/internal/transport"
+	notion "github.com/Corray333/employee_dashboard/pkg/notion/v2"
+	"google.golang.org/grpc"
 )
 
 type app struct {
 	store     *repositories.Storage
 	service   *service.Service
 	transport *transport.Transport
+
+	grpcServer *grpc.Server
+
+	controllers []controller
+}
+
+type controller interface {
+	Build()
+	Run()
 }
 
 func New() *app {
 
+	app := &app{}
+
 	storage := repositories.New()
 	external := external.New()
-	// data, _ := external.GetSheetsTimes(1741718524, "", "")
-	// for i := range data {
-	// 	fmt.Println(data[i].Properties.WhatDid.Title, data[i].Properties.BHGS.Formula.String)
-	// }
-	// val, _ := storage.GetEmployees()
-	// fmt.Printf("%+v\n", val)
 	service := service.New(storage, external)
-	// fmt.Println(service.UpdateProjectsEstimates(context.Background()))
 
 	transport := transport.New(service)
 	transport.RegisterRoutes()
 
-	app := &app{
-		store:     storage,
-		service:   service,
-		transport: transport,
-	}
+	app.store = storage
+	app.service = service
+	app.transport = transport
+
+	grpcServer := grpc.NewServer()
+	app.grpcServer = grpcServer
+
+	store := postgres.New()
+	notionClient := notion.NewClient()
+
+	feedbackController := feedback.NewFeedbackController(grpcServer, store, notionClient)
+
+	app.controllers = append(app.controllers, feedbackController)
 
 	return app
 }
 
 func (app *app) Run() {
 	go app.service.Run()
+	for _, c := range app.controllers {
+		go c.Run()
+	}
+	go func() {
+		listener, err := net.Listen("tcp", ":50051")
+		if err != nil {
+			slog.Error("Failed to listen", "error", err)
+			panic(err)
+		}
+		slog.Info("Starting gRPC server")
+		if err := app.grpcServer.Serve(listener); err != nil {
+			slog.Error("Failed to serve", "error", err)
+			panic(err)
+		}
+	}()
 	app.transport.Run()
+}
+
+func (app *app) Init() *app {
+	for _, c := range app.controllers {
+		c.Build()
+	}
+	return app
 }
