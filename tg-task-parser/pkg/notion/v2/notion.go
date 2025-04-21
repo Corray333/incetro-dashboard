@@ -336,3 +336,52 @@ func (c *Client) AppendPageContent(pageID string, content interface{}) ([]byte, 
 
 	return body, nil
 }
+
+func (c *Client) AddCommentToPage(pageID string, text string) ([]byte, error) {
+	url := "https://api.notion.com/v1/comments"
+
+	reqBody := map[string]interface{}{
+		"parent": map[string]string{
+			"block_id": pageID,
+		},
+		"rich_text": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": map[string]string{
+					"content": text,
+				},
+			},
+		},
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", c.auth)
+	req.Header.Set("Notion-Version", "2022-06-28")
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.transport.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("notion error %s while adding comment to page %s", string(body), string(data))
+	}
+
+	return body, nil
+}

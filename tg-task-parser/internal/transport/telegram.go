@@ -43,6 +43,7 @@ type service interface {
 
 	RequestActiveFeedbacks(ctx context.Context, chatID int64, messageID int64, msg *message.Message) ([]feedback.Feedback, error)
 	AnswerFeedback(ctx context.Context, chatID, messageID int64, feedbackID uuid.UUID) error
+	CreateFeedback(ctx context.Context, chatID, messageID int64) (uuid.UUID, error)
 }
 
 func New(service service) *Transport {
@@ -136,6 +137,13 @@ func (t *Transport) registerHandlers() {
 				keyboard = append(keyboard, []gotgbot.InlineKeyboardButton{btn})
 			}
 
+			keyboard = append(keyboard, []gotgbot.InlineKeyboardButton{
+				gotgbot.InlineKeyboardButton{
+					Text:         "Новая обратная связь",
+					CallbackData: CallbackTypeChooseFeedback + "|" + uuid.Nil.String() + "|" + strconv.Itoa(int(msg.GetMessageId())),
+				},
+			})
+
 			_, err = msg.Reply(bot, MsgTextChooseFeedback, &gotgbot.SendMessageOpts{
 				ReplyMarkup: &gotgbot.InlineKeyboardMarkup{
 					InlineKeyboard: keyboard,
@@ -192,16 +200,36 @@ func (t *Transport) registerHandlers() {
 				return nil
 			}
 
-			if err := t.service.AnswerFeedback(context.Background(), cb.Message.GetChat().Id, int64(messageID), feedbackID); err != nil {
-				slog.Error("Error updating feedback", "error", err)
-				return nil
-			}
+			if feedbackID == uuid.Nil {
+				feedbackID, err := t.service.CreateFeedback(context.Background(), cb.Message.GetChat().Id, int64(messageID))
+				if err != nil {
+					slog.Error("Error creating feedback", "error", err)
+					return nil
+				}
 
-			if _, err := bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
-				Text: "Обратная связь выбрана",
-			}); err != nil {
-				slog.Error("Error answering callback query", "error", err)
-				return nil
+				if _, err := bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+					Text: "Обратная связь создана",
+				}); err != nil {
+					slog.Error("Error answering callback query", "error", err)
+					return nil
+				}
+
+				if _, err := bot.SendMessage(cb.Message.GetChat().Id, fmt.Sprintf("Новая обратная связь: https://notion.so/%s", strings.ReplaceAll(feedbackID.String(), "-", "")), nil); err != nil {
+					slog.Error("Error sending feedback link", "error", err)
+				}
+
+			} else {
+				if err := t.service.AnswerFeedback(context.Background(), cb.Message.GetChat().Id, int64(messageID), feedbackID); err != nil {
+					slog.Error("Error updating feedback", "error", err)
+					return nil
+				}
+
+				if _, err := bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+					Text: "Обратная связь выбрана",
+				}); err != nil {
+					slog.Error("Error answering callback query", "error", err)
+					return nil
+				}
 			}
 		}
 

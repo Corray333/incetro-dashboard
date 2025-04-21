@@ -15,6 +15,7 @@ type repository interface {
 
 type notionRepo interface {
 	feedbackAnswerer
+	feedbackCreator
 }
 
 type Service struct {
@@ -27,6 +28,7 @@ type Service struct {
 	messageMetaScanner    messageMetaScanner
 
 	feedbackAnswerer feedbackAnswerer
+	feedbackCreator  feedbackCreator
 }
 
 type option func(*Service)
@@ -104,8 +106,15 @@ func WithFeedbackAnswerer(feedbackAnswerer feedbackAnswerer) option {
 	}
 }
 
+func WithFeedbackCreator(feedbackCreator feedbackCreator) option {
+	return func(s *Service) {
+		s.feedbackCreator = feedbackCreator
+	}
+}
+
 func WithNotionRepo(notionRepo notionRepo) option {
 	return func(s *Service) {
 		s.feedbackAnswerer = notionRepo
+		s.feedbackCreator = notionRepo
 	}
 }
