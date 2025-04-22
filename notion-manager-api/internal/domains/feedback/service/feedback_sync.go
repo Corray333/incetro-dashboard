@@ -42,6 +42,7 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 		if err := s.feedbackSetter.SetFeedback(ctx, &feedback); err != nil {
 			return err
 		}
+		fmt.Printf("Feedback %+v\n", feedback)
 		if feedback.LastUpdate.After(lastTime) {
 			lastTime = feedback.LastUpdate
 		}
