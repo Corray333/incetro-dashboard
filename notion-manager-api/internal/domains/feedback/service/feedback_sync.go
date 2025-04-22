@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -26,14 +25,11 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	slog.Info("Updating feedback", "time", lastUpdateTime)
 
 	feedbacks, err := s.feedbacksRawLister.ListFeedback(ctx, lastUpdateTime)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("Feedbacks: ", feedbacks)
 
 	for _, feedback := range feedbacks {
 		if err := s.feedbackSetter.SetFeedback(ctx, &feedback); err != nil {

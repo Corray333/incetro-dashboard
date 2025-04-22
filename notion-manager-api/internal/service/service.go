@@ -196,7 +196,7 @@ func (s *Service) GetTasksOfEmployee(employee_username string, period_start, per
 }
 
 func (s *Service) GetQuarterTasks() ([]entities.Task, error) {
-	currentQuarter := (time.Now().Month() + 1) / 3
+	currentQuarter := (int(time.July)-1)/3 + 1
 	return s.repo.GetQuarterTasks(int(currentQuarter))
 }
 
@@ -218,7 +218,7 @@ func (s *Service) StartUpdatingWorker() {
 	for {
 		_, err := s.Actualize()
 		if err != nil {
-			slog.Error(err.Error())
+			slog.Error("Error actualizing dbs", "error", err)
 		}
 		time.Sleep(time.Minute)
 	}
