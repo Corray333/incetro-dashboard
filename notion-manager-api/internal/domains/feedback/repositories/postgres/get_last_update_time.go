@@ -17,6 +17,7 @@ func (s *FeedbackPostgresRepository) GetFeedbackLastUpdateTime(ctx context.Conte
 }
 
 func (s *FeedbackPostgresRepository) SetFeedbackLastUpdateTime(ctx context.Context, lastUpdateTime time.Time) error {
+	slog.Info("Setting feedback last update time", "time", lastUpdateTime)
 	_, err := s.DB().Exec("UPDATE system SET feedback_db_last_sync = $1", lastUpdateTime)
 	return err
 }
