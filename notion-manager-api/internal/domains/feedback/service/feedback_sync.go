@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -25,6 +26,7 @@ type feedbackSetter interface {
 }
 
 func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
+	slog.Info("Updating feedbacks")
 	lastUpdateTime, err := s.feedbackLastUpdateTimeGetter.GetFeedbackLastUpdateTime(ctx)
 	if err != nil {
 		return err
@@ -44,6 +46,7 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 			lastTime = feedback.LastUpdate
 		}
 	}
+	fmt.Println("Last time: ", lastTime)
 
 	if err := s.feedbackLastUpdateTimeSetter.SetFeedbackLastUpdateTime(ctx, lastTime); err != nil {
 		return err
