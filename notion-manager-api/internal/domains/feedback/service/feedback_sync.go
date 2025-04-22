@@ -36,6 +36,9 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if len(feedbacks) == 0 {
+		return nil
+	}
 
 	lastTime := time.Time{}
 	for _, feedback := range feedbacks {
@@ -47,8 +50,6 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 			lastTime = feedback.LastUpdate
 		}
 	}
-	fmt.Println("Last time: ", lastTime)
-
 	if err := s.feedbackLastUpdateTimeSetter.SetFeedbackLastUpdateTime(ctx, lastTime); err != nil {
 		return err
 	}
