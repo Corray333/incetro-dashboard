@@ -155,6 +155,11 @@ type Feedback struct {
 }
 
 func (f *Feedback) ToEntity() *feedback.Feedback {
+	lastEdited, err := time.Parse(notion.TIME_LAYOUT_IN, f.LastEditedTime)
+	if err != nil {
+		return nil
+	}
+
 	return &feedback.Feedback{
 		Text: func() string {
 			if len(f.Properties.Name.Title) == 0 {
@@ -211,5 +216,6 @@ func (f *Feedback) ToEntity() *feedback.Feedback {
 			}
 			return id
 		}(),
+		LastUpdate: lastEdited,
 	}
 }

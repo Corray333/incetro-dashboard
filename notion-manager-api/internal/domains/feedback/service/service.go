@@ -7,12 +7,14 @@ type FeedbackService struct {
 	feedbackSetter
 	feedbacksRawLister
 	feedbackLastUpdateTimeGetter
+	feedbackLastUpdateTimeSetter
 }
 
 type postgresRepository interface {
 	feedbacksLister
 	feedbackSetter
 	feedbackLastUpdateTimeGetter
+	feedbackLastUpdateTimeSetter
 }
 type notionRepository interface {
 	feedbacksRawLister
@@ -35,6 +37,7 @@ func WithPostgresRepository(repository postgresRepository) option {
 		s.feedbacksLister = repository
 		s.feedbackLastUpdateTimeGetter = repository
 		s.feedbackSetter = repository
+		s.feedbackLastUpdateTimeSetter = repository
 	}
 }
 
@@ -65,6 +68,12 @@ func WithNotionRepository(repository notionRepository) option {
 func WithFeedbacksRawLister(lister feedbacksRawLister) option {
 	return func(s *FeedbackService) {
 		s.feedbacksRawLister = lister
+	}
+}
+
+func WithFeedbackLastUpdateTimeSetter(setter feedbackLastUpdateTimeSetter) option {
+	return func(s *FeedbackService) {
+		s.feedbackLastUpdateTimeSetter = setter
 	}
 }
 

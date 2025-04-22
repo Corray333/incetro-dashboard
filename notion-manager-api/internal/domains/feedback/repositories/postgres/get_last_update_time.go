@@ -15,3 +15,8 @@ func (s *FeedbackPostgresRepository) GetFeedbackLastUpdateTime(ctx context.Conte
 
 	return lastUpdateTime, nil
 }
+
+func (s *FeedbackPostgresRepository) SetFeedbackLastUpdateTime(ctx context.Context, lastUpdateTime time.Time) error {
+	_, err := s.DB().Exec("UPDATE system SET feedback_db_last_sync = $1", lastUpdateTime)
+	return err
+}

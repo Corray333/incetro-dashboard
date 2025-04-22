@@ -16,4 +16,6 @@ type Feedback struct {
 	CreatedDate time.Time `json:"createdDate"`
 	Direction   string    `json:"direction"`
 	Status      string    `json:"status"`
+
+	LastUpdate time.Time `json:"-"`
 }

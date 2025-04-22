@@ -12,6 +12,10 @@ type feedbackLastUpdateTimeGetter interface {
 	GetFeedbackLastUpdateTime(ctx context.Context) (time.Time, error)
 }
 
+type feedbackLastUpdateTimeSetter interface {
+	SetFeedbackLastUpdateTime(ctx context.Context, lastUpdateTime time.Time) error
+}
+
 type feedbacksRawLister interface {
 	ListFeedback(ctx context.Context, lastUpdate time.Time) ([]feedback.Feedback, error)
 }
@@ -31,10 +35,18 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 		return err
 	}
 
+	lastTime := time.Time{}
 	for _, feedback := range feedbacks {
 		if err := s.feedbackSetter.SetFeedback(ctx, &feedback); err != nil {
 			return err
 		}
+		if feedback.LastUpdate.After(lastTime) {
+			lastTime = feedback.LastUpdate
+		}
+	}
+
+	if err := s.feedbackLastUpdateTimeSetter.SetFeedbackLastUpdateTime(ctx, lastTime); err != nil {
+		return err
 	}
 
 	return nil
