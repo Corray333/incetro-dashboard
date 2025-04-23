@@ -58,15 +58,17 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 }
 
 func (s *FeedbackService) FeedbackSync(ctx context.Context) {
-	if err := s.updateFeedbacks(ctx); err != nil {
-		slog.Error("Notion feedback sync error", "error", err)
-	}
-
 	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
 	for {
+		if err := s.updateFeedbacks(ctx); err != nil {
+			slog.Error("Notion feedback sync error", "error", err)
+		}
+
 		select {
 		case <-ticker.C:
-			go s.FeedbackSync(ctx)
+			continue
 		case <-ctx.Done():
 			return
 		}
