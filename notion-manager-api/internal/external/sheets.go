@@ -24,7 +24,7 @@ const (
 
 func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error) {
 
-	readRange := "Time!V2"
+	readRange := "Time!W2"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	if err != nil {
 		slog.Error("Error getting Google Sheets", slog.String("error", err.Error()))
@@ -46,7 +46,7 @@ func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error)
 }
 
 func SetLastSyncedTime(lastSyncedTimestamp int64, srv *sheets.Service, spreadsheetId string) error {
-	writeRange := "Time!V2"
+	writeRange := "Time!W2"
 
 	lastSynced := time.Unix(lastSyncedTimestamp, 0)
 
@@ -187,12 +187,18 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service, getExpertise func(string
 			}(),
 			timeRaw.Properties.PH.Formula.Number,
 			timeRaw.Properties.Overtime.Checkbox,
+			func() string {
+				if len(timeRaw.Properties.Priority.Rollup.Array) == 0 {
+					return ""
+				}
+				return timeRaw.Properties.Priority.Rollup.Array[0].Select.Name
+			}(),
 		}...)
 
 		if rawId != -1 {
 			uvr := sheets.ValueRange{
 				Values: [][]interface{}{myval},
-				Range:  fmt.Sprintf("Time!A%d:U%d", rawId, rawId),
+				Range:  fmt.Sprintf("Time!A%d:V%d", rawId, rawId),
 			}
 			updateVr = append(updateVr, &uvr)
 			continue
@@ -202,7 +208,7 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service, getExpertise func(string
 
 	}
 
-	writeRange := "Time!A3:U3"
+	writeRange := "Time!A3:V3"
 
 	_, err = srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, &sheets.BatchUpdateValuesRequest{
 		ValueInputOption: "USER_ENTERED",
