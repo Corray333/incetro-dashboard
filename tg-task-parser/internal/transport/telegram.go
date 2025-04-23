@@ -214,7 +214,14 @@ func (t *Transport) registerHandlers() {
 					return nil
 				}
 
-				if _, err := bot.SendMessage(cb.Message.GetChat().Id, fmt.Sprintf("Новая обратная связь: https://notion.so/%s", strings.ReplaceAll(feedbackID.String(), "-", "")), nil); err != nil {
+				opts := &gotgbot.SendMessageOpts{
+					MessageThreadId: ctx.Message.MessageThreadId,
+				}
+
+				_, err = bot.SendMessage(cb.Message.GetChat().Id,
+					fmt.Sprintf("Новая обратная связь: https://notion.so/%s", strings.ReplaceAll(feedbackID.String(), "-", "")),
+					opts)
+				if err != nil {
 					slog.Error("Error sending feedback link", "error", err)
 				}
 
