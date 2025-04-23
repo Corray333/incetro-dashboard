@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"os"
@@ -107,7 +108,7 @@ func (s *Storage) GetQuarterTasks(quarter int) (tasks []entities.Task, err error
 	if err := s.db.Select(&tasks, `
         SELECT tasks.* FROM task_tag NATURAL JOIN tasks 
         WHERE tag = $1
-    `, "Q"+strconv.Itoa(quarter)); err != nil {
+    `, "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
 		slog.Error("error getting tasks: " + err.Error())
 		return nil, err
 	}
@@ -234,7 +235,7 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
 		OR (end_time >= $2 AND end_time <= $3)
     ) AND tag = $4
 `
-	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end, "Q"+strconv.Itoa(quarter)); err != nil {
+	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end, "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
 		slog.Error("error getting tasks of employee: " + err.Error())
 		return nil, err
 	}
