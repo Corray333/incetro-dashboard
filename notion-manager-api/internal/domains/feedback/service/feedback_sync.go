@@ -58,7 +58,7 @@ func (s *FeedbackService) updateFeedbacks(ctx context.Context) error {
 }
 
 func (s *FeedbackService) FeedbackSync(ctx context.Context) {
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	for {
