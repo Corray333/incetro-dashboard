@@ -31,6 +31,8 @@ func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error)
 		return 0, err
 	}
 
+	fmt.Println(resp.Values)
+
 	if len(resp.Values) == 0 || len(resp.Values[0]) == 0 {
 		slog.Error("No data found")
 		return 0, ErrNoTime
