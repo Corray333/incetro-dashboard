@@ -17,7 +17,7 @@ type messageMetaSetter interface {
 }
 
 func (s *Service) listActiveFeedbacks(ctx context.Context, projectID uuid.UUID) ([]feedback.Feedback, error) {
-	return s.feedbackLister.ListFeedbacks(ctx, projectID, feedback.ActiveStatuses)
+	return s.feedbackLister.ListFeedbacks(ctx, projectID, append(feedback.ActiveStatuses, feedback.NotStartedStatuses...))
 }
 
 func (s *Service) RequestActiveFeedbacks(ctx context.Context, chatID int64, messageID int64, msg *message.Message) ([]feedback.Feedback, error) {
