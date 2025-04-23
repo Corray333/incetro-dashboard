@@ -192,6 +192,7 @@ func (s *Service) UpdateGoogleSheets() error {
 
 func (s *Service) GetTasksOfEmployee(employee_username string, period_start, period_end int64) ([]entities.Task, error) {
 	currentQuarter := (time.Now().Month() + 1) / 3
+	fmt.Println("Quarter: ", currentQuarter)
 	return s.repo.GetTasksOfEmployee(employee_username, period_start, period_end, int(currentQuarter))
 }
 
