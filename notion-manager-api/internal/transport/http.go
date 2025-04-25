@@ -78,6 +78,8 @@ func (s *Transport) Run() {
 
 func (t *Transport) RegisterRoutes() {
 
+	t.router.Post("/api/notion-webhooks", t.handleNotionWebhooks)
+
 	t.router.Group(func(r chi.Router) {
 		env := os.Getenv("ENV")
 
@@ -107,6 +109,17 @@ func (t *Transport) RegisterRoutes() {
 
 	// s.router.Get("/tracker/swagger/*", httpSwagger.WrapHandler)
 
+}
+
+func (t *Transport) handleNotionWebhooks(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("got webhook")
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(string(body))
+	w.WriteHeader(http.StatusOK)
 }
 
 // GetEmployees godoc
