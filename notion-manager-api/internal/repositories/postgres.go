@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/Corray333/employee_dashboard/internal/entities"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
@@ -442,4 +443,13 @@ func (s *Storage) GetExtertiseByID(ctx context.Context, id string) (expertise en
 	}
 
 	return expertise, nil
+}
+
+func (s *Storage) DeleteFeedback(ctx context.Context, feedbackID uuid.UUID) error {
+	if _, err := s.db.Exec("DELETE FROM feedbacks WHERE feedback_id = $1", feedbackID); err != nil {
+		slog.Error("Error deleting feedback", "error", err)
+		return err
+	}
+
+	return nil
 }

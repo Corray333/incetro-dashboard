@@ -21,6 +21,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -45,6 +46,8 @@ type service interface {
 	NotifyEmployeesAboutSalary(ctx context.Context) error
 
 	GetUserRole(username string, userID int64) entities.DashboardRole
+
+	DeleteFeedback(ctx context.Context, feedbackID uuid.UUID) error
 }
 
 func New(service service) *Transport {
@@ -111,14 +114,49 @@ func (t *Transport) RegisterRoutes() {
 
 }
 
+type notionWebhookData struct {
+	Type   string `json:"type"`
+	Entity struct {
+		Type string `json:"type"`
+		ID   string `json:"id"`
+	} `json:"entity"`
+	Data struct {
+		Parent struct {
+			Type string `json:"type"`
+			ID   string `json:"id"`
+		} `json:"parent"`
+	} `json:"data"`
+}
+
+const notinoWebhookTypePageDeleted = "page.deleted"
+
+const notionEntityTypePage = "page"
+const notionEntityTypeDatabase = "database"
+
 func (t *Transport) handleNotionWebhooks(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("got webhook")
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var data notionWebhookData
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, fmt.Sprintf("Error decoding webhook data: %s", err.Error()), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(string(body))
+
+	fmt.Println("Data: ", data)
+	switch data.Type {
+	case notinoWebhookTypePageDeleted:
+		if data.Entity.Type == notionEntityTypePage && data.Data.Parent.Type == notionEntityTypeDatabase && strings.ReplaceAll(data.Data.Parent.ID, "-", "") == viper.GetString("notion.databases.feedback") {
+			feedbackID, err := uuid.Parse(data.Entity.ID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error parsing feedback ID: %s", err.Error()), http.StatusBadRequest)
+				return
+			}
+
+			if err := t.service.DeleteFeedback(r.Context(), feedbackID); err != nil {
+				http.Error(w, fmt.Sprintf("Error deleting feedback: %s", err.Error()), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

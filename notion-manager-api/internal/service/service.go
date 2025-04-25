@@ -10,6 +10,7 @@ import (
 	"github.com/Corray333/employee_dashboard/internal/entities"
 	"github.com/Corray333/employee_dashboard/pkg/mindmap"
 	"github.com/go-co-op/gocron"
+	"github.com/google/uuid"
 	"google.golang.org/api/sheets/v4"
 )
 
@@ -45,6 +46,8 @@ type repository interface {
 
 	GetExtertiseByID(ctx context.Context, id string) (expertise entities.Expertise, err error)
 	GetProjectsWithHoursSums(ctx context.Context) ([]entities.Project, error)
+
+	DeleteFeedback(ctx context.Context, feedbackID uuid.UUID) error
 }
 
 type external interface {
@@ -477,4 +480,8 @@ func (s *Service) updateProjectsEstimates(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (s *Service) DeleteFeedback(ctx context.Context, feedbackID uuid.UUID) error {
+	return s.repo.DeleteFeedback(ctx, feedbackID)
 }
