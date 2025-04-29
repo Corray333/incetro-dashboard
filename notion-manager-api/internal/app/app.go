@@ -5,10 +5,12 @@ import (
 	"net"
 
 	"github.com/Corray333/employee_dashboard/internal/domains/feedback"
+	time "github.com/Corray333/employee_dashboard/internal/domains/time"
 	"github.com/Corray333/employee_dashboard/internal/external"
 	"github.com/Corray333/employee_dashboard/internal/postgres"
 	"github.com/Corray333/employee_dashboard/internal/repositories"
 	"github.com/Corray333/employee_dashboard/internal/service"
+	gsheets "github.com/Corray333/employee_dashboard/internal/sheets"
 	"github.com/Corray333/employee_dashboard/internal/transport"
 	notion "github.com/Corray333/employee_dashboard/pkg/notion/v2"
 	"google.golang.org/grpc"
@@ -49,10 +51,13 @@ func New() *app {
 
 	store := postgres.New()
 	notionClient := notion.NewClient()
+	sheetsClient := gsheets.NewSheetsClient()
 
 	feedbackController := feedback.NewFeedbackController(grpcServer, store, notionClient)
-
 	app.controllers = append(app.controllers, feedbackController)
+
+	timeController := time.NewTimeController(grpcServer, store, notionClient, sheetsClient)
+	app.controllers = append(app.controllers, timeController)
 
 	return app
 }

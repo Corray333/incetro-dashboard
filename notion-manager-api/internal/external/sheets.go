@@ -204,9 +204,9 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service, getExpertise func(string
 			}
 			updateVr = append(updateVr, &uvr)
 			continue
+		} else {
+			vr.Values = append(vr.Values, myval)
 		}
-
-		vr.Values = append(vr.Values, myval)
 
 	}
 

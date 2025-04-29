@@ -305,15 +305,6 @@ func (s *Service) Actualize() (updated bool, err error) {
 		return false, err
 	}
 
-	fmt.Println("Getting not correct person times")
-	times, _, err := s.external.GetNotCorrectPersonTimes()
-	if err != nil {
-		return false, err
-	}
-	if err := s.SetProfileInTimes(times); err != nil {
-		return false, err
-	}
-
 	fmt.Println("Getting tasks")
 	tasks, tasksLastUpdate, err := s.external.GetTasks("last_edited_time", system.TasksDBLastSynced, "", false)
 	if err != nil {
@@ -321,6 +312,15 @@ func (s *Service) Actualize() (updated bool, err error) {
 	}
 
 	if err := s.repo.SetTasks(tasks); err != nil {
+		return false, err
+	}
+
+	fmt.Println("Getting not correct person times")
+	times, _, err := s.external.GetNotCorrectPersonTimes()
+	if err != nil {
+		return false, err
+	}
+	if err := s.SetProfileInTimes(times); err != nil {
 		return false, err
 	}
 
@@ -349,6 +349,9 @@ func (s *Service) SetProfileInTimes(times []entities.Time) error {
 		employee, err := s.repo.GetEmployeeByID(time.EmployeeID)
 		if err != nil {
 			return err
+		}
+		if employee.ID == "" {
+			continue
 		}
 		if err := s.external.SetProfileInTime(time.ID, employee.ProfileID); err != nil {
 			return err

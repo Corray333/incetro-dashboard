@@ -58,9 +58,9 @@ func getHTTPClient() *http.Client {
 }
 
 type searchResponse struct {
-	HasMore    bool            `json:"has_more"`
-	NextCursor string          `json:"next_cursor"`
-	Results    json.RawMessage `json:"results"` // или []map[string]interface{} если хочешь сразу распарсить
+	HasMore    bool              `json:"has_more"`
+	NextCursor string            `json:"next_cursor"`
+	Results    []json.RawMessage `json:"results"` // или []map[string]interface{} если хочешь сразу распарсить
 }
 
 func (c *Client) SearchPages(dbid string, filter map[string]interface{}) ([]byte, error) {
@@ -113,15 +113,13 @@ func (c *Client) SearchPages(dbid string, filter map[string]interface{}) ([]byte
 		}
 
 		// добавляем текущие результаты
-		var pageResults []json.RawMessage
-		if err := json.Unmarshal(page.Results, &pageResults); err != nil {
-			return nil, err
-		}
-		allResults = append(allResults, pageResults...)
+
+		allResults = append(allResults, page.Results...)
 
 		if !page.HasMore || page.NextCursor == "" {
 			break
 		}
+		fmt.Println("New page")
 		startCursor = page.NextCursor
 	}
 

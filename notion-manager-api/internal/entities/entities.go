@@ -100,7 +100,7 @@ type System struct {
 	ProjectsDBLastSynced int64     `json:"projectsDBLastSynced" db:"projects_db_last_sync"`
 	TasksDBLastSynced    int64     `json:"tasksDBLastSynced" db:"tasks_db_last_sync"`
 	EmployeeDBLastSynced int64     `json:"employeeDBLastSynced" db:"employee_db_last_sync"`
-	TimesDBLastSynced    int64     `json:"timesDBLastSynced" db:"times_db_last_sync"`
+	TimesDBLastSynced    time.Time `json:"timesDBLastSynced" db:"times_db_last_sync"`
 	FeedbackDBLastSynced time.Time `json:"feedbackDBLastSynced" db:"feedback_db_last_sync"`
 }
 

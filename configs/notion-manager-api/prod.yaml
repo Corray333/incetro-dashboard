@@ -29,3 +29,7 @@ notion:
     employees: "6807e199ff4247daac765cd9f29c184d"
     expertise: "f86c3388749c412c801e6edf1a8dfc22"
     feedback: "1ca27b05040480a79afbf179126afd10"
+  
+sheets:
+  id: "1dStGuMfFU2Vq2V2xgXLyKUq_j3zYBeP15LA0eUQtTAQ"
+  time_append_range: "Time!A3:V3"
