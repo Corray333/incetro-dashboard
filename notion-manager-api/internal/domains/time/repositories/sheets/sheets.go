@@ -46,6 +46,7 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, times []en
 }
 
 func entityToSheetsTime(time *entity_time.Time) []interface{} {
+	fmt.Printf("%+v\n", time)
 	return []interface{}{
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.ID.String(), "-", "")), time.WhatDid),
 		time.TotalHours,
