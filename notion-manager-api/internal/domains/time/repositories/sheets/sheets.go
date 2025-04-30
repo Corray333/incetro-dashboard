@@ -46,12 +46,11 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, times []en
 }
 
 func entityToSheetsTime(time *entity_time.Time) []interface{} {
-	fmt.Printf("%+v\n", time)
 	return []interface{}{
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.ID.String(), "-", "")), time.WhatDid),
 		time.TotalHours,
 		time.WorkDate.Format("02/01/2006"),
-		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.TaskID.String(), "-", "")), time.MainTask),
+		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.TaskID.String(), "-", "")), time.TaskName),
 		time.ProjectName,
 		time.WhoDid,
 		time.PayableHours,
@@ -65,7 +64,7 @@ func entityToSheetsTime(time *entity_time.Time) []interface{} {
 		time.DH,
 		time.BHGS,
 		time.ProjectStatus,
-		time.IDField,
+		time.ID,
 		time.Expertise,
 		time.PH,
 		time.Overtime,
