@@ -860,7 +860,7 @@ type Time struct {
 	Properties     struct {
 		TotalHours struct {
 			Number float64 `json:"number"`
-		} `json:"Всего ч"`
+		} `json:"Затрачено ч."`
 		Analytics struct {
 			Relation []struct{} `json:"relation"`
 		} `json:"Аналитика"`
