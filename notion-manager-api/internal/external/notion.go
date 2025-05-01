@@ -808,7 +808,7 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 func (e *External) WriteOfTime(timeToWriteOf *entities.TimeMsg) error {
 
 	req := map[string]interface{}{
-		"Всего ч": map[string]interface{}{
+		"Затрачено ч.": map[string]interface{}{
 			"number": math.Ceil((float64(timeToWriteOf.Duration)/60/60)/0.15) * 0.15,
 		},
 		"Задача": map[string]interface{}{
