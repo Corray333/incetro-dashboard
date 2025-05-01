@@ -38,7 +38,7 @@ type service interface {
 
 	GetTasksOfEmployee(employee_id string, period_start, period_end int64) ([]entities.Task, error)
 
-	UpdateGoogleSheets() error
+	UpdateGoogleSheets(ctx context.Context) error
 
 	CreateMindmapTasks(mindmap string) error
 	GetQuarterTasks() ([]entities.Task, error)
@@ -403,7 +403,7 @@ func (t *Transport) getTasksOfEmployee(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/update-sheets [post]
 func (t *Transport) updateGoogleSheets(w http.ResponseWriter, r *http.Request) {
-	if err := t.service.UpdateGoogleSheets(); err != nil {
+	if err := t.service.UpdateGoogleSheets(r.Context()); err != nil {
 		http.Error(w, fmt.Sprintf("Error updating Google Sheets: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}

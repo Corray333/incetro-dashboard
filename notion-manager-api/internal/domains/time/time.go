@@ -53,3 +53,7 @@ func (c *TimeController) Build() {
 func (c *TimeController) Run() {
 	c.service.Run()
 }
+
+func (c *TimeController) GetService() *service.TimeService {
+	return c.service
+}

@@ -30,6 +30,10 @@ func NewTaskService(opts ...option) *TimeService {
 	return service
 }
 
+func (s *TimeService) AcceptUpdate(ctx context.Context) {
+	go s.TimeSync(ctx)
+}
+
 func WithPostgresRepository(repository postgresRepository) option {
 	return func(s *TimeService) {
 		s.timeLastUpdateTimeGetter = repository

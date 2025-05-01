@@ -1,9 +1,6 @@
 package app
 
 import (
-	"log/slog"
-	"net"
-
 	"github.com/Corray333/employee_dashboard/internal/domains/feedback"
 	time "github.com/Corray333/employee_dashboard/internal/domains/time"
 	"github.com/Corray333/employee_dashboard/internal/external"
@@ -35,17 +32,6 @@ func New() *app {
 
 	app := &app{}
 
-	storage := repositories.New()
-	external := external.New()
-	service := service.New(storage, external)
-
-	transport := transport.New(service)
-	transport.RegisterRoutes()
-
-	app.store = storage
-	app.service = service
-	app.transport = transport
-
 	grpcServer := grpc.NewServer()
 	app.grpcServer = grpcServer
 
@@ -59,6 +45,17 @@ func New() *app {
 	timeController := time.NewTimeController(grpcServer, store, notionClient, sheetsClient)
 	app.controllers = append(app.controllers, timeController)
 
+	storage := repositories.New()
+	external := external.New()
+	service := service.New(storage, external, timeController.GetService())
+
+	transport := transport.New(service)
+	transport.RegisterRoutes()
+
+	app.store = storage
+	app.service = service
+	app.transport = transport
+
 	return app
 }
 
@@ -67,18 +64,18 @@ func (app *app) Run() {
 	for _, c := range app.controllers {
 		go c.Run()
 	}
-	go func() {
-		listener, err := net.Listen("tcp", ":50051")
-		if err != nil {
-			slog.Error("Failed to listen", "error", err)
-			panic(err)
-		}
-		slog.Info("Starting gRPC server")
-		if err := app.grpcServer.Serve(listener); err != nil {
-			slog.Error("Failed to serve", "error", err)
-			panic(err)
-		}
-	}()
+	// go func() {
+	// 	listener, err := net.Listen("tcp", ":50051")
+	// 	if err != nil {
+	// 		slog.Error("Failed to listen", "error", err)
+	// 		panic(err)
+	// 	}
+	// 	slog.Info("Starting gRPC server")
+	// 	if err := app.grpcServer.Serve(listener); err != nil {
+	// 		slog.Error("Failed to serve", "error", err)
+	// 		panic(err)
+	// 	}
+	// }()
 	app.transport.Run()
 }
 

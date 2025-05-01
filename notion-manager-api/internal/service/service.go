@@ -77,21 +77,29 @@ type external interface {
 	UpdateTaskEstimate(ctx context.Context, taskID string, estimate float64) error
 }
 
+type updateSubscriber interface {
+	AcceptUpdate(ctx context.Context)
+}
+
 type Service struct {
 	repo     repository
 	external external
 	cron     *gocron.Scheduler
+
+	updateSubs []updateSubscriber
 }
 
-func New(repo repository, external external) *Service {
+func New(repo repository, external external, sub updateSubscriber) *Service {
 	loc, _ := time.LoadLocation("Europe/Moscow")
 	s := gocron.NewScheduler(loc)
 
-	return &Service{
+	svc := &Service{
 		repo:     repo,
 		external: external,
 		cron:     s,
 	}
+	svc.updateSubs = append(svc.updateSubs, sub)
+	return svc
 }
 
 func (s *Service) Run() {
@@ -145,7 +153,12 @@ func (s *Service) CheckInvalid() {
 
 }
 
-func (s *Service) UpdateGoogleSheets() error {
+func (s *Service) UpdateGoogleSheets(ctx context.Context) error {
+
+	for _, sub := range s.updateSubs {
+		go sub.AcceptUpdate(ctx)
+	}
+
 	projects, err := s.repo.GetProjects("")
 	if err != nil {
 		return err
