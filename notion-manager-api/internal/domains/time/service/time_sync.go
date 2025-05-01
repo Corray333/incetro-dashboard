@@ -25,6 +25,10 @@ type timeSetter interface {
 	SetTime(ctx context.Context, time *entity_time.Time) error
 }
 
+type timesLister interface {
+	ListTimes(ctx context.Context, offset, limit int) ([]entity_time.Time, error)
+}
+
 func (s *TimeService) updateTimes(ctx context.Context) error {
 	slog.Info("Updating times")
 	lastUpdateTime, err := s.timeLastUpdateTimeGetter.GetTimeLastUpdateTime(ctx)
@@ -72,4 +76,24 @@ func (s *TimeService) TimeSync(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (s *TimeService) uploadToSheets(ctx context.Context) {
+	// times, err := postgresRepo.ListTimes(context.Background(), 0, 9000)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(sheetsRepo.UpdateSheetsTimes(context.Background(), times))
+
+	times, err := s.timesLister.ListTimes(ctx, 0, 20000)
+	if err != nil {
+		slog.Error("Error getting times", "error", err)
+		return
+	}
+
+	if err := s.sheetsRepository.UpdateSheetsTimes(ctx, times); err != nil {
+		slog.Error("Error updating sheets", "error", err)
+		return
+	}
+
 }
