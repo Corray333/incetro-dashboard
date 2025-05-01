@@ -23,8 +23,17 @@ func NewTimeSheetsRepository(client *gsheets.Client) *TimeSheetsRepository {
 }
 
 func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, times []entity_time.Time) error {
+	if len(times) == 0 {
+		return nil
+	}
+
+	appendRange := viper.GetString("sheets.time_sheet") + "!A2"
+	rowLen := len(entityToSheetsTime(&times[0]))
+	lastColLetter := string(rune('A' + rowLen - 1))
+	appendRange += lastColLetter
+
 	clearValues := &sheets.ClearValuesRequest{}
-	_, err := r.client.Svc().Spreadsheets.Values.Clear(viper.GetString("sheets.id"), viper.GetString("sheets.expertise.clear_range"), clearValues).Do()
+	_, err := r.client.Svc().Spreadsheets.Values.Clear(viper.GetString("sheets.id"), appendRange, clearValues).Do()
 	if err != nil {
 		slog.Error("Error clearing old values", "error", err)
 		return err
@@ -36,7 +45,7 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, times []en
 		vr.Values = append(vr.Values, entityToSheetsTime(&time))
 	}
 
-	_, err = r.client.Svc().Spreadsheets.Values.Append(viper.GetString("sheets.id"), viper.GetString("sheets.time.append_range"), &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
+	_, err = r.client.Svc().Spreadsheets.Values.Append(viper.GetString("sheets.id"), appendRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
 	if err != nil {
 		slog.Error("Error updating Google Sheets", "error", err)
 		return err
@@ -53,7 +62,6 @@ func entityToSheetsTime(time *entity_time.Time) []interface{} {
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.TaskID.String(), "-", "")), time.TaskName),
 		time.ProjectName,
 		time.WhoDid,
-		time.PayableHours,
 		time.TaskID,
 		time.Direction,
 		time.TaskEstimate,
