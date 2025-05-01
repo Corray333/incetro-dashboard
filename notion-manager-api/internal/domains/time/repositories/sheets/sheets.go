@@ -27,7 +27,7 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, times []en
 		return nil
 	}
 
-	appendRange := viper.GetString("sheets.time_sheet") + "!A2"
+	appendRange := viper.GetString("sheets.time_sheet") + "!A2:"
 	rowLen := len(entityToSheetsTime(&times[0]))
 	lastColLetter := string(rune('A' + rowLen - 1))
 	appendRange += lastColLetter
