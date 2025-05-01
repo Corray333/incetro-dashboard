@@ -169,17 +169,17 @@ func (s *Service) UpdateGoogleSheets(ctx context.Context) error {
 		return err
 	}
 
-	getExpertise := func(id string) string {
-		expertise, err := s.repo.GetExtertiseByID(context.Background(), id)
-		if err != nil {
-			return ""
-		}
-		return expertise.Name
-	}
+	// getExpertise := func(id string) string {
+	// 	expertise, err := s.repo.GetExtertiseByID(context.Background(), id)
+	// 	if err != nil {
+	// 		return ""
+	// 	}
+	// 	return expertise.Name
+	// }
 
-	if err := s.external.UpdateTimeSheet(srv, getExpertise); err != nil {
-		return err
-	}
+	// if err := s.external.UpdateTimeSheet(srv, getExpertise); err != nil {
+	// 	return err
+	// }
 
 	if err := s.external.UpdateProjectsSheet(srv, projects); err != nil {
 		return err

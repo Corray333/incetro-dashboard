@@ -31,8 +31,5 @@ notion:
     feedback: "1ca27b05040480a79afbf179126afd10"
 
 sheets:
-  id: "1e0o5soN-0_MC0sbdWSs_jtiPi4HPzG1Mipt2YhS2uQI"
-  time:
-    append_range: "Time!A2:V"
-  expertise:
-    clear_range: "Time!A2:V"
+  id: "1dStGuMfFU2Vq2V2xgXLyKUq_j3zYBeP15LA0eUQtTAQ"
+  time_sheet: "Time"
