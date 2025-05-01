@@ -78,7 +78,7 @@ func (s *TimeService) TimeSync(ctx context.Context) {
 	}
 }
 
-func (s *TimeService) uploadToSheets(ctx context.Context) {
+func (s *TimeService) updateSheets(ctx context.Context) {
 	// times, err := postgresRepo.ListTimes(context.Background(), 0, 9000)
 	// if err != nil {
 	// 	fmt.Println(err)
