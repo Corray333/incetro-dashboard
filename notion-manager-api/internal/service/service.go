@@ -242,7 +242,6 @@ func (s *Service) StartUpdatingWorker() {
 
 func (s *Service) StartOutboxWorker() {
 	for {
-		slog.Info("Reading outbox")
 		times, err := s.repo.GetTimesMsg()
 		if err != nil {
 			slog.Error("error getting times: " + err.Error())
@@ -261,7 +260,7 @@ func (s *Service) StartOutboxWorker() {
 			}
 		}
 
-		time.Sleep(time.Minute)
+		time.Sleep(time.Second * 10)
 	}
 }
 
