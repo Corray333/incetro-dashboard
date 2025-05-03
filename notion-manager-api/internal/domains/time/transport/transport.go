@@ -33,7 +33,7 @@ func (t *TimeTransport) RegisterRoutes() {
 	t.router.Group(func(r chi.Router) {
 		r.Use(transport.NewTaskTrackerAuthMiddleware())
 		fmt.Println("Register time routes")
-		r.Post("/api/time/write-of", t.writeOfTime)
+		r.Post("/api/time", t.writeOfTime)
 	})
 }
 
