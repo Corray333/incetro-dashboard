@@ -758,7 +758,7 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 		Results []Project `json:"results"`
 	}{}
 	if err := json.Unmarshal(resp, &project); err != nil {
-		slog.Error("Error unmarshalling projects", slog.String("error", err.Error()))
+		slog.Error("Error unmarshalling projects", "error", err)
 		return nil, 0, err
 	}
 
@@ -1340,7 +1340,7 @@ func (e *External) GetExpertise() (expertises []entities.Expertise, err error) {
 		Results []Expertise `json:"results"`
 	}{}
 	if err := json.Unmarshal(resp, &expertiseResults); err != nil {
-		slog.Error("Error unmarshalling expertise", slog.String("error", err.Error()))
+		slog.Error("Error unmarshalling expertise", "error", err)
 		return nil, err
 	}
 

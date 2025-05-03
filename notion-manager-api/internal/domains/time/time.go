@@ -9,7 +9,7 @@ import (
 	"github.com/Corray333/employee_dashboard/internal/postgres"
 	gsheets "github.com/Corray333/employee_dashboard/internal/sheets"
 	notion "github.com/Corray333/employee_dashboard/pkg/notion/v2"
-	"google.golang.org/grpc"
+	"github.com/go-chi/chi/v5"
 )
 
 type TimeController struct {
@@ -19,15 +19,15 @@ type TimeController struct {
 	transport    *transport.TimeTransport
 }
 
-func NewTimeController(grpcServer *grpc.Server, store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client) *TimeController {
+func NewTimeController(router *chi.Mux, store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client) *TimeController {
 
 	postgresRepo := postgres_repo.NewTimePostgresRepository(store)
 	notionRepo := notion_repo.NewTimeNotionRepository(notionClient)
 	sheetsRepo := sheets.NewTimeSheetsRepository(sheetsClient)
 
-	service := service.NewTaskService(service.WithPostgresRepository(postgresRepo), service.WithNotionRepository(notionRepo), service.WithSheetsRepository(sheetsRepo))
+	service := service.NewTimeService(service.WithPostgresRepository(postgresRepo), service.WithNotionRepository(notionRepo), service.WithSheetsRepository(sheetsRepo))
 
-	transport := transport.NewTimeTransport(grpcServer, service)
+	transport := transport.NewTimeTransport(router, service)
 
 	return &TimeController{
 		postgresRepo: postgresRepo,
@@ -39,7 +39,7 @@ func NewTimeController(grpcServer *grpc.Server, store *postgres.PostgresClient, 
 }
 
 func (c *TimeController) Build() {
-	// c.transport.RegisterRoutes()
+	c.transport.RegisterRoutes()
 }
 
 func (c *TimeController) Run() {

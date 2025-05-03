@@ -32,7 +32,7 @@ func GetHTTPClient() *http.Client {
 	if proxy != "" {
 		proxyURL, err := url.Parse(proxy)
 		if err != nil {
-			slog.Error("Failed to parse proxy URL", slog.String("error", err.Error()))
+			slog.Error("Failed to parse proxy URL", "error", err)
 			panic(err)
 		}
 		transport.Proxy = http.ProxyURL(proxyURL)

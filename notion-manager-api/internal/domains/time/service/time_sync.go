@@ -66,7 +66,7 @@ func (s *TimeService) TimeSync(ctx context.Context) {
 
 	for {
 		if err := s.updateTimes(ctx); err != nil {
-			slog.Error("Notion feedback sync error", "error", err)
+			slog.Error("Notion time sync error", "error", err)
 		}
 
 		select {

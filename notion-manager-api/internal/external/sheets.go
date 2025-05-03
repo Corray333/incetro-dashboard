@@ -27,7 +27,7 @@ func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error)
 	readRange := "Time!W2"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	if err != nil {
-		slog.Error("Error getting Google Sheets", slog.String("error", err.Error()))
+		slog.Error("Error getting Google Sheets", "error", err)
 		return 0, err
 	}
 
@@ -40,7 +40,7 @@ func GetLastSyncedTime(srv *sheets.Service, spreadsheetId string) (int64, error)
 
 	lastSynced, err := time.ParseInLocation(TimeLayout, resp.Values[0][0].(string), time.Local)
 	if err != nil {
-		slog.Error("Error parsing last synced time", slog.String("error", err.Error()))
+		slog.Error("Error parsing last synced time", "error", err)
 		return 0, err
 	}
 
@@ -62,7 +62,7 @@ func SetLastSyncedTime(lastSyncedTimestamp int64, srv *sheets.Service, spreadshe
 	// Update the cell with the value
 	_, err := srv.Spreadsheets.Values.Update(spreadsheetId, writeRange, &vr).ValueInputOption("USER_ENTERED").Do()
 	if err != nil {
-		slog.Error("Error setting last synced time", slog.String("error", err.Error()))
+		slog.Error("Error setting last synced time", "error", err)
 		return err
 	}
 
@@ -88,21 +88,21 @@ func (e *External) removeTimeDuplicates(times []Time) []Time {
 func (e *External) UpdateTimeSheet(srv *sheets.Service, getExpertise func(string) string) error {
 	lastSynced, err := GetLastSyncedTime(srv, spreadsheetId)
 	if err != nil {
-		slog.Error("Error getting last synced time", slog.String("error", err.Error()))
+		slog.Error("Error getting last synced time", "error", err)
 		return err
 	}
 
 	readRange := "Time!S:S"
 	fullTable, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	if err != nil {
-		slog.Error("Error getting Google Sheets", slog.String("error", err.Error()))
+		slog.Error("Error getting Google Sheets", "error", err)
 		return err
 	}
 
 	var vr sheets.ValueRange
 	times, err := e.GetSheetsTimes(lastSynced, "", "")
 	if err != nil {
-		slog.Error("Error getting times from Notion", slog.String("error", err.Error()))
+		slog.Error("Error getting times from Notion", "error", err)
 		return err
 	}
 
@@ -126,7 +126,7 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service, getExpertise func(string
 		rawId, err := findRowIndexByID(fullTable, timeRaw.ID)
 
 		if err != nil {
-			slog.Error("Error finding row index", slog.String("error", err.Error()))
+			slog.Error("Error finding row index", "error", err)
 			return err
 		}
 
@@ -218,13 +218,13 @@ func (e *External) UpdateTimeSheet(srv *sheets.Service, getExpertise func(string
 	}).Do()
 
 	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
+		slog.Error("Error updating Google Sheets", "error", err)
 		return err
 	}
 
 	_, err = srv.Spreadsheets.Values.Append(spreadsheetId, writeRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
 	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
+		slog.Error("Error updating Google Sheets", "error", err)
 		return err
 	}
 
@@ -256,7 +256,7 @@ func (e *External) UpdateProjectsSheet(srv *sheets.Service, projects []entities.
 		ValueInputOption("USER_ENTERED").
 		Do()
 	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
+		slog.Error("Error updating Google Sheets", "error", err)
 		return err
 	}
 
@@ -292,7 +292,7 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 		ValueInputOption("USER_ENTERED").
 		Do()
 	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
+		slog.Error("Error updating Google Sheets", "error", err)
 		return err
 	}
 
@@ -322,13 +322,13 @@ func (e *External) UpdateExpertiseSheet(srv *sheets.Service, expertises []entiti
 	clearValues := &sheets.ClearValuesRequest{}
 	_, err := srv.Spreadsheets.Values.Clear(spreadsheetId, clearRange, clearValues).Do()
 	if err != nil {
-		slog.Error("Error clearing old values", slog.String("error", err.Error()))
+		slog.Error("Error clearing old values", "error", err)
 		return err
 	}
 
 	_, err = srv.Spreadsheets.Values.Append(spreadsheetId, writeRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
 	if err != nil {
-		slog.Error("Error updating Google Sheets", slog.String("error", err.Error()))
+		slog.Error("Error updating Google Sheets", "error", err)
 		return err
 	}
 
@@ -341,20 +341,20 @@ func (e *External) NewSheetsClient() (*sheets.Service, error) {
 	slog.Info("Updating Google Sheets")
 	b, err := os.ReadFile("../secrets/credentials.json")
 	if err != nil {
-		slog.Error("Unable to read client secret file", slog.String("error", err.Error()))
+		slog.Error("Unable to read client secret file", "error", err)
 		return nil, err
 	}
 
 	config, err := google.ConfigFromJSON(b, sheets.SpreadsheetsScope)
 	if err != nil {
-		slog.Error("Unable to parse client secret file to config", slog.String("error", err.Error()))
+		slog.Error("Unable to parse client secret file to config", "error", err)
 		return nil, err
 	}
 	client := GetClient(config)
 
 	srv, err := sheets.New(client)
 	if err != nil {
-		slog.Error("Unable to retrieve Sheets Client", slog.String("error", err.Error()))
+		slog.Error("Unable to retrieve Sheets Client", "error", err)
 		return nil, err
 	}
 

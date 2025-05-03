@@ -13,6 +13,10 @@ type TimeService struct {
 	timeSetter
 	sheetsRepository
 	timesLister
+	timeWriteOfCreater
+	timeOutboxMsgGetter
+	timeWriteOfSentMarker
+	timeWriteOfNotion
 }
 
 type postgresRepository interface {
@@ -20,9 +24,13 @@ type postgresRepository interface {
 	timeLastUpdateTimeSetter
 	timeSetter
 	timesLister
+	timeWriteOfCreater
+	timeOutboxMsgGetter
+	timeWriteOfSentMarker
 }
 type notionRepository interface {
 	timeRawLister
+	timeWriteOfNotion
 }
 
 type sheetsRepository interface {
@@ -31,7 +39,7 @@ type sheetsRepository interface {
 
 type option func(*TimeService)
 
-func NewTaskService(opts ...option) *TimeService {
+func NewTimeService(opts ...option) *TimeService {
 	service := &TimeService{}
 
 	for _, opt := range opts {
@@ -51,12 +59,16 @@ func WithPostgresRepository(repository postgresRepository) option {
 		s.timeLastUpdateTimeSetter = repository
 		s.timeSetter = repository
 		s.timesLister = repository
+		s.timeWriteOfCreater = repository
+		s.timeOutboxMsgGetter = repository
+		s.timeWriteOfSentMarker = repository
 	}
 }
 
 func WithNotionRepository(repository notionRepository) option {
 	return func(s *TimeService) {
 		s.timeRawLister = repository
+		s.timeWriteOfNotion = repository
 	}
 }
 
@@ -68,4 +80,5 @@ func WithSheetsRepository(repository sheetsRepository) option {
 
 func (s *TimeService) Run() {
 	go s.TimeSync(context.Background())
+	go s.StartWriteOfOutboxWorker(context.Background())
 }

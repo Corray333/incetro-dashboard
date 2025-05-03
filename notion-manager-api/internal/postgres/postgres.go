@@ -98,7 +98,7 @@ func (r *PostgresClient) GetTx(ctx context.Context) (tx *sqlx.Tx, isNew bool, er
 	if tx == nil {
 		tx, err = r.db.BeginTxx(ctx, nil)
 		if err != nil {
-			slog.Error("failed to begin transaction: " + err.Error())
+			slog.Error("Failed to begin transaction", "error", err)
 			return nil, false, err
 		}
 

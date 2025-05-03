@@ -50,8 +50,7 @@ type service interface {
 	DeleteFeedback(ctx context.Context, feedbackID uuid.UUID) error
 }
 
-func New(service service) *Transport {
-	router := NewRouter()
+func New(router *chi.Mux, service service) *Transport {
 
 	return &Transport{
 		service: service,

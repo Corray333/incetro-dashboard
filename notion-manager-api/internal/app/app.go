@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/Corray333/employee_dashboard/internal/domains/feedback"
+	"github.com/Corray333/employee_dashboard/internal/domains/task"
 	time "github.com/Corray333/employee_dashboard/internal/domains/time"
 	"github.com/Corray333/employee_dashboard/internal/external"
 	"github.com/Corray333/employee_dashboard/internal/postgres"
@@ -32,6 +33,7 @@ func New() *app {
 
 	app := &app{}
 
+	router := transport.NewRouter()
 	grpcServer := grpc.NewServer()
 	app.grpcServer = grpcServer
 
@@ -42,19 +44,26 @@ func New() *app {
 	feedbackController := feedback.NewFeedbackController(grpcServer, store, notionClient)
 	app.controllers = append(app.controllers, feedbackController)
 
-	timeController := time.NewTimeController(grpcServer, store, notionClient, sheetsClient)
+	timeController := time.NewTimeController(router, store, notionClient, sheetsClient)
 	app.controllers = append(app.controllers, timeController)
+
+	taskController := task.NewTaskController(router, store, notionClient)
+	app.controllers = append(app.controllers, taskController)
 
 	storage := repositories.New()
 	external := external.New()
 	service := service.New(storage, external, timeController.GetService())
 
-	transport := transport.New(service)
+	transport := transport.New(router, service)
 	transport.RegisterRoutes()
 
 	app.store = storage
 	app.service = service
 	app.transport = transport
+
+	for _, c := range app.controllers {
+		c.Build()
+	}
 
 	return app
 }

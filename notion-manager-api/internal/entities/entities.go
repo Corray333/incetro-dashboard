@@ -23,11 +23,12 @@ type Row struct {
 // TimeMsg godoc
 // @Description Represents a time
 type TimeMsg struct {
-	ID          int64  `json:"id" db:"time_id" example:"0"`
-	TaskID      string `json:"taskID" db:"task_id" example:"9eb9de5f-2341-44c6-aae8-fc917394092b"`
-	EmployeeID  string `json:"employeeID" db:"employee_id" example:"353198d1-1a40-4b4b-9841-66e7de4de6ea"`
-	Duration    int    `json:"duration" db:"duration" example:"1800"`
-	Description string `json:"description" db:"description" example:"Мыла попу"`
+	ID          int64     `json:"id" db:"time_id" example:"0"`
+	TaskID      string    `json:"taskID" db:"task_id" example:"9eb9de5f-2341-44c6-aae8-fc917394092b"`
+	EmployeeID  string    `json:"employeeID" db:"employee_id" example:"353198d1-1a40-4b4b-9841-66e7de4de6ea"`
+	Duration    int       `json:"duration" db:"duration" example:"1800"`
+	Description string    `json:"description" db:"description" example:"Мыла попу"`
+	WorkDate    time.Time `json:"workDate" db:"work_date"`
 }
 
 // Task godoc

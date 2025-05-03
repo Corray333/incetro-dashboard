@@ -126,7 +126,7 @@ func (s *Storage) GetUserRole(username string, userID int64) entities.DashboardR
 			user.TelegramID = userID
 			s.dashboardUsers[username] = user
 			if err := s.SetEmployeeTelegramID(username, userID); err != nil {
-				slog.Error("Error setting tg id of employee", slog.String("error", err.Error()))
+				slog.Error("Error setting tg id of employee", "error", err)
 				return entities.DashboardRoleUnknown
 			}
 		}
@@ -138,7 +138,7 @@ func (s *Storage) GetUserRole(username string, userID int64) entities.DashboardR
 
 func (s *Storage) SetEmployeeTelegramID(username string, telegramID int64) error {
 	if _, err := s.db.Exec("UPDATE employees SET tg_id = $1 WHERE tg_username = $2", telegramID, username); err != nil {
-		slog.Error("Error settimg tg id of employee", slog.String("error", err.Error()))
+		slog.Error("Error settimg tg id of employee", "error", err)
 		return err
 	}
 
@@ -178,7 +178,7 @@ func (s *Storage) SetEmployees(employees []entities.Employee) error {
 
 		for _, flag := range employee.NotificationFlags {
 			if _, err := tx.Exec("INSERT INTO employee_notification_flag (employee_id, flag) VALUES ($1, $2) ON CONFLICT (employee_id, flag) DO UPDATE SET flag = $2", employee.ID, flag); err != nil {
-				slog.Error("Error setting notification flags", slog.String("error", err.Error()))
+				slog.Error("Error setting notification flags", "error", err)
 				return err
 			}
 		}
@@ -205,7 +205,7 @@ func (s *Storage) GetEmployeesByNotificationFlag(ctx context.Context, flag entit
 func (s *Storage) SetTasks(tasks []entities.Task) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("Error starting transaction", slog.String("error", err.Error()))
+		slog.Error("Error starting transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback()
@@ -213,12 +213,12 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 	for _, task := range tasks {
 		_, err := tx.Exec("INSERT INTO tasks (task_id, project_id, employee_id, title, status, start_time, end_time, estimate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (task_id) DO UPDATE SET title = $4, status = $5, employee_id = $3, project_id = $2, start_time = $6, end_time = $7, estimate = $8", task.ID, task.ProjectID, task.EmployeeID, task.Title, task.Status, task.StartTime, task.EndTime, task.Estimate)
 		if err != nil {
-			slog.Error("Error setting tasks", slog.String("error", err.Error()))
+			slog.Error("Error setting tasks", "error", err)
 			return err
 		}
 		for _, tag := range task.Tags {
 			if _, err := tx.Exec("INSERT INTO task_tag (task_id, tag) VALUES ($1, $2) ON CONFLICT (task_id, tag) DO UPDATE SET tag = $2", task.ID, tag); err != nil {
-				slog.Error("Error setting task tags", slog.String("error", err.Error()))
+				slog.Error("Error setting task tags", "error", err)
 				return err
 			}
 		}
@@ -253,7 +253,7 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
 func (s *Storage) SetProjects(projects []entities.Project) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("Error starting transaction", slog.String("error", err.Error()))
+		slog.Error("Error starting transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback()
@@ -261,7 +261,7 @@ func (s *Storage) SetProjects(projects []entities.Project) error {
 	for _, project := range projects {
 		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID)
 		if err != nil {
-			slog.Error("Error setting projects", slog.String("error", err.Error()))
+			slog.Error("Error setting projects", "error", err)
 			return err
 		}
 	}
@@ -272,7 +272,7 @@ func (s *Storage) SetProjects(projects []entities.Project) error {
 func (s *Storage) SaveTimeWriteOf(time *entities.TimeMsg) error {
 	_, err := s.db.Exec("INSERT INTO time_outbox (task_id, employee_id, duration, description) VALUES ($1, $2, $3, $4)", time.TaskID, time.EmployeeID, time.Duration, time.Description)
 	if err != nil {
-		slog.Error("Error saving time outbox message", slog.String("error", err.Error()))
+		slog.Error("Error saving time outbox message", "error", err)
 		return err
 	}
 
@@ -281,7 +281,7 @@ func (s *Storage) SaveTimeWriteOf(time *entities.TimeMsg) error {
 
 func (s *Storage) GetTimesMsg() (times []entities.TimeMsg, err error) {
 	if err = s.db.Select(&times, "SELECT * FROM time_outbox"); err != nil {
-		slog.Error("error getting times messages", slog.String("error", err.Error()))
+		slog.Error("error getting times messages", "error", err)
 		return nil, err
 	}
 
@@ -290,7 +290,7 @@ func (s *Storage) GetTimesMsg() (times []entities.TimeMsg, err error) {
 
 func (s *Storage) GetTimes() (times []entities.Time, err error) {
 	if err = s.db.Select(&times, "SELECT * FROM times"); err != nil {
-		slog.Error("error getting times", slog.String("error", err.Error()))
+		slog.Error("error getting times", "error", err)
 		return nil, err
 	}
 
@@ -299,7 +299,7 @@ func (s *Storage) GetTimes() (times []entities.Time, err error) {
 
 func (s *Storage) GetInvalidRows() (times []entities.Row, err error) {
 	if err = s.db.Select(&times, "SELECT * FROM invalid_rows"); err != nil {
-		slog.Error("error getting invalid rows", slog.String("error", err.Error()))
+		slog.Error("error getting invalid rows", "error", err)
 		return nil, err
 	}
 
@@ -309,14 +309,14 @@ func (s *Storage) GetInvalidRows() (times []entities.Row, err error) {
 func (s *Storage) MarkInvalidRowsAsSent(rows []entities.Row) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("error starting transaction", slog.String("error", err.Error()))
+		slog.Error("error starting transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback()
 
 	for _, row := range rows {
 		if _, err := tx.Exec("DELETE FROM invalid_rows WHERE id = $1", row.ID); err != nil {
-			slog.Error("error deleting invalid row", slog.String("error", err.Error()))
+			slog.Error("error deleting invalid row", "error", err)
 			return err
 		}
 	}
@@ -327,7 +327,7 @@ func (s *Storage) MarkInvalidRowsAsSent(rows []entities.Row) error {
 func (s *Storage) SetInvalidRows(rows []entities.Row) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("error starting transaction", slog.String("error", err.Error()))
+		slog.Error("error starting transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback()
@@ -335,7 +335,7 @@ func (s *Storage) SetInvalidRows(rows []entities.Row) error {
 	for _, row := range rows {
 		_, err := tx.Exec("INSERT INTO invalid_rows (id, description, employee, employee_id) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET description = $2, employee = $3, employee_id = $4", row.ID, row.Description, row.Employee, row.EmployeeID)
 		if err != nil {
-			slog.Error("error setting invalid rows", slog.String("error", err.Error()))
+			slog.Error("error setting invalid rows", "error", err)
 			return err
 		}
 	}
@@ -346,7 +346,7 @@ func (s *Storage) SetInvalidRows(rows []entities.Row) error {
 func (s *Storage) SetTimes(times []entities.Time) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("error starting transaction", slog.String("error", err.Error()))
+		slog.Error("error starting transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback()

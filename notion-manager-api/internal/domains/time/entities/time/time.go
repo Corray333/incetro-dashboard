@@ -47,3 +47,12 @@ type Time struct {
 	TaskName     string  `json:"task_name"`
 	TaskEstimate float64 `json:"task_estimate"`
 }
+
+type TimeOutboxMsg struct {
+	ID          int64     `json:"id"`
+	TaskID      uuid.UUID `json:"taskID"`
+	EmployeeID  uuid.UUID `json:"employeeID"`
+	Duration    float64   `json:"duration"`
+	Description string    `json:"description"`
+	WorkDate    time.Time `json:"workDate"`
+}

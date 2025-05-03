@@ -104,7 +104,7 @@ func New(repo repository, external external, sub updateSubscriber) *Service {
 
 func (s *Service) Run() {
 	go s.StartUpdatingWorker()
-	go s.StartOutboxWorker()
+	// go s.StartOutboxWorker()
 
 	s.cron.Every(1).Day().At("10:00").Do(s.CheckInvalid)
 	s.cron.StartBlocking()
@@ -461,12 +461,12 @@ func (s *Service) NotifyEmployeesAboutSalary(ctx context.Context) error {
 func (s *Service) CreateMindmapTasks(mindmapData string) error {
 	projectName, tasks, err := mindmap.ParseMarkdownTasks(mindmapData)
 	if err != nil {
-		slog.Error("Failed to parse tasks from mindmap", slog.String("error", err.Error()))
+		slog.Error("Failed to parse tasks from mindmap", "error", err)
 		return err
 	}
 
 	if err := s.external.CreateMindmapTasks(projectName, tasks); err != nil {
-		slog.Error("Failed to create tasks in Notion", slog.String("error", err.Error()))
+		slog.Error("Failed to create tasks in Notion", "error", err)
 		return err
 	}
 
@@ -476,20 +476,20 @@ func (s *Service) CreateMindmapTasks(mindmapData string) error {
 func (s *Service) updateProjectsEstimates(ctx context.Context) error {
 	projects, err := s.repo.GetProjectsWithHoursSums(ctx)
 	if err != nil {
-		slog.Error("Error getting projects with hours sums", slog.String("error", err.Error()))
+		slog.Error("Error getting projects with hours sums", "error", err)
 		return err
 	}
 
 	for _, project := range projects {
 		if project.ManagementTaskID != "" {
 			if err := s.external.UpdateTaskEstimate(ctx, project.ManagementTaskID, (project.TotalHours*0.2*100)/100); err != nil {
-				slog.Error("Error updating task estimate", slog.String("error", err.Error()))
+				slog.Error("Error updating task estimate", "error", err)
 				return err
 			}
 		}
 		if project.TestingTaskID != "" {
 			if err := s.external.UpdateTaskEstimate(ctx, project.TestingTaskID, (project.TotalHours*0.15*100)/100); err != nil {
-				slog.Error("Error updating task estimate", slog.String("error", err.Error()))
+				slog.Error("Error updating task estimate", "error", err)
 				return err
 			}
 		}

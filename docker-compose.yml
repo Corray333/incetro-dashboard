@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 50051:50051
+      - 3001:3001
     volumes:
       - ./notion-manager-api:/app
       - .env:/app/.env

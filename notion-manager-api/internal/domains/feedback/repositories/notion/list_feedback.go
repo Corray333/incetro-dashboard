@@ -37,7 +37,7 @@ func (r *FeedbackNotionRepository) ListFeedback(ctx context.Context, lastUpdate 
 	}{}
 
 	if err := json.Unmarshal(resp, &feedbacksRaw); err != nil {
-		slog.Error("Error unmarshalling feedbacks from notion", slog.String("error", err.Error()))
+		slog.Error("Error unmarshalling feedbacks from notion", "error", err)
 		return nil, err
 	}
 
