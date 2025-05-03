@@ -23,6 +23,7 @@ type taskOutboxMsgDB struct {
 
 func (m *taskOutboxMsgDB) toEntity() *entity_task.TaskOutboxMsg {
 	return &entity_task.TaskOutboxMsg{
+		ID:         m.ID,
 		Task:       m.Task,
 		Estimate:   m.Estimate,
 		Priority:   m.Priority,
@@ -54,7 +55,6 @@ func (r *TaskPostgresRepository) CreateTaskOutboxMsg(ctx context.Context, msg *e
 	if isNew {
 		defer tx.Rollback()
 	}
-	fmt.Printf("%+v\n", msg)
 	if _, err := tx.NamedExec(`INSERT INTO task_outbox (task, estimate, priority, deadline_start, deadline_end, executor_id, project_id) VALUES (:task, :estimate, :priority, :deadline_start, :deadline_end, :executor_id, :project_id)`, taskOutboxMsgDBFromEntity(msg)); err != nil {
 		slog.Error("Error insert task outbox msg", "error", err)
 		return err
@@ -95,6 +95,7 @@ func (r *TaskPostgresRepository) DeleteTaskOutboxMsg(ctx context.Context, msg *e
 		defer tx.Rollback()
 	}
 	msgDB := taskOutboxMsgDBFromEntity(msg)
+	fmt.Printf("Deleting: %+v\n", msg)
 	if _, err := tx.NamedExec(`DELETE FROM task_outbox WHERE task_msg_id = :task_msg_id`, msgDB); err != nil {
 		slog.Error("Error delete task outbox msg", "error", err)
 		return err
