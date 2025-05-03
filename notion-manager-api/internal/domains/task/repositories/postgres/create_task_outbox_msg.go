@@ -35,6 +35,7 @@ func (m *taskOutboxMsgDB) toEntity() *entity_task.TaskOutboxMsg {
 
 func taskOutboxMsgDBFromEntity(msg *entity_task.TaskOutboxMsg) *taskOutboxMsgDB {
 	return &taskOutboxMsgDB{
+		ID:         msg.ID,
 		Task:       msg.Task,
 		Estimate:   msg.Estimate,
 		Priority:   msg.Priority,
@@ -51,11 +52,7 @@ func (r *TaskPostgresRepository) CreateTaskOutboxMsg(ctx context.Context, msg *e
 		return err
 	}
 	if isNew {
-		defer func() {
-			if err := tx.Rollback(); err != nil {
-				slog.Error("Error rollback transaction", "error", err)
-			}
-		}()
+		defer tx.Rollback()
 	}
 	fmt.Printf("%+v\n", msg)
 	if _, err := tx.NamedExec(`INSERT INTO task_outbox (task, estimate, priority, deadline_start, deadline_end, executor_id, project_id) VALUES (:task, :estimate, :priority, :deadline_start, :deadline_end, :executor_id, :project_id)`, taskOutboxMsgDBFromEntity(msg)); err != nil {
