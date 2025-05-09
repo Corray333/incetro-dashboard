@@ -157,6 +157,65 @@ func (t *Transport) registerHandlers() {
 		return nil
 	}))
 
+	// t.dispatcher.AddHandler(handlers.NewCommand("pinapp", func(b *gotgbot.Bot, ctx *ext.Context) error {
+	// 	chatId := ctx.EffectiveChat.Id
+
+	// 	// Извлекаем текст после команды
+	// 	args := strings.TrimSpace(ctx.Message.Text[len("/pinapp"):])
+	// 	if args == "" {
+	// 		args = "Запусти наше мини-приложение!"
+	// 	}
+
+	// 	// Создаём inline-кнопку
+	// 	inlineKeyboard := [][]gotgbot.InlineKeyboardButton{
+	// 		{
+	// 			{
+	// 				Text: "Открыть мини-приложение",
+	// 				WebApp: &gotgbot.WebAppInfo{
+	// 					Url: "https://example.com/app", // Замените на ваш URL мини-приложения
+	// 				},
+	// 			},
+	// 		},
+	// 	}
+
+	// 	// Получаем информацию о чате
+	// 	chat, err := b.GetChat(chatId, nil)
+	// 	if err != nil {
+	// 		slog.Error("Не удалось получить информацию о чате", "error", err)
+	// 		return err
+	// 	}
+
+	// 	// Проверяем наличие закреплённого сообщения
+	// 	if chat.PinnedMessage != nil && chat.PinnedMessage.From != nil && chat.PinnedMessage.From.Id == b.Id {
+	// 		// Пытаемся изменить текст существующего закреплённого сообщения
+	// 		_, _, err := b.EditMessageText(chatId, chat.PinnedMessage.MessageId, args, &gotgbot.EditMessageTextOpts{
+	// 			ReplyMarkup: gotgbot.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard},
+	// 		})
+	// 		if err != nil {
+	// 			slog.Error("Не удалось изменить текст закреплённого сообщения", "error", err)
+	// 			return err
+	// 		}
+	// 	} else {
+	// 		// Отправляем новое сообщение с кнопкой
+	// 		msg, err := b.SendMessage(chatId, args, &gotgbot.SendMessageOpts{
+	// 			ReplyMarkup: gotgbot.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard},
+	// 		})
+	// 		if err != nil {
+	// 			slog.Error("Не удалось отправить сообщение", "error", err)
+	// 			return err
+	// 		}
+
+	// 		// Закрепляем отправленное сообщение
+	// 		_, err = b.PinChatMessage(chatId, msg.MessageId, nil)
+	// 		if err != nil {
+	// 			slog.Error("Не удалось закрепить сообщение", "error", err)
+	// 			return err
+	// 		}
+	// 	}
+
+	// 	return nil
+	// }))
+
 	// Хендлер callback-кнопок
 	t.dispatcher.AddHandler(handlers.NewCallback(nil, func(bot *gotgbot.Bot, ctx *ext.Context) error {
 		cb := ctx.CallbackQuery

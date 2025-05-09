@@ -11,6 +11,7 @@ import (
 	entity_time "github.com/Corray333/employee_dashboard/internal/domains/time/entities/time"
 	"github.com/Corray333/employee_dashboard/pkg/notion"
 	"github.com/google/uuid"
+	"github.com/nav-inc/datetime"
 	"github.com/spf13/viper"
 )
 
@@ -243,15 +244,15 @@ type time struct {
 }
 
 func (t *time) ToEntity() *entity_time.Time {
-	lastUpdate, err := pkg_time.Parse(notion.TIME_LAYOUT_IN, t.LastEditedTime)
+	lastUpdate, err := datetime.Parse(t.LastEditedTime, pkg_time.UTC)
 	if err != nil {
 		lastUpdate = pkg_time.Time{}
 	}
-	created, err := pkg_time.Parse(notion.TIME_LAYOUT_IN, t.CreatedTime)
+	created, err := datetime.Parse(t.CreatedTime, pkg_time.UTC)
 	if err != nil {
 		created = pkg_time.Time{}
 	}
-	workDate, err := pkg_time.Parse(notion.TIME_LAYOUT_IN, t.Properties.WorkDate.Date.Start)
+	workDate, err := datetime.Parse(t.Properties.WorkDate.Date.Start, pkg_time.UTC)
 	if err != nil {
 		workDate = pkg_time.Time{}
 	}

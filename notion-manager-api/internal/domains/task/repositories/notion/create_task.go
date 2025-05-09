@@ -7,6 +7,7 @@ import (
 
 	entity_task "github.com/Corray333/employee_dashboard/internal/domains/task/entities/task"
 	"github.com/google/uuid"
+	"github.com/nav-inc/datetime"
 	"github.com/spf13/viper"
 )
 
@@ -225,13 +226,13 @@ func (t *taskNotion) toEntity() *entity_task.Task {
 	}
 
 	if t.Properties.Deadline.Date.Start != "" {
-		if deadlineStart, err := time.Parse(time.RFC3339, t.Properties.Deadline.Date.Start); err == nil {
+		if deadlineStart, err := datetime.Parse(t.Properties.Deadline.Date.Start, time.UTC); err == nil {
 			entity.Start = deadlineStart
 		}
 	}
 
 	if t.Properties.Deadline.Date.End != "" {
-		if deadlineEnd, err := time.Parse(time.RFC3339, t.Properties.Deadline.Date.End); err == nil {
+		if deadlineEnd, err := datetime.Parse(t.Properties.Deadline.Date.End, time.UTC); err == nil {
 			entity.End = deadlineEnd
 		}
 	}
