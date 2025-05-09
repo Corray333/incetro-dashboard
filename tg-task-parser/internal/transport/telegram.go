@@ -91,9 +91,7 @@ func (t *Transport) registerHandlers() {
 			{
 				{
 					Text: "Открыть",
-					WebApp: &gotgbot.WebAppInfo{
-						Url: "https://management.incetro.agency",
-					},
+					Url:  "https://management.incetro.agency",
 				},
 			},
 		}
