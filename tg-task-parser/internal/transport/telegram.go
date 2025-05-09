@@ -91,7 +91,7 @@ func (t *Transport) registerHandlers() {
 			{
 				{
 					Text: "Открыть",
-					Url:  "https://management.incetro.agency",
+					Url:  "https://t.me/incetro_bot/management",
 				},
 			},
 		}
