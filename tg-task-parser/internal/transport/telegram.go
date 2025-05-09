@@ -90,9 +90,9 @@ func (t *Transport) registerHandlers() {
 		inlineKeyboard := [][]gotgbot.InlineKeyboardButton{
 			{
 				{
-					Text: "Открыть мини-приложение",
+					Text: "Открыть",
 					WebApp: &gotgbot.WebAppInfo{
-						Url: "https://management.incetro.agency", // Замените на ваш URL мини-приложения
+						Url: "https://management.incetro.agency",
 					},
 				},
 			},
