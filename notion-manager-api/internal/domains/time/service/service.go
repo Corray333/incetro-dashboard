@@ -35,6 +35,7 @@ type notionRepository interface {
 
 type sheetsRepository interface {
 	UpdateSheetsTimes(ctx context.Context, times []entity_time.Time) error
+	UpdateTempSheetsTimes(ctx context.Context, times []entity_time.Time) error
 }
 
 type option func(*TimeService)

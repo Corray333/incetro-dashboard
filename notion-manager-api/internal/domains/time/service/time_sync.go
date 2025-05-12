@@ -7,6 +7,7 @@ import (
 	pkg_time "time"
 
 	entity_time "github.com/Corray333/employee_dashboard/internal/domains/time/entities/time"
+	"github.com/google/uuid"
 )
 
 type timeLastUpdateTimeGetter interface {
@@ -27,6 +28,7 @@ type timeSetter interface {
 
 type timesLister interface {
 	ListTimes(ctx context.Context, offset, limit int) ([]entity_time.Time, error)
+	ListTimesByProject(ctx context.Context, projectID uuid.UUID, offset int, limit int) ([]entity_time.Time, error)
 }
 
 func (s *TimeService) updateTimes(ctx context.Context) error {
@@ -93,6 +95,17 @@ func (s *TimeService) updateSheets(ctx context.Context) {
 
 	if err := s.sheetsRepository.UpdateSheetsTimes(ctx, times); err != nil {
 		slog.Error("Error updating sheets", "error", err)
+		return
+	}
+
+	times, err = s.timesLister.ListTimesByProject(ctx, uuid.MustParse("e754753f-491b-4fd5-8913-d1fc51ce2f12"), 0, 20000)
+	if err != nil {
+		slog.Error("Error getting project temp times", "error", err)
+		return
+	}
+
+	if err := s.sheetsRepository.UpdateTempSheetsTimes(ctx, times); err != nil {
+		slog.Error("Error updating project temp sheets", "error", err)
 		return
 	}
 

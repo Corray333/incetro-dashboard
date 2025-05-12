@@ -54,6 +54,38 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, times []en
 	return nil
 }
 
+func (r *TimeSheetsRepository) UpdateTempSheetsTimes(ctx context.Context, times []entity_time.Time) error {
+	if len(times) == 0 {
+		return nil
+	}
+
+	appendRange := viper.GetString("temp_sheets.time_sheet") + "!A3:"
+	rowLen := len(entityToSheetsTime(&times[0]))
+	lastColLetter := string(rune('A' + rowLen - 1))
+	appendRange += lastColLetter
+
+	clearValues := &sheets.ClearValuesRequest{}
+	_, err := r.client.Svc().Spreadsheets.Values.Clear(viper.GetString("temp_sheets.id"), appendRange, clearValues).Do()
+	if err != nil {
+		slog.Error("Error clearing old values", "error", err)
+		return err
+	}
+
+	var vr sheets.ValueRange
+
+	for _, time := range times {
+		vr.Values = append(vr.Values, entityToSheetsTime(&time))
+	}
+
+	_, err = r.client.Svc().Spreadsheets.Values.Append(viper.GetString("temp_sheets.id"), appendRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
+	if err != nil {
+		slog.Error("Error updating Google Sheets", "error", err)
+		return err
+	}
+
+	return nil
+}
+
 func entityToSheetsTime(time *entity_time.Time) []interface{} {
 	return []interface{}{
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.ID.String(), "-", "")), time.WhatDid),
