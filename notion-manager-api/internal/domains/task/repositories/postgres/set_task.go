@@ -44,6 +44,39 @@ type taskDB struct {
 	Direction   string `db:"direction"`
 }
 
+func (r *TaskPostgresRepository) ListTasks(ctx context.Context, limit, offset int) ([]task.Task, error) {
+	tasks := make([]taskDB, 0)
+	if err := r.DB().SelectContext(ctx, &tasks, `
+		SELECT 
+			tasks.task_id, tasks.created_time, tasks.last_edited_time, tasks.title, tasks.priority, tasks.status,
+			COALESCE(tasks.parent_id, '') AS parent_id, tasks.creator_id, tasks.project_id, tasks.estimate,
+			tasks.start, tasks."end", tasks.previous_id, tasks.next_id, tasks.total_hours, tasks.tbh,
+			tasks.cp, tasks.total_estimate, tasks.plan_fact, tasks.duration, tasks.cr, tasks.ikp, tasks.main_task,
+			tasks.executor_id, tasks.responsible_id,
+			COALESCE(t.title, '') AS parent_name,
+			COALESCE(exp.name, '') AS expertise
+		FROM tasks
+		LEFT JOIN tasks t ON t.task_id = tasks.parent_id
+		LEFT JOIN employees e ON e.employee_id::uuid = NULLIF(tasks.executor_id, '')
+		LEFT JOIN expertise exp ON exp.expertise_id = e.expertise_id
+		LIMIT $1 OFFSET $2
+	`, limit, offset); err != nil {
+		slog.Error("Error listing tasks", "error", err)
+		return nil, err
+	}
+
+	result := make([]task.Task, 0, len(tasks))
+	for _, t := range tasks {
+		if err := r.DB().Select(&t.Tags, `SELECT tag FROM task_tag WHERE task_id = $1`, t.ID); err != nil {
+			slog.Error("Error getting task tags", "error", err)
+			return nil, err
+		}
+		result = append(result, *t.toEntity())
+	}
+
+	return result, nil
+}
+
 func entityToTaskDB(task *entity_task.Task) *taskDB {
 	return &taskDB{
 		ID:             task.ID.String(),
@@ -144,39 +177,6 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *entity_task.
 	}
 
 	return nil
-}
-
-func (r *TaskPostgresRepository) ListTasks(ctx context.Context, limit, offset int) ([]task.Task, error) {
-	tasks := make([]taskDB, 0)
-	if err := r.DB().SelectContext(ctx, &tasks, `
-		SELECT 
-			tasks.task_id, tasks.created_time, tasks.last_edited_time, tasks.title, tasks.priority, tasks.status,
-			COALESCE(tasks.parent_id, '') AS parent_id, tasks.creator_id, tasks.project_id, tasks.estimate,
-			tasks.start, tasks."end", tasks.previous_id, tasks.next_id, tasks.total_hours, tasks.tbh,
-			tasks.cp, tasks.total_estimate, tasks.plan_fact, tasks.duration, tasks.cr, tasks.ikp, tasks.main_task,
-			tasks.executor_id, tasks.responsible_id,
-			COALESCE(t.title, '') AS parent_name,
-			COALESCE(exp.name, '') AS expertise
-		FROM tasks
-		LEFT JOIN tasks t ON t.task_id = tasks.parent_id
-		LEFT JOIN employees e ON e.employee_id::uuid = tasks.executor_id
-		LEFT JOIN expertise exp ON exp.expertise_id = e.expertise_id
-		LIMIT $1 OFFSET $2
-	`, limit, offset); err != nil {
-		slog.Error("Error listing tasks", "error", err)
-		return nil, err
-	}
-
-	result := make([]task.Task, 0, len(tasks))
-	for _, t := range tasks {
-		if err := r.DB().Select(&t.Tags, `SELECT tag FROM task_tag WHERE task_id = $1`, t.ID); err != nil {
-			slog.Error("Error getting task tags", "error", err)
-			return nil, err
-		}
-		result = append(result, *t.toEntity())
-	}
-
-	return result, nil
 }
 
 func (t *taskDB) toEntity() *task.Task {
