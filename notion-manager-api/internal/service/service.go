@@ -89,7 +89,7 @@ type Service struct {
 	updateSubs []updateSubscriber
 }
 
-func New(repo repository, external external, sub updateSubscriber) *Service {
+func New(repo repository, external external) *Service {
 	loc, _ := time.LoadLocation("Europe/Moscow")
 	s := gocron.NewScheduler(loc)
 
@@ -98,8 +98,12 @@ func New(repo repository, external external, sub updateSubscriber) *Service {
 		external: external,
 		cron:     s,
 	}
-	svc.updateSubs = append(svc.updateSubs, sub)
+	// svc.updateSubs = append(svc.updateSubs, subs...)
 	return svc
+}
+
+func (s *Service) AddUpdateSubscriber(sub updateSubscriber) {
+	s.updateSubs = append(s.updateSubs, sub)
 }
 
 func (s *Service) Run() {

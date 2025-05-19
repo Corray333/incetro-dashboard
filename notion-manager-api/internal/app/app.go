@@ -52,7 +52,9 @@ func New() *app {
 
 	storage := repositories.New()
 	external := external.New()
-	service := service.New(storage, external, timeController.GetService())
+	service := service.New(storage, external)
+	service.AddUpdateSubscriber(timeController.GetService())
+	service.AddUpdateSubscriber(taskController.GetService())
 
 	transport := transport.New(router, service)
 	transport.RegisterRoutes()
