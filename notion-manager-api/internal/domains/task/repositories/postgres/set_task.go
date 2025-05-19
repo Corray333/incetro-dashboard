@@ -11,22 +11,22 @@ import (
 )
 
 type taskDB struct {
-	ID             string    `db:"task_id"`
+	ID             uuid.UUID `db:"task_id"`
 	CreatedTime    time.Time `db:"created_time"`
 	LastEditedTime time.Time `db:"last_edited_time"`
 	Title          string    `db:"title"`
-	ExecutorID     string    `db:"executor_id"`
-	ResponsibleID  string    `db:"responsible_id"`
+	ExecutorID     uuid.UUID `db:"executor_id"`
+	ResponsibleID  uuid.UUID `db:"responsible_id"`
 	Priority       string    `db:"priority"`
 	Status         string    `db:"status"`
 	ParentID       uuid.UUID `db:"parent_id"`
-	CreatorID      string    `db:"creator_id"`
-	ProjectID      string    `db:"project_id"`
+	CreatorID      uuid.UUID `db:"creator_id"`
+	ProjectID      uuid.UUID `db:"project_id"`
 	Estimate       float64   `db:"estimate"`
 	Start          time.Time `db:"start"`
 	End            time.Time `db:"end"`
-	PreviousID     string    `db:"previous_id"`
-	NextID         string    `db:"next_id"`
+	PreviousID     uuid.UUID `db:"previous_id"`
+	NextID         uuid.UUID `db:"next_id"`
 	TotalHours     float64   `db:"total_hours"`
 	TBH            float64   `db:"tbh"`
 	CP             float64   `db:"cp"`
@@ -79,20 +79,20 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, limit, offset in
 
 func entityToTaskDB(task *entity_task.Task) *taskDB {
 	return &taskDB{
-		ID:             task.ID.String(),
+		ID:             task.ID,
 		CreatedTime:    task.CreatedTime,
 		LastEditedTime: task.LastEditedTime,
 		Title:          task.Task,
 		Priority:       task.Priority,
 		Status:         string(task.Status),
 		ParentID:       task.ParentID,
-		CreatorID:      task.CreatorID.String(),
-		ProjectID:      task.ProjectID.String(),
+		CreatorID:      task.CreatorID,
+		ProjectID:      task.ProjectID,
 		Estimate:       task.Estimate,
 		Start:          task.Start,
 		End:            task.End,
-		PreviousID:     task.PreviousID.String(),
-		NextID:         task.NextID.String(),
+		PreviousID:     task.PreviousID,
+		NextID:         task.NextID,
 		TotalHours:     task.TotalHours,
 		TBH:            task.TBH,
 		CP:             task.CP,
@@ -107,8 +107,8 @@ func entityToTaskDB(task *entity_task.Task) *taskDB {
 		ProjectName:   task.ProjectName,
 		ParentName:    task.ParentName,
 		Direction:     task.Direction,
-		ExecutorID:    task.ExecutorID.String(),
-		ResponsibleID: task.ResponsibleID.String(),
+		ExecutorID:    task.ExecutorID,
+		ResponsibleID: task.ResponsibleID,
 	}
 }
 
@@ -180,13 +180,6 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *entity_task.
 }
 
 func (t *taskDB) toEntity() *task.Task {
-	executorID, _ := uuid.Parse(t.ExecutorID)
-	responsibleID, _ := uuid.Parse(t.ResponsibleID)
-	creatorID, _ := uuid.Parse(t.CreatorID)
-	projectID, _ := uuid.Parse(t.ProjectID)
-	previousID, _ := uuid.Parse(t.PreviousID)
-	nextID, _ := uuid.Parse(t.NextID)
-	taskID, _ := uuid.Parse(t.ID)
 
 	tags := make([]task.Tag, 0, len(t.Tags))
 	for _, tag := range t.Tags {
@@ -194,22 +187,22 @@ func (t *taskDB) toEntity() *task.Task {
 	}
 
 	return &task.Task{
-		ID:             taskID,
+		ID:             t.ID,
 		CreatedTime:    t.CreatedTime,
 		LastEditedTime: t.LastEditedTime,
 		Task:           t.Title,
-		ExecutorID:     executorID,
-		ResponsibleID:  responsibleID,
+		ExecutorID:     t.ExecutorID,
+		ResponsibleID:  t.ResponsibleID,
 		Priority:       t.Priority,
 		Status:         task.Status(t.Status),
 		ParentID:       t.ParentID,
-		CreatorID:      creatorID,
-		ProjectID:      projectID,
+		CreatorID:      t.CreatorID,
+		ProjectID:      t.ProjectID,
 		Estimate:       t.Estimate,
 		Start:          t.Start,
 		End:            t.End,
-		PreviousID:     previousID,
-		NextID:         nextID,
+		PreviousID:     t.PreviousID,
+		NextID:         t.NextID,
 		TotalHours:     t.TotalHours,
 		TBH:            t.TBH,
 		CP:             t.CP,
