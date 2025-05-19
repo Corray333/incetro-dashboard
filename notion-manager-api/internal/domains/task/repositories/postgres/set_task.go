@@ -19,7 +19,7 @@ type taskDB struct {
 	ResponsibleID  string    `db:"responsible_id"`
 	Priority       string    `db:"priority"`
 	Status         string    `db:"status"`
-	ParentID       string    `db:"parent_id"`
+	ParentID       uuid.UUID `db:"parent_id"`
 	CreatorID      string    `db:"creator_id"`
 	ProjectID      string    `db:"project_id"`
 	Estimate       float64   `db:"estimate"`
@@ -85,7 +85,7 @@ func entityToTaskDB(task *entity_task.Task) *taskDB {
 		Title:          task.Task,
 		Priority:       task.Priority,
 		Status:         string(task.Status),
-		ParentID:       task.ParentID.String(),
+		ParentID:       task.ParentID,
 		CreatorID:      task.CreatorID.String(),
 		ProjectID:      task.ProjectID.String(),
 		Estimate:       task.Estimate,
@@ -182,7 +182,6 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *entity_task.
 func (t *taskDB) toEntity() *task.Task {
 	executorID, _ := uuid.Parse(t.ExecutorID)
 	responsibleID, _ := uuid.Parse(t.ResponsibleID)
-	parentID, _ := uuid.Parse(t.ParentID)
 	creatorID, _ := uuid.Parse(t.CreatorID)
 	projectID, _ := uuid.Parse(t.ProjectID)
 	previousID, _ := uuid.Parse(t.PreviousID)
@@ -203,7 +202,7 @@ func (t *taskDB) toEntity() *task.Task {
 		ResponsibleID:  responsibleID,
 		Priority:       t.Priority,
 		Status:         task.Status(t.Status),
-		ParentID:       parentID,
+		ParentID:       t.ParentID,
 		CreatorID:      creatorID,
 		ProjectID:      projectID,
 		Estimate:       t.Estimate,
