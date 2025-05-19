@@ -262,8 +262,8 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
     JOIN employees ON tasks.executor_id = employees.employee_id  JOIN task_tag ON tasks.task_id = task_tag.task_id
     WHERE tg_username = $1
     AND (
-		(start_time >= $2 AND start_time <= $3)
-		OR (end_time >= $2 AND end_time <= $3)
+		(start >= $2 AND start <= $3)
+		OR (end >= $2 AND end <= $3)
     ) AND tag = $4
 `
 	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end, "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
