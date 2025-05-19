@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Corray333/employee_dashboard/internal/entities"
 	"github.com/google/uuid"
@@ -266,7 +267,7 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
 		OR ("end" >= $2 AND "end" <= $3)
     ) AND tag = $4
 `
-	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end, "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
+	if err := s.db.Select(&tasks, query, employeeUsername, time.Unix(period_start, 0), time.Unix(period_end, 0), "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
 		slog.Error("error getting tasks of employee: " + err.Error())
 		return nil, err
 	}
