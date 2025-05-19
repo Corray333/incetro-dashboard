@@ -13,15 +13,33 @@ type TaskService struct {
 	taskOutboxMsgDeleter taskOutboxMsgDeleter
 	notionTaskCreator    notionTaskCreator
 	taskMsgCreator       taskMsgCreator
+
+	taskSetter            taskSetter
+	notionTaskLister      notionTaskLister
+	tasksLastUpdateGetter tasksLastUpdateGetter
+	tasksLastUpdateSetter tasksLastUpdateSetter
+
+	taskLister         taskLister
+	sheetsTasksUpdater sheetsTasksUpdater
 }
 
 type postgresRepository interface {
 	taskOutboxMsgGetter
 	taskOutboxMsgDeleter
 	taskMsgCreator
+	taskSetter
+	tasksLastUpdateGetter
+	tasksLastUpdateSetter
+	taskLister
 }
+
 type notionRepository interface {
 	notionTaskCreator
+	notionTaskLister
+}
+
+type sheetsRepository interface {
+	sheetsTasksUpdater
 }
 
 type option func(*TaskService)
@@ -33,11 +51,13 @@ func NewTaskService(opts ...option) *TaskService {
 		opt(service)
 	}
 
+	service.updateSheets(context.Background())
+
 	return service
 }
 
 func (s *TaskService) AcceptUpdate(ctx context.Context) {
-
+	go s.updateSheets(ctx)
 }
 
 func WithPostgresRepository(repository postgresRepository) option {
@@ -45,16 +65,28 @@ func WithPostgresRepository(repository postgresRepository) option {
 		s.taskOutboxMsgGetter = repository
 		s.taskOutboxMsgDeleter = repository
 		s.taskMsgCreator = repository
+		s.taskSetter = repository
+		s.tasksLastUpdateGetter = repository
+		s.tasksLastUpdateSetter = repository
+		s.taskLister = repository
 	}
 }
 
 func WithNotionRepository(repository notionRepository) option {
 	return func(s *TaskService) {
 		s.notionTaskCreator = repository
+		s.notionTaskLister = repository
+	}
+}
+
+func WithSheetsRepository(repository sheetsRepository) option {
+	return func(s *TaskService) {
+		s.sheetsTasksUpdater = repository
 	}
 }
 
 func (s *TaskService) Run() {
+	go s.TaskSync(context.Background())
 	go s.StartTaskOutboxWorker(context.Background())
 }
 

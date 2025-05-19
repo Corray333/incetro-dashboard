@@ -31,9 +31,7 @@ func (r *TaskNotionRepository) ListTasks(ctx context.Context, lastUpdate time.Ti
 	if err != nil {
 		return nil, err
 	}
-	tasksRaw := struct {
-		Results []taskNotion `json:"results"`
-	}{}
+	tasksRaw := []taskNotion{}
 
 	if err := json.Unmarshal(resp, &tasksRaw); err != nil {
 		slog.Error("Error unmarshalling feedbacks from notion", "error", err)
@@ -41,7 +39,7 @@ func (r *TaskNotionRepository) ListTasks(ctx context.Context, lastUpdate time.Ti
 	}
 
 	tasks := []task.Task{}
-	for _, f := range tasksRaw.Results {
+	for _, f := range tasksRaw {
 		tasks = append(tasks, *f.toEntity())
 	}
 

@@ -56,25 +56,21 @@ func (r *TaskNotionRepository) CreateTask(ctx context.Context, task *entity_task
 		"Исполнитель": map[string]interface{}{
 			"type": "people",
 			"people": func() []map[string]interface{} {
-				res := make([]map[string]interface{}, 0, len(task.ExecutorIDs))
-				for _, executorID := range task.ExecutorIDs {
-					res = append(res, map[string]interface{}{
-						"id": executorID.String(),
-					})
+				return []map[string]interface{}{
+					{
+						"id": task.ExecutorID.String(),
+					},
 				}
-				return res
 			}(),
 		},
 		"Ответственный": map[string]interface{}{
 			"type": "people",
 			"people": func() []map[string]interface{} {
-				res := make([]map[string]interface{}, 0, len(task.ExecutorIDs))
-				for _, executorID := range task.ExecutorIDs {
-					res = append(res, map[string]interface{}{
-						"id": executorID.String(),
-					})
+				return []map[string]interface{}{
+					{
+						"id": task.ExecutorID.String(),
+					},
 				}
-				return res
 			}(),
 		},
 		"Продукт": map[string]interface{}{
@@ -99,6 +95,13 @@ func (r *TaskNotionRepository) CreateTask(ctx context.Context, task *entity_task
 	}
 
 	return nil
+}
+
+type Formula struct {
+	Type    string  `json:"type"`
+	Number  float64 `json:"number,omitempty"`
+	String  string  `json:"string,omitempty"`
+	Boolean bool    `json:"boolean,omitempty"`
 }
 
 type taskNotion struct {
@@ -130,6 +133,22 @@ type taskNotion struct {
 			} `json:"relation"`
 		} `json:"Предыдущая"`
 
+		TotalHours struct {
+			Formula Formula `json:"formula"`
+		} `json:"Тотал ч."`
+
+		Subtasks struct {
+			Relation []struct {
+				ID string `json:"id"`
+			} `json:"relation"`
+		} `json:"Подзадачи"`
+
+		Next struct {
+			Relation []struct {
+				ID string `json:"id"`
+			} `json:"relation"`
+		} `json:"Следующая"`
+
 		Responsible struct {
 			People []struct {
 				ID string `json:"id"`
@@ -146,11 +165,71 @@ type taskNotion struct {
 			} `json:"people"`
 		} `json:"Исполнитель"`
 
-		// Questions struct {
-		// 	Relation []struct {
-		// 		ID string `json:"id"`
-		// 	} `json:"relation"`
-		// } `json:"Вопросы"`
+		TBH struct {
+			Formula Formula `json:"formula"`
+		} `json:"TBH"`
+
+		MainTask struct {
+			Formula Formula `json:"formula"`
+		} `json:"Главная задача"`
+
+		CP struct {
+			Formula Formula `json:"formula"`
+		} `json:"CP"`
+
+		Priority struct {
+			Select struct {
+				Name string `json:"name"`
+			} `json:"select"`
+		} `json:"Приоритет"`
+
+		InProgress struct {
+			Formula Formula `json:"formula"`
+		} `json:"В работе"`
+
+		TotalEstimate struct {
+			Formula Formula `json:"formula"`
+		} `json:"Тотал оценка"`
+
+		PlanFact struct {
+			Formula Formula `json:"formula"`
+		} `json:"План / Факт"`
+
+		Section struct {
+			Formula Formula `json:"formula"`
+		} `json:"Секция"`
+
+		Duration struct {
+			Formula Formula `json:"formula"`
+		} `json:"Длительность"`
+
+		Chain struct {
+			Formula Formula `json:"formula"`
+		} `json:"Цепочка проектов"`
+
+		Volume struct {
+			Formula Formula `json:"formula"`
+		} `json:"Объем"`
+
+		CR struct {
+			Formula Formula `json:"formula"`
+		} `json:"CR"`
+
+		Questions struct {
+			Relation []struct {
+				ID string `json:"id"`
+			} `json:"relation"`
+		} `json:"Вопросы"`
+
+		IKP struct {
+			Select struct {
+				Name string `json:"name"`
+			} `json:"select"`
+		} `json:"IKP"`
+
+		CreatedDate struct {
+			CreatedTime string `json:"created_time"`
+		} `json:"Дата создания"`
 
 		Product struct {
 			Relation []struct {
@@ -178,25 +257,43 @@ type taskNotion struct {
 		Task struct {
 			Title []textElement `json:"title"`
 		} `json:"Task"`
-
-		Priority struct {
-			Select struct {
-				Name string `json:"name"`
-			} `json:"select"`
-		} `json:"Приоритет"`
 	} `json:"properties"`
 }
 
 func (t *taskNotion) toEntity() *entity_task.Task {
+	createdTime, err := datetime.Parse(t.CreatedTime, time.UTC)
+	if err != nil {
+		slog.Error("Error parsing created time", "error", err)
+		return nil
+	}
+
+	lastEditedTime, err := datetime.Parse(t.LastEditedTime, time.UTC)
+	if err != nil {
+		slog.Error("Error parsing last edited time", "error", err)
+		return nil
+	}
+
 	entity := &entity_task.Task{
 		ID:             parseUUIDOrNil(t.ID),
-		CreatedTime:    t.CreatedTime,
-		LastEditedTime: t.LastEditedTime,
+		CreatedTime:    createdTime,
+		LastEditedTime: lastEditedTime,
 		Priority:       t.Properties.Priority.Select.Name,
 		Task:           getPlainText(t.Properties.Task.Title),
 		Status:         entity_task.Status(t.Properties.Status.Status.Name),
 		Estimate:       t.Properties.Estimate.Number,
-		Tags:           make([]string, 0, len(t.Properties.Tags.MultiSelect)),
+		Tags:           make([]entity_task.Tag, 0, len(t.Properties.Tags.MultiSelect)),
+		CreatorID:      parseUUIDOrNil(t.Properties.Creator.ID),
+		Start:          time.Time{},
+		End:            time.Time{},
+		TotalHours:     t.Properties.TotalHours.Formula.Number,
+		TBH:            t.Properties.TBH.Formula.Number,
+		CP:             t.Properties.CP.Formula.Number,
+		TotalEstimate:  t.Properties.TotalEstimate.Formula.Number,
+		PlanFact:       t.Properties.PlanFact.Formula.Number,
+		Duration:       t.Properties.Duration.Formula.Number,
+		CR:             t.Properties.CR.Formula.Number,
+		IKP:            t.Properties.IKP.Select.Name,
+		MainTask:       t.Properties.MainTask.Formula.String,
 	}
 
 	if len(t.Properties.ParentTask.Relation) > 0 {
@@ -204,17 +301,11 @@ func (t *taskNotion) toEntity() *entity_task.Task {
 	}
 
 	if len(t.Properties.Responsible.People) > 0 {
-		entity.Responsible = make([]uuid.UUID, 0, len(t.Properties.Responsible.People))
-		for _, person := range t.Properties.Responsible.People {
-			entity.Responsible = append(entity.Responsible, parseUUIDOrNil(person.ID))
-		}
+		entity.ResponsibleID = parseUUIDOrNil(t.Properties.Responsible.People[0].ID)
 	}
 
 	if len(t.Properties.Executor.People) > 0 {
-		entity.ExecutorIDs = make([]uuid.UUID, 0, len(t.Properties.Executor.People))
-		for _, person := range t.Properties.Executor.People {
-			entity.ExecutorIDs = append(entity.ExecutorIDs, parseUUIDOrNil(person.ID))
-		}
+		entity.ExecutorID = parseUUIDOrNil(t.Properties.Executor.People[0].ID)
 	}
 
 	if len(t.Properties.Product.Relation) > 0 {
@@ -222,7 +313,7 @@ func (t *taskNotion) toEntity() *entity_task.Task {
 	}
 
 	for _, tag := range t.Properties.Tags.MultiSelect {
-		entity.Tags = append(entity.Tags, tag.Name)
+		entity.Tags = append(entity.Tags, entity_task.Tag(tag.Name))
 	}
 
 	if t.Properties.Deadline.Date.Start != "" {
@@ -235,6 +326,21 @@ func (t *taskNotion) toEntity() *entity_task.Task {
 		if deadlineEnd, err := datetime.Parse(t.Properties.Deadline.Date.End, time.UTC); err == nil {
 			entity.End = deadlineEnd
 		}
+	}
+
+	if len(t.Properties.Subtasks.Relation) > 0 {
+		entity.Subtasks = make([]uuid.UUID, 0, len(t.Properties.Subtasks.Relation))
+		for _, subtask := range t.Properties.Subtasks.Relation {
+			entity.Subtasks = append(entity.Subtasks, parseUUIDOrNil(subtask.ID))
+		}
+	}
+
+	if len(t.Properties.Previous.Relation) > 0 {
+		entity.PreviousID = parseUUIDOrNil(t.Properties.Previous.Relation[0].ID)
+	}
+
+	if len(t.Properties.Next.Relation) > 0 {
+		entity.NextID = parseUUIDOrNil(t.Properties.Next.Relation[0].ID)
 	}
 
 	return entity

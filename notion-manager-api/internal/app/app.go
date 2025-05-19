@@ -47,7 +47,7 @@ func New() *app {
 	timeController := time.NewTimeController(router, store, notionClient, sheetsClient)
 	app.controllers = append(app.controllers, timeController)
 
-	taskController := task.NewTaskController(router, store, notionClient)
+	taskController := task.NewTaskController(router, store, notionClient, sheetsClient)
 	app.controllers = append(app.controllers, taskController)
 
 	storage := repositories.New()

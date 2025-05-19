@@ -33,6 +33,4 @@ notion:
 sheets:
   id: "1dStGuMfFU2Vq2V2xgXLyKUq_j3zYBeP15LA0eUQtTAQ"
   time_sheet: "Time"
-temp_sheets:
-  id: "1IH6CTkmTmQB9PftS0vZlkqsZ2B5Kf_Lx0560AQHFtQk"
-  time_sheet: "Time"
+  task_sheet: "Task"

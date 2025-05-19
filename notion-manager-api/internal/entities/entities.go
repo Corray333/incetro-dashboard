@@ -34,16 +34,16 @@ type TimeMsg struct {
 // Task godoc
 // @Description Represents a task in the system
 type Task struct {
-	ID         string   `json:"id" db:"task_id" example:"9eb9de5f-2341-44c6-aae8-fc917394092b"`
-	Title      string   `json:"title" db:"title" example:"Доделать прототип тайм трекера"`
-	Status     string   `json:"status" db:"status" example:"В работе"`
-	ProjectID  string   `json:"projectID" db:"project_id" example:"268c4871-39fd-4c78-9681-4d62ae34dcee"`
-	EmployeeID string   `json:"employeeID" db:"employee_id" example:"353198d1-1a40-4b4b-9841-66e7de4de6ea"`
-	Employee   string   `json:"employee" example:"Mark"`
-	Tags       []string `json:"tags" db:"tags"`
-	StartTime  int64    `json:"startTime" db:"start_time"`
-	EndTime    int64    `json:"endTime" db:"end_time"`
-	Estimate   float64  `json:"estimate" db:"estimate"`
+	ID         string    `json:"id" db:"task_id" example:"9eb9de5f-2341-44c6-aae8-fc917394092b"`
+	Title      string    `json:"title" db:"title" example:"Доделать прототип тайм трекера"`
+	Status     string    `json:"status" db:"status" example:"В работе"`
+	ProjectID  string    `json:"projectID" db:"project_id" example:"268c4871-39fd-4c78-9681-4d62ae34dcee"`
+	EmployeeID string    `json:"employeeID" db:"employee_id" example:"353198d1-1a40-4b4b-9841-66e7de4de6ea"`
+	Employee   string    `json:"employee" example:"Mark"`
+	Tags       []string  `json:"tags" db:"tags"`
+	StartTime  time.Time `json:"startTime" db:"start"`
+	EndTime    time.Time `json:"endTime" db:"end"`
+	Estimate   float64   `json:"estimate" db:"estimate"`
 }
 
 func (t Task) ToMsg() string {
@@ -99,7 +99,7 @@ type Employee struct {
 type System struct {
 	ID                   int       `json:"id" db:"id"`
 	ProjectsDBLastSynced int64     `json:"projectsDBLastSynced" db:"projects_db_last_sync"`
-	TasksDBLastSynced    int64     `json:"tasksDBLastSynced" db:"tasks_db_last_sync"`
+	TasksDBLastSynced    time.Time `json:"tasksDBLastSynced" db:"tasks_db_last_sync"`
 	EmployeeDBLastSynced int64     `json:"employeeDBLastSynced" db:"employee_db_last_sync"`
 	TimesDBLastSynced    time.Time `json:"timesDBLastSynced" db:"times_db_last_sync"`
 	FeedbackDBLastSynced time.Time `json:"feedbackDBLastSynced" db:"feedback_db_last_sync"`

@@ -478,27 +478,27 @@ func (e *External) GetTasks(timeFilterType string, lastSynced int64, startCursor
 				}
 				return w.Properties.Worker.People[0].ID
 			}(),
-			StartTime: func() int64 {
+			StartTime: func() time.Time {
 				if w.Properties.Deadline.Date.Start == nil {
-					return 0
+					return time.Time{}
 				}
 
 				startTime, err := parseDate(*w.Properties.Deadline.Date.Start)
 				if err != nil {
-					return 0
+					return time.Time{}
 				}
-				return startTime.Unix()
+				return startTime
 			}(),
-			EndTime: func() int64 {
+			EndTime: func() time.Time {
 				if w.Properties.Deadline.Date.End == nil {
-					return 0
+					return time.Time{}
 				}
 
 				endTime, err := parseDate(*w.Properties.Deadline.Date.End)
 				if err != nil {
-					return 0
+					return time.Time{}
 				}
-				return endTime.Unix()
+				return endTime
 			}(),
 			Estimate: w.Properties.Estimated.Number,
 		})
