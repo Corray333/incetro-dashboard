@@ -241,10 +241,23 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 	return tx.Commit()
 }
 
+// type Task struct {
+// 	ID         string    `json:"id" db:"task_id" example:"9eb9de5f-2341-44c6-aae8-fc917394092b"`
+// 	Title      string    `json:"title" db:"title" example:"Доделать прототип тайм трекера"`
+// 	Status     string    `json:"status" db:"status" example:"В работе"`
+// 	ProjectID  string    `json:"projectID" db:"project_id" example:"268c4871-39fd-4c78-9681-4d62ae34dcee"`
+// 	EmployeeID string    `json:"employeeID" db:"employee_id" example:"353198d1-1a40-4b4b-9841-66e7de4de6ea"`
+// 	Employee   string    `json:"employee" example:"Mark"`
+// 	Tags       []string  `json:"tags" db:"tags"`
+// 	StartTime  time.Time `json:"startTime" db:"start"`
+// 	EndTime    time.Time `json:"endTime" db:"end"`
+// 	Estimate   float64   `json:"estimate" db:"estimate"`
+// }
+
 func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64, quarter int) ([]entities.Task, error) {
 	tasks := []entities.Task{}
 	query := `
-    SELECT DISTINCT tasks.task_id, tasks.status, tasks.title, tasks.status, tasks.project_id, employees.username as employee, tasks.start_time as start, tasks.end_time as end, tasks.estimate
+    SELECT DISTINCT tasks.task_id, tasks.status, tasks.title, tasks.status, tasks.project_id, employees.username as employee, tasks.start, tasks.end, tasks.estimate
     FROM tasks 
     JOIN employees ON tasks.executor_id = employees.employee_id  JOIN task_tag ON tasks.task_id = task_tag.task_id
     WHERE tg_username = $1
