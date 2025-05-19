@@ -67,10 +67,10 @@ func (s *Storage) GetProjectsWithHoursSums(ctx context.Context) ([]entities.Proj
 					'Тестирование ' || p.name
 				)
 			), 0) AS total_hours,
-			COALESCE(MAX(t.task_id) FILTER (
+			COALESCE(MAX(t.task_id::text) FILTER (
 				WHERE t.title = 'Менеджмент ' || p.name
 			)::text, '') AS management_task_id,
-			COALESCE(MAX(t.task_id) FILTER (
+			COALESCE(MAX(t.task_id::text) FILTER (
 				WHERE t.title = 'Тестирование ' || p.name
 			)::text, '') AS testing_task_id
 		FROM
