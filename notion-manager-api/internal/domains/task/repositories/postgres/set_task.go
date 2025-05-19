@@ -57,7 +57,7 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, limit, offset in
 			COALESCE(exp.name, '') AS expertise
 		FROM tasks
 		LEFT JOIN tasks t ON t.task_id = tasks.parent_id
-		LEFT JOIN employees e ON tasks.executor_id <> '' AND e.employee_id = tasks.executor_id::uuid
+		LEFT JOIN employees e ON e.employee_id = tasks.executor_id
 		LEFT JOIN expertise exp ON exp.expertise_id = e.expertise_id
 		LIMIT $1 OFFSET $2
 	`, limit, offset); err != nil {
