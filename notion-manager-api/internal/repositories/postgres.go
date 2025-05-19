@@ -244,7 +244,7 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64, quarter int) ([]entities.Task, error) {
 	tasks := []entities.Task{}
 	query := `
-    SELECT DISTINCT tasks.* 
+    SELECT DISTINCT tasks.id, tasks.status, tasks.title, tasks.status, tasks.project_id, tasks.employee_id, employees.username as employee, tasks.start_time as start, tasks.end_time as end, tasks.estimate
     FROM tasks 
     JOIN employees ON tasks.employee_id = employees.employee_id  JOIN task_tag ON tasks.task_id = task_tag.task_id
     WHERE tg_username = $1
