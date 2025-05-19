@@ -49,7 +49,7 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, limit, offset in
 	if err := r.DB().SelectContext(ctx, &tasks, `
 		SELECT 
 			tasks.task_id, tasks.created_time, tasks.last_edited_time, tasks.title, tasks.priority, tasks.status,
-			COALESCE(tasks.parent_id, '') AS parent_id, tasks.creator_id, tasks.project_id, tasks.estimate,
+			tasks.parent_id AS parent_id, tasks.creator_id, tasks.project_id, tasks.estimate,
 			tasks.start, tasks."end", tasks.previous_id, tasks.next_id, tasks.total_hours, tasks.tbh,
 			tasks.cp, tasks.total_estimate, tasks.plan_fact, tasks.duration, tasks.cr, tasks.ikp, tasks.main_task,
 			tasks.executor_id, tasks.responsible_id,
