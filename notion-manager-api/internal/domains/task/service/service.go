@@ -51,7 +51,7 @@ func NewTaskService(opts ...option) *TaskService {
 		opt(service)
 	}
 
-	service.updateSheets(context.Background())
+	// service.updateSheets(context.Background())
 
 	return service
 }
