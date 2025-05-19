@@ -157,13 +157,27 @@ func (s *Storage) SetEmployees(employees []entities.Employee) error {
 
 		var tgID int64 // Use pointer to handle NULL values
 
+		var expertiseID sql.NullString
+		if employee.ExpertiseID != "" {
+			// Проверяем, что строка является допустимым UUID
+			if _, err := uuid.Parse(employee.ExpertiseID); err == nil {
+				expertiseID = sql.NullString{String: employee.ExpertiseID, Valid: true}
+			} else {
+				// Обработка ошибки парсинга UUID
+				slog.Error("invalid UUID format for ExpertiseID: " + err.Error())
+				return err
+			}
+		} else {
+			expertiseID = sql.NullString{Valid: false}
+		}
+
 		query := `INSERT INTO employees (employee_id, username, email, icon, profile_id, tg_username, geo, expertise_id, direction, status, phone, fio) 
 				  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
 				  ON CONFLICT (employee_id) 
 				  DO UPDATE SET username = $2, email = $3, icon = $4, profile_id = $5, tg_username = $6, geo = $7, expertise_id = $8, direction = $9, status = $10, phone = $11, fio = $12
 				  RETURNING tg_id`
 
-		err := tx.QueryRow(query, employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram, employee.Geo, employee.ExpertiseID, employee.Direction, employee.Status, employee.Phone, employee.FIO).Scan(&tgID)
+		err := tx.QueryRow(query, employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram, employee.Geo, expertiseID, employee.Direction, employee.Status, employee.Phone, employee.FIO).Scan(&tgID)
 		if err != nil {
 			slog.Error("error setting employees: " + err.Error())
 			return err

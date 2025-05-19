@@ -313,6 +313,8 @@ func (t *Transport) NewDashboardAuthMiddleware() func(next http.Handler) http.Ha
 
 			role := t.service.GetUserRole(creds.GetUsername(), creds.GetUserID())
 
+			fmt.Println(role)
+
 			r = r.WithContext(context.WithValue(r.Context(), entities.ContextKeyUserRole, role))
 			next.ServeHTTP(w, r)
 		}
