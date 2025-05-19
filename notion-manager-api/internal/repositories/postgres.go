@@ -263,7 +263,7 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
     WHERE tg_username = $1
     AND (
 		(start >= $2 AND start <= $3)
-		OR (end >= $2 AND end <= $3)
+		OR ("end" >= $2 AND "end" <= $3)
     ) AND tag = $4
 `
 	if err := s.db.Select(&tasks, query, employeeUsername, period_start, period_end, "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
