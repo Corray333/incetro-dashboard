@@ -107,7 +107,7 @@ func (s *Storage) GetActiveTasks(userID string, projectID string) (tasks []entit
 func (s *Storage) GetQuarterTasks(quarter int) (tasks []entities.Task, err error) {
 	tasks = []entities.Task{}
 	if err := s.db.Select(&tasks, `
-        SELECT tasks.* FROM task_tag NATURAL JOIN tasks 
+        SELECT tasks.task_id, tasks.status FROM task_tag NATURAL JOIN tasks 
         WHERE tag = $1
     `, "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
 		slog.Error("error getting tasks: " + err.Error())
@@ -244,7 +244,7 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64, quarter int) ([]entities.Task, error) {
 	tasks := []entities.Task{}
 	query := `
-    SELECT DISTINCT tasks.id, tasks.status, tasks.title, tasks.status, tasks.project_id, tasks.employee_id, employees.username as employee, tasks.start_time as start, tasks.end_time as end, tasks.estimate
+    SELECT DISTINCT tasks.task_id, tasks.status, tasks.title, tasks.status, tasks.project_id, tasks.executor_id, employees.username as employee, tasks.start_time as start, tasks.end_time as end, tasks.estimate
     FROM tasks 
     JOIN employees ON tasks.employee_id = employees.employee_id  JOIN task_tag ON tasks.task_id = task_tag.task_id
     WHERE tg_username = $1
