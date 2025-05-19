@@ -6,5 +6,6 @@ ALTER COLUMN employee_id TYPE uuid USING employee_id::uuid;
 
 -- +goose Down
 -- +goose StatementBegin
-SELECT 'down SQL query';
+ALTER TABLE employees
+ALTER COLUMN employee_id TYPE integer USING employee_id::integer;
 -- +goose StatementEnd
