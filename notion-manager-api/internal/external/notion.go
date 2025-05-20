@@ -543,63 +543,78 @@ func (e *External) GetNotCorrectPersonTimes() (times []entities.Time, lastUpdate
 		"filter": map[string]interface{}{
 			"property": "PC-B",
 			"formula": map[string]interface{}{
-				"checkbox": map[string]interface{}{
-					"equals": false,
-				},
+				"checkbox": map[string]interface{}{"equals": false},
 			},
 		},
-		"sorts": []map[string]interface{}{
-			{
-				"timestamp": "last_edited_time",
-				"direction": "ascending",
-			},
-		},
-	}
-
-	resp, err := notion.SearchPages(viper.GetString("notion.databases.times"), filter)
-	if err != nil {
-		return nil, 0, err
-	}
-	timeResults := struct {
-		Results    []Time `json:"results"`
-		HasMore    bool   `json:"has_more"`
-		NextCursor string `json:"next_cursor"`
-	}{}
-	if err := json.Unmarshal(resp, &timeResults); err != nil {
-		return nil, 0, err
+		"sorts": []map[string]interface{}{{
+			"timestamp": "last_edited_time",
+			"direction": "ascending",
+		}},
 	}
 
 	times = []entities.Time{}
-	for _, w := range timeResults.Results {
-		times = append(times, entities.Time{
-			Description: func() string {
-				if len(w.Properties.WhatDid.Title) == 0 {
-					return ""
-				}
+	var cursor string
+	for {
+		// Include cursor for pagination if set
+		if cursor != "" {
+			fmt.Println("Next cursor applied")
+			filter["start_cursor"] = cursor
+		} else {
+			delete(filter, "start_cursor")
+		}
 
-				return w.Properties.WhatDid.Title[0].PlainText
-			}(),
-			ID: strings.ReplaceAll(w.ID, "-", ""),
-			Employee: func() string {
-				if len(w.Properties.WhoDid.People) == 0 {
-					return ""
-				}
-				return w.Properties.WhoDid.People[0].Name
-			}(),
-			EmployeeID: func() string {
-				if len(w.Properties.WhoDid.People) == 0 {
-					return ""
-				}
-				return w.Properties.WhoDid.People[0].ID
-			}(),
-		})
-
-		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)
+		resp, err := notion.SearchPages(viper.GetString("notion.databases.times"), filter)
 		if err != nil {
 			return nil, 0, err
 		}
 
-		lastUpdate = lastEditedTime.Unix()
+		var page struct {
+			Results    []Time `json:"results"`
+			HasMore    bool   `json:"has_more"`
+			NextCursor string `json:"next_cursor"`
+		}
+		if err := json.Unmarshal(resp, &page); err != nil {
+			return nil, 0, err
+		}
+
+		// Process results
+		for _, w := range page.Results {
+			times = append(times, entities.Time{
+				Description: func() string {
+					if len(w.Properties.WhatDid.Title) == 0 {
+						return ""
+					}
+
+					return w.Properties.WhatDid.Title[0].PlainText
+				}(),
+				ID: strings.ReplaceAll(w.ID, "-", ""),
+				Employee: func() string {
+					if len(w.Properties.WhoDid.People) == 0 {
+						return ""
+					}
+					return w.Properties.WhoDid.People[0].Name
+				}(),
+				EmployeeID: func() string {
+					if len(w.Properties.WhoDid.People) == 0 {
+						return ""
+					}
+					return w.Properties.WhoDid.People[0].ID
+				}(),
+			})
+
+			// Update lastUpdate timestamp
+			lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)
+			if err != nil {
+				return nil, 0, err
+			}
+			lastUpdate = lastEditedTime.Unix()
+		}
+
+		// If there's more pages, continue
+		if !page.HasMore {
+			break
+		}
+		cursor = page.NextCursor
 	}
 
 	return times, lastUpdate, nil
