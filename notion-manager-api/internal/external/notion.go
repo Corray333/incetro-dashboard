@@ -734,6 +734,10 @@ type Project struct {
 				Function string        `json:"function"`
 			} `json:"rollup"`
 		} `json:"Менеджер Link"`
+		GSL struct {
+			Type string `json:"type"`
+			URL  string `json:"url"`
+		} `json:"GSL"`
 	} `json:"properties"`
 }
 
@@ -808,6 +812,12 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 				return w.Properties.Manager.Relation[0].ID
 			}(),
 			Type: w.Properties.ProjectType.Select.Name,
+			SheetsLink: func() string {
+				if w.Properties.GSL.Type == "url" {
+					return w.Properties.GSL.URL
+				}
+				return ""
+			}(),
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)

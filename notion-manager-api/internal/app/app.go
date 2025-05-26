@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/Corray333/employee_dashboard/internal/domains/feedback"
+	"github.com/Corray333/employee_dashboard/internal/domains/project"
 	"github.com/Corray333/employee_dashboard/internal/domains/task"
 	time "github.com/Corray333/employee_dashboard/internal/domains/time"
 	"github.com/Corray333/employee_dashboard/internal/external"
@@ -44,10 +45,13 @@ func New() *app {
 	feedbackController := feedback.NewFeedbackController(grpcServer, store, notionClient)
 	app.controllers = append(app.controllers, feedbackController)
 
-	timeController := time.NewTimeController(router, store, notionClient, sheetsClient)
+	projectController := project.NewProjectController(store, notionClient, sheetsClient)
+	app.controllers = append(app.controllers, projectController)
+
+	timeController := time.NewTimeController(router, store, notionClient, sheetsClient, projectController.GetService())
 	app.controllers = append(app.controllers, timeController)
 
-	taskController := task.NewTaskController(router, store, notionClient, sheetsClient)
+	taskController := task.NewTaskController(router, store, notionClient, sheetsClient, projectController.GetService())
 	app.controllers = append(app.controllers, taskController)
 
 	storage := repositories.New()

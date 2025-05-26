@@ -1,6 +1,7 @@
 package task
 
 import (
+	project_repo "github.com/Corray333/employee_dashboard/internal/domains/project/service"
 	notion_repo "github.com/Corray333/employee_dashboard/internal/domains/task/repositories/notion"
 	postgres_repo "github.com/Corray333/employee_dashboard/internal/domains/task/repositories/postgres"
 	sheets_repo "github.com/Corray333/employee_dashboard/internal/domains/task/repositories/sheets"
@@ -19,13 +20,13 @@ type TaskController struct {
 	transport    *transport.TaskTransport
 }
 
-func NewTaskController(router *chi.Mux, store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client) *TaskController {
+func NewTaskController(router *chi.Mux, store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client, projectRepository *project_repo.ProjectService) *TaskController {
 
 	postgresRepo := postgres_repo.NewTaskPostgresRepository(store)
 	notionRepo := notion_repo.NewTaskNotionRepository(notionClient)
 	sheetsRepo := sheets_repo.NewTaskSheetsRepository(sheetsClient)
 
-	service := service.NewTaskService(service.WithPostgresRepository(postgresRepo), service.WithNotionRepository(notionRepo), service.WithSheetsRepository(sheetsRepo))
+	service := service.NewTaskService(service.WithPostgresRepository(postgresRepo), service.WithNotionRepository(notionRepo), service.WithSheetsRepository(sheetsRepo), service.WithProjectRepository(projectRepository))
 
 	transport := transport.NewTaskTransport(router, service)
 

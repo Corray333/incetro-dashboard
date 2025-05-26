@@ -56,3 +56,7 @@ type TimeOutboxMsg struct {
 	Description string    `json:"description"`
 	WorkDate    time.Time `json:"workDate"`
 }
+
+type TimeFilter struct {
+	ProjectID uuid.UUID `json:"project_id"`
+}

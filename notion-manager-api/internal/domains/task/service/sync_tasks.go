@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/Corray333/employee_dashboard/internal/domains/task/entities/task"
+	"github.com/Corray333/employee_dashboard/internal/utils"
 	"github.com/spf13/viper"
 )
 
@@ -78,23 +80,57 @@ func (s *TaskService) updateTasks(ctx context.Context) error {
 }
 
 type taskLister interface {
-	ListTasks(ctx context.Context, limit, offset int) ([]task.Task, error)
+	ListTasks(ctx context.Context, filter task.Filter, limit, offset int) ([]task.Task, error)
 }
 
 type sheetsTasksUpdater interface {
 	UpdateSheetsTasks(ctx context.Context, sheetID string, tasks []task.Task) error
 }
 
+type projectsLister interface {
+	ListProjects(ctx context.Context) ([]project.Project, error)
+}
+
 func (s *TaskService) updateSheets(ctx context.Context) {
 
-	times, err := s.taskLister.ListTasks(ctx, 20000, 0)
+	tasks, err := s.taskLister.ListTasks(ctx, task.Filter{}, 20000, 0)
 	if err != nil {
 		slog.Error("Error getting tasks", "error", err)
 		return
 	}
 
-	if err := s.sheetsTasksUpdater.UpdateSheetsTasks(ctx, viper.GetString("sheets.id"), times); err != nil {
+	if err := s.sheetsTasksUpdater.UpdateSheetsTasks(ctx, viper.GetString("sheets.id"), tasks); err != nil {
 		slog.Error("Error updating sheets", "error", err)
 		return
+	}
+
+	projects, err := s.projectsLister.ListProjects(ctx)
+	if err != nil {
+		slog.Error("Error getting projects", "error", err)
+		return
+	}
+
+	for _, project := range projects {
+		if project.SheetsLink == "" {
+			continue
+		}
+
+		sheetID, err := utils.ExtractSpreadsheetID(project.SheetsLink)
+		if err != nil {
+			slog.Error("Error extracting spreadsheet ID", "error", err)
+			continue
+		}
+
+		tasks, err := s.taskLister.ListTasks(ctx, task.Filter{ProjectID: project.ID}, 20000, 0)
+		if err != nil {
+			slog.Error("Error getting tasks", "error", err)
+			return
+		}
+
+		if err := s.sheetsTasksUpdater.UpdateSheetsTasks(ctx, sheetID, tasks); err != nil {
+			slog.Error("Error updating sheets", "error", err)
+			return
+		}
+
 	}
 }

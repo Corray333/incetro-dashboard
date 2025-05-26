@@ -68,6 +68,8 @@ type Project struct {
 	Type     string `json:"type" db:"type" example:"Личный"`
 	Manager  string `json:"manager" db:"manager" example:"Mark"`
 
+	SheetsLink string `json:"sheetsLink" db:"sheets_link"`
+
 	ManagerID string `json:"managerID" db:"manager_id"`
 
 	TotalHours       float64 `json:"-" db:"total_hours"`

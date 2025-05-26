@@ -7,16 +7,17 @@ import (
 )
 
 type TimeService struct {
-	timeLastUpdateTimeGetter
-	timeLastUpdateTimeSetter
-	timeRawLister
-	timeSetter
-	sheetsRepository
-	timesLister
-	timeWriteOfCreater
-	timeOutboxMsgGetter
-	timeWriteOfSentMarker
-	timeWriteOfNotion
+	timeLastUpdateTimeGetter timeLastUpdateTimeGetter
+	timeLastUpdateTimeSetter timeLastUpdateTimeSetter
+	timeRawLister            timeRawLister
+	timeSetter               timeSetter
+	sheetsRepository         sheetsRepository
+	timesLister              timesLister
+	timeWriteOfCreater       timeWriteOfCreater
+	timeOutboxMsgGetter      timeOutboxMsgGetter
+	timeWriteOfSentMarker    timeWriteOfSentMarker
+	timeWriteOfNotion        timeWriteOfNotion
+	projectsLister           projectsLister
 }
 
 type postgresRepository interface {
@@ -34,8 +35,7 @@ type notionRepository interface {
 }
 
 type sheetsRepository interface {
-	UpdateSheetsTimes(ctx context.Context, times []entity_time.Time) error
-	UpdateTempSheetsTimes(ctx context.Context, times []entity_time.Time) error
+	UpdateSheetsTimes(ctx context.Context, sheetID string, times []entity_time.Time) error
 }
 
 type option func(*TimeService)
@@ -76,6 +76,12 @@ func WithNotionRepository(repository notionRepository) option {
 func WithSheetsRepository(repository sheetsRepository) option {
 	return func(s *TimeService) {
 		s.sheetsRepository = repository
+	}
+}
+
+func WithProjectRepository(repository projectsLister) option {
+	return func(s *TimeService) {
+		s.projectsLister = repository
 	}
 }
 

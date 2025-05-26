@@ -21,6 +21,8 @@ type TaskService struct {
 
 	taskLister         taskLister
 	sheetsTasksUpdater sheetsTasksUpdater
+
+	projectsLister projectsLister
 }
 
 type postgresRepository interface {
@@ -118,6 +120,12 @@ func (s *TaskService) processTaskMsgs(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func WithProjectRepository(repository projectsLister) option {
+	return func(s *TaskService) {
+		s.projectsLister = repository
+	}
 }
 
 func (s *TaskService) StartTaskOutboxWorker(ctx context.Context) {

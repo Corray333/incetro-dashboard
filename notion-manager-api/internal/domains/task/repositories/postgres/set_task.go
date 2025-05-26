@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Corray333/employee_dashboard/internal/domains/task/entities/task"
-	entity_task "github.com/Corray333/employee_dashboard/internal/domains/task/entities/task"
+	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 )
 
@@ -44,31 +44,51 @@ type taskDB struct {
 	Direction   string `db:"direction"`
 }
 
-func (r *TaskPostgresRepository) ListTasks(ctx context.Context, limit, offset int) ([]task.Task, error) {
-	tasks := make([]taskDB, 0)
-	if err := r.DB().SelectContext(ctx, &tasks, `
-		SELECT 
-			tasks.task_id, tasks.created_time, tasks.last_edited_time, tasks.title, tasks.priority, tasks.status,
-			tasks.parent_id AS parent_id, tasks.creator_id, tasks.project_id, tasks.estimate,
-			tasks.start, tasks."end", tasks.previous_id, tasks.next_id, tasks.total_hours, tasks.tbh,
-			tasks.cp, tasks.total_estimate, tasks.plan_fact, tasks.duration, tasks.cr, COALESCE(tasks.ikp, '') AS ikp, tasks.main_task,
-			tasks.executor_id, tasks.responsible_id,
-			COALESCE(t.title, '') AS parent_name,
-			COALESCE(exp.name, '') AS expertise
-		FROM tasks
-		LEFT JOIN tasks t ON t.task_id = tasks.parent_id
-		LEFT JOIN employees e ON e.employee_id = tasks.executor_id
-		LEFT JOIN expertise exp ON exp.expertise_id = e.expertise_id
-		LIMIT $1 OFFSET $2
-	`, limit, offset); err != nil {
-		slog.Error("Error listing tasks", "error", err)
+func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filter, limit, offset int) ([]task.Task, error) {
+	// Инициализация билдера запроса с использованием Squirrel
+	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Select(
+			"tasks.task_id", "tasks.created_time", "tasks.last_edited_time", "tasks.title", "tasks.priority", "tasks.status",
+			"tasks.parent_id AS parent_id", "tasks.creator_id", "tasks.project_id", "tasks.estimate",
+			"tasks.start", "tasks.end", "tasks.previous_id", "tasks.next_id", "tasks.total_hours", "tasks.tbh",
+			"tasks.cp", "tasks.total_estimate", "tasks.plan_fact", "tasks.duration", "tasks.cr",
+			"COALESCE(tasks.ikp, '') AS ikp", "tasks.main_task",
+			"tasks.executor_id", "tasks.responsible_id",
+			"COALESCE(t.title, '') AS parent_name",
+			"COALESCE(exp.name, '') AS expertise",
+		).
+		From("tasks").
+		LeftJoin("tasks t ON t.task_id = tasks.parent_id").
+		LeftJoin("employees e ON e.employee_id = tasks.executor_id").
+		LeftJoin("expertise exp ON exp.expertise_id = e.expertise_id").
+		Limit(uint64(limit)).
+		Offset(uint64(offset))
+
+	// Применение фильтра по ProjectID, если он задан
+	if filter.ProjectID != uuid.Nil {
+		builder = builder.Where(squirrel.Eq{"tasks.project_id": filter.ProjectID})
+	}
+
+	// Преобразование билдера в SQL-запрос
+	query, args, err := builder.ToSql()
+	if err != nil {
+		slog.Error("Ошибка при построении SQL-запроса", "error", err)
 		return nil, err
 	}
 
+	// Выполнение запроса
+	var tasks []taskDB
+	if err := r.DB().SelectContext(ctx, &tasks, query, args...); err != nil {
+		slog.Error("Ошибка при выполнении запроса к базе данных", "error", err)
+		return nil, err
+	}
+
+	// Преобразование результатов в сущности и загрузка тегов
 	result := make([]task.Task, 0, len(tasks))
 	for _, t := range tasks {
-		if err := r.DB().Select(&t.Tags, `SELECT tag FROM task_tag WHERE task_id = $1`, t.ID); err != nil {
-			slog.Error("Error getting task tags", "error", err)
+		// Загрузка тегов задачи
+		if err := r.DB().SelectContext(ctx, &t.Tags, `SELECT tag FROM task_tag WHERE task_id = $1`, t.ID); err != nil {
+			slog.Error("Ошибка при получении тегов задачи", "error", err)
 			return nil, err
 		}
 		result = append(result, *t.toEntity())
@@ -77,7 +97,7 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, limit, offset in
 	return result, nil
 }
 
-func entityToTaskDB(task *entity_task.Task) *taskDB {
+func entityToTaskDB(task *task.Task) *taskDB {
 	return &taskDB{
 		ID:             task.ID,
 		CreatedTime:    task.CreatedTime,
@@ -112,7 +132,7 @@ func entityToTaskDB(task *entity_task.Task) *taskDB {
 	}
 }
 
-func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *entity_task.Task) error {
+func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *task.Task) error {
 	tx, isNew, err := r.GetTx(ctx)
 	if err != nil {
 		return err

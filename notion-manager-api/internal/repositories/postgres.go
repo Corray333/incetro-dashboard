@@ -258,15 +258,15 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, period_end int64, quarter int) ([]entities.Task, error) {
 	tasks := []entities.Task{}
 	query := `
-    SELECT DISTINCT tasks.task_id, tasks.status, tasks.title, tasks.status, tasks.project_id, employees.username as employee, tasks.start, tasks.end, tasks.estimate
-    FROM tasks 
-    JOIN employees ON tasks.executor_id = employees.employee_id  JOIN task_tag ON tasks.task_id = task_tag.task_id
-    WHERE tg_username = $1
-    AND (
-		(start >= $2 AND start <= $3)
-		OR ("end" >= $2 AND "end" <= $3)
-    ) AND tag = $4
-`
+		SELECT DISTINCT tasks.task_id, tasks.status, tasks.title, tasks.status, tasks.project_id, employees.username as employee, tasks.start, tasks.end, tasks.estimate
+		FROM tasks 
+		JOIN employees ON tasks.executor_id = employees.employee_id  JOIN task_tag ON tasks.task_id = task_tag.task_id
+		WHERE tg_username = $1
+		AND (
+			(start >= $2 AND start <= $3)
+			OR ("end" >= $2 AND "end" <= $3)
+		) AND tag = $4
+	`
 	if err := s.db.Select(&tasks, query, employeeUsername, time.Unix(period_start, 0), time.Unix(period_end, 0), "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
 		slog.Error("error getting tasks of employee: " + err.Error())
 		return nil, err
@@ -287,7 +287,7 @@ func (s *Storage) SetProjects(projects []entities.Project) error {
 	defer tx.Rollback()
 
 	for _, project := range projects {
-		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID)
+		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id, sheets_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7, sheets_link = $8", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID, project.SheetsLink)
 		if err != nil {
 			slog.Error("Error setting projects", "error", err)
 			return err

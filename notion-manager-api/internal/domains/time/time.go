@@ -1,6 +1,7 @@
 package feedback
 
 import (
+	project_repo "github.com/Corray333/employee_dashboard/internal/domains/project/service"
 	notion_repo "github.com/Corray333/employee_dashboard/internal/domains/time/repositories/notion"
 	postgres_repo "github.com/Corray333/employee_dashboard/internal/domains/time/repositories/postgres"
 	"github.com/Corray333/employee_dashboard/internal/domains/time/repositories/sheets"
@@ -19,13 +20,13 @@ type TimeController struct {
 	transport    *transport.TimeTransport
 }
 
-func NewTimeController(router *chi.Mux, store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client) *TimeController {
+func NewTimeController(router *chi.Mux, store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client, projectRepository *project_repo.ProjectService) *TimeController {
 
 	postgresRepo := postgres_repo.NewTimePostgresRepository(store)
 	notionRepo := notion_repo.NewTimeNotionRepository(notionClient)
 	sheetsRepo := sheets.NewTimeSheetsRepository(sheetsClient)
 
-	service := service.NewTimeService(service.WithPostgresRepository(postgresRepo), service.WithNotionRepository(notionRepo), service.WithSheetsRepository(sheetsRepo))
+	service := service.NewTimeService(service.WithPostgresRepository(postgresRepo), service.WithNotionRepository(notionRepo), service.WithSheetsRepository(sheetsRepo), service.WithProjectRepository(projectRepository))
 
 	transport := transport.NewTimeTransport(router, service)
 

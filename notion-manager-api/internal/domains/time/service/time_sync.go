@@ -6,8 +6,10 @@ import (
 	"time"
 	pkg_time "time"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	entity_time "github.com/Corray333/employee_dashboard/internal/domains/time/entities/time"
-	"github.com/google/uuid"
+	"github.com/Corray333/employee_dashboard/internal/utils"
+	"github.com/spf13/viper"
 )
 
 type timeLastUpdateTimeGetter interface {
@@ -27,8 +29,7 @@ type timeSetter interface {
 }
 
 type timesLister interface {
-	ListTimes(ctx context.Context, offset, limit int) ([]entity_time.Time, error)
-	ListTimesByProject(ctx context.Context, projectID uuid.UUID, offset int, limit int) ([]entity_time.Time, error)
+	ListTimes(ctx context.Context, filter entity_time.TimeFilter, offset, limit int) ([]entity_time.Time, error)
 }
 
 func (s *TimeService) updateTimes(ctx context.Context) error {
@@ -80,28 +81,48 @@ func (s *TimeService) TimeSync(ctx context.Context) {
 	}
 }
 
+type projectsLister interface {
+	ListProjects(ctx context.Context) ([]project.Project, error)
+}
+
 func (s *TimeService) updateSheets(ctx context.Context) {
 
-	times, err := s.timesLister.ListTimes(ctx, 0, 20000)
+	times, err := s.timesLister.ListTimes(ctx, entity_time.TimeFilter{}, 0, 20000)
 	if err != nil {
 		slog.Error("Error getting times", "error", err)
 		return
 	}
 
-	if err := s.sheetsRepository.UpdateSheetsTimes(ctx, times); err != nil {
+	if err := s.sheetsRepository.UpdateSheetsTimes(ctx, viper.GetString("sheets.id"), times); err != nil {
 		slog.Error("Error updating sheets", "error", err)
 		return
 	}
 
-	times, err = s.timesLister.ListTimesByProject(ctx, uuid.MustParse("e754753f-491b-4fd5-8913-d1fc51ce2f12"), 0, 20000)
+	projects, err := s.projectsLister.ListProjects(ctx)
 	if err != nil {
-		slog.Error("Error getting project temp times", "error", err)
+		slog.Error("Error getting projects", "error", err)
 		return
 	}
 
-	if err := s.sheetsRepository.UpdateTempSheetsTimes(ctx, times); err != nil {
-		slog.Error("Error updating project temp sheets", "error", err)
-		return
+	for _, project := range projects {
+		if project.SheetsLink == "" {
+			continue
+		}
+
+		sheetsID, err := utils.ExtractSpreadsheetID(project.SheetsLink)
+		if err != nil {
+			slog.Error("Error extracting spreadsheet ID", "error", err)
+			continue
+		}
+		times, err := s.timesLister.ListTimes(ctx, entity_time.TimeFilter{ProjectID: project.ID}, 0, 20000)
+		if err != nil {
+			slog.Error("Error getting times", "error", err)
+			return
+		}
+		if err := s.sheetsRepository.UpdateSheetsTimes(ctx, sheetsID, times); err != nil {
+			slog.Error("Error updating sheets", "error", err)
+			return
+		}
 	}
 
 }
