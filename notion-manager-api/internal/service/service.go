@@ -159,6 +159,8 @@ func (s *Service) CheckInvalid() {
 
 func (s *Service) UpdateGoogleSheets(ctx context.Context) error {
 
+	ctx = context.Background()
+
 	for _, sub := range s.updateSubs {
 		go sub.AcceptUpdate(ctx)
 	}
