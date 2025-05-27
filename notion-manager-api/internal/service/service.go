@@ -366,7 +366,6 @@ func (s *Service) SetProfileInTimes(times []entities.Time) error {
 		if time.EmployeeID == "" {
 			continue
 		}
-		fmt.Printf("Setting profile in time: %+v\n", time)
 		employee, err := s.repo.GetEmployeeByID(time.EmployeeID)
 		if err != nil {
 			return err
