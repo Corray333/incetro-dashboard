@@ -370,7 +370,6 @@ func (s *Service) SetProfileInTimes(times []entities.Time) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Employee: %+v\n", employee)
 		if employee.ID == "" {
 			continue
 		}

@@ -472,7 +472,7 @@ func (e *External) GetTasks(timeFilterType string, lastSynced int64, startCursor
 				}
 				return w.Properties.Product.Relation[0].ID
 			}(),
-			EmployeeID: func() string {
+			ExecutorID: func() string {
 				if len(w.Properties.Worker.People) == 0 {
 					return ""
 				}

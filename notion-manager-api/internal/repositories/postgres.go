@@ -90,7 +90,7 @@ func (s *Storage) GetProjectsWithHoursSums(ctx context.Context) ([]entities.Proj
 func (s *Storage) GetActiveTasks(userID string, projectID string) (tasks []entities.Task, err error) {
 	statuses := []string{"Формируется", "Можно делать", "На паузе", "Ожидание", "В работе", "Надо обсудить", "Код-ревью", "Внутренняя проверка"}
 	query := `
-        SELECT * FROM tasks 
+        SELECT task_id, title, status, project_id, estimate FROM tasks 
         WHERE project_id = $1 
         AND executor_id = $2 
         AND status = ANY($3)
@@ -226,7 +226,7 @@ func (s *Storage) SetTasks(tasks []entities.Task) error {
 	defer tx.Rollback()
 
 	for _, task := range tasks {
-		_, err := tx.Exec("INSERT INTO tasks (task_id, project_id, employee_id, title, status, start_time, end_time, estimate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (task_id) DO UPDATE SET title = $4, status = $5, employee_id = $3, project_id = $2, start_time = $6, end_time = $7, estimate = $8", task.ID, task.ProjectID, task.EmployeeID, task.Title, task.Status, task.StartTime, task.EndTime, task.Estimate)
+		_, err := tx.Exec("INSERT INTO tasks (task_id, project_id, employee_id, title, status, start_time, end_time, estimate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (task_id) DO UPDATE SET title = $4, status = $5, employee_id = $3, project_id = $2, start_time = $6, end_time = $7, estimate = $8", task.ID, task.ProjectID, task.ExecutorID, task.Title, task.Status, task.StartTime, task.EndTime, task.Estimate)
 		if err != nil {
 			slog.Error("Error setting tasks", "error", err)
 			return err

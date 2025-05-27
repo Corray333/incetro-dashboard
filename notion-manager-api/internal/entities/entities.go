@@ -38,7 +38,7 @@ type Task struct {
 	Title      string    `json:"title" db:"title" example:"Доделать прототип тайм трекера"`
 	Status     string    `json:"status" db:"status" example:"В работе"`
 	ProjectID  string    `json:"projectID" db:"project_id" example:"268c4871-39fd-4c78-9681-4d62ae34dcee"`
-	EmployeeID string    `json:"employeeID" db:"employee_id" example:"353198d1-1a40-4b4b-9841-66e7de4de6ea"`
+	ExecutorID string    `json:"employeeID" db:"executor_id" example:"353198d1-1a40-4b4b-9841-66e7de4de6ea"`
 	Employee   string    `json:"employee" example:"Mark"`
 	Tags       []string  `json:"tags" db:"tags"`
 	StartTime  time.Time `json:"startTime" db:"start"`
@@ -55,7 +55,7 @@ func (t Task) ToRow() Row {
 		ID:          t.ID,
 		Description: t.Title,
 		Employee:    t.Employee,
-		EmployeeID:  t.EmployeeID,
+		EmployeeID:  t.ExecutorID,
 	}
 }
 
