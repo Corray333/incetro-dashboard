@@ -92,7 +92,7 @@ func (s *Storage) GetActiveTasks(userID string, projectID string) (tasks []entit
 	query := `
         SELECT * FROM tasks 
         WHERE project_id = $1 
-        AND employee_id = $2 
+        AND executor_id = $2 
         AND status = ANY($3)
     `
 	args := []interface{}{projectID, userID, pq.Array(statuses)}
