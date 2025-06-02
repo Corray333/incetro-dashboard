@@ -339,8 +339,6 @@ func (t *Transport) handleBotAddedToChat(bot *gotgbot.Bot, ctx *ext.Context) err
 		return nil
 	}
 
-	fmt.Println("Projects: ", projects)
-
 	var keyboard [][]gotgbot.InlineKeyboardButton
 	var row []gotgbot.InlineKeyboardButton
 
@@ -349,15 +347,12 @@ func (t *Transport) handleBotAddedToChat(bot *gotgbot.Bot, ctx *ext.Context) err
 			Text:         p.Name,
 			CallbackData: CallbackTypeChooseProject + "|" + p.ID.String(),
 		}
-		fmt.Println("Project: ", p)
 		row = append(row, btn)
 		if len(row) == 2 {
 			keyboard = append(keyboard, row)
 			row = nil
 		}
 	}
-	fmt.Println("Keyboard: ", keyboard)
-	fmt.Println("Row: ", row)
 	if len(row) > 0 {
 		keyboard = append(keyboard, row)
 	}

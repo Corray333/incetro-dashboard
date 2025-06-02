@@ -333,16 +333,18 @@ func (s *Service) Actualize() (updated bool, err error) {
 	// 	return false, err
 	// }
 
-	fmt.Println("Getting not correct person times")
-	times, _, err := s.external.GetNotCorrectPersonTimes()
-	if err != nil {
-		slog.Error("error getting not correct person times: " + err.Error())
-		return false, err
-	}
-	if err := s.SetProfileInTimes(times); err != nil {
-		slog.Error("error setting profile in times: " + err.Error())
-		return false, err
-	}
+	go func() {
+		fmt.Println("Getting not correct person times")
+		times, _, err := s.external.GetNotCorrectPersonTimes()
+		if err != nil {
+			slog.Error("error getting not correct person times: " + err.Error())
+			return
+		}
+		if err := s.SetProfileInTimes(times); err != nil {
+			slog.Error("error setting profile in times: " + err.Error())
+			return
+		}
+	}()
 
 	system.EmployeeDBLastSynced = 0
 	system.ProjectsDBLastSynced = projectsLastUpdate
