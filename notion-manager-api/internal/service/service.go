@@ -242,7 +242,7 @@ func (s *Service) StartUpdatingWorker() {
 		if err != nil {
 			slog.Error("Error actualizing dbs", "error", err)
 		}
-		time.Sleep(time.Minute)
+		time.Sleep(time.Second * 15)
 	}
 }
 
