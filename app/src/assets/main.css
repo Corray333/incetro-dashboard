@@ -4,10 +4,16 @@
 html, body, #root {
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
+    /* overflow: hidden;
+    overscroll-behavior: none; */
   }
   #root {
     /* Preserve scrolling behavior */
-    overflow-y: auto;
+    /* overflow-y: auto; */
   }
+
+@layer components {
+  button{
+    @apply bg-primary text-white rounded-full hover:bg-dark-primary duration-300 p-2;
+  }
+}

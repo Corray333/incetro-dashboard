@@ -45,7 +45,7 @@ func New() *app {
 	feedbackController := feedback.NewFeedbackController(grpcServer, store, notionClient)
 	app.controllers = append(app.controllers, feedbackController)
 
-	projectController := project.NewProjectController(store, notionClient, sheetsClient)
+	projectController := project.NewProjectController(router, store, notionClient, sheetsClient)
 	app.controllers = append(app.controllers, projectController)
 
 	timeController := time.NewTimeController(router, store, notionClient, sheetsClient, projectController.GetService())
@@ -53,6 +53,8 @@ func New() *app {
 
 	taskController := task.NewTaskController(router, store, notionClient, sheetsClient, projectController.GetService())
 	app.controllers = append(app.controllers, taskController)
+	projectController.AddProjectSheetsUpdater(taskController.GetService())
+	projectController.AddProjectSheetsUpdater(timeController.GetService())
 
 	storage := repositories.New()
 	external := external.New()

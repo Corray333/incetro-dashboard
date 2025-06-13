@@ -8,6 +8,7 @@ import (
 	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/Corray333/employee_dashboard/internal/domains/task/entities/task"
 	"github.com/Corray333/employee_dashboard/internal/utils"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -91,6 +92,40 @@ type projectsLister interface {
 	ListProjects(ctx context.Context) ([]project.Project, error)
 }
 
+func (s *TaskService) UpdateProjectSheets(ctx context.Context, projectID uuid.UUID) error {
+	tasks, err := s.taskLister.ListTasks(ctx, task.Filter{ProjectID: projectID}, 20000, 0)
+	if err != nil {
+		return err
+	}
+
+	projects, err := s.projectsLister.ListProjects(ctx)
+	if err != nil {
+		return err
+	}
+
+	var sheetID string
+	for _, project := range projects {
+		if project.ID == projectID {
+			sheetID, err = utils.ExtractSpreadsheetID(project.SheetsLink)
+			if err != nil {
+				return err
+			}
+			break
+		}
+	}
+
+	if sheetID == "" {
+		return nil
+	}
+
+	if err := s.sheetsTasksUpdater.UpdateSheetsTasks(ctx, sheetID, tasks); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 func (s *TaskService) updateSheets(ctx context.Context) {
 
 	tasks, err := s.taskLister.ListTasks(ctx, task.Filter{}, 20000, 0)
@@ -104,33 +139,33 @@ func (s *TaskService) updateSheets(ctx context.Context) {
 		return
 	}
 
-	projects, err := s.projectsLister.ListProjects(ctx)
-	if err != nil {
-		slog.Error("Error getting projects", "error", err)
-		return
-	}
+	// projects, err := s.projectsLister.ListProjects(ctx)
+	// if err != nil {
+	// 	slog.Error("Error getting projects", "error", err)
+	// 	return
+	// }
 
-	for _, project := range projects {
-		if project.SheetsLink == "" {
-			continue
-		}
+	// for _, project := range projects {
+	// 	if project.SheetsLink == "" {
+	// 		continue
+	// 	}
 
-		sheetID, err := utils.ExtractSpreadsheetID(project.SheetsLink)
-		if err != nil {
-			slog.Error("Error extracting spreadsheet ID", "error", err)
-			continue
-		}
+	// 	sheetID, err := utils.ExtractSpreadsheetID(project.SheetsLink)
+	// 	if err != nil {
+	// 		slog.Error("Error extracting spreadsheet ID", "error", err)
+	// 		continue
+	// 	}
 
-		tasks, err := s.taskLister.ListTasks(ctx, task.Filter{ProjectID: project.ID}, 20000, 0)
-		if err != nil {
-			slog.Error("Error getting tasks", "error", err)
-			return
-		}
+	// 	tasks, err := s.taskLister.ListTasks(ctx, task.Filter{ProjectID: project.ID}, 20000, 0)
+	// 	if err != nil {
+	// 		slog.Error("Error getting tasks", "error", err)
+	// 		return
+	// 	}
 
-		if err := s.sheetsTasksUpdater.UpdateSheetsTasks(ctx, sheetID, tasks); err != nil {
-			slog.Error("Error updating sheets", "error", err)
-			return
-		}
+	// 	if err := s.sheetsTasksUpdater.UpdateSheetsTasks(ctx, sheetID, tasks); err != nil {
+	// 		slog.Error("Error updating sheets", "error", err)
+	// 		return
+	// 	}
 
-	}
+	// }
 }

@@ -45,3 +45,17 @@ func (r *ProjectPostgresRepository) ListProjects(ctx context.Context) ([]project
 	}
 	return result, nil
 }
+
+func (r *ProjectPostgresRepository) ListProjectsWithLinkedSheets(ctx context.Context) ([]project.Project, error) {
+	var projects []projectPostgres
+	if err := r.DB().Select(&projects, "SELECT * FROM projects WHERE sheets_link != ''"); err != nil {
+		slog.Error("Error listing projects with linked sheets", "error", err)
+		return nil, err
+	}
+
+	var result []project.Project
+	for _, p := range projects {
+		result = append(result, p.ToEntity())
+	}
+	return result, nil
+}

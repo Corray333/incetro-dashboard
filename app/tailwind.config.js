@@ -6,6 +6,7 @@ export default {
     extend: {
       colors: {
         primary: 'var(--color-primary)',
+        'dark-primary': 'var(--color-dark-primary)',
         success: 'var(--color-success)',
         warning: 'var(--color-warning)',
         danger: 'var(--color-danger)',

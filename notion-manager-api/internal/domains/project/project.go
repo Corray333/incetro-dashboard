@@ -8,6 +8,7 @@ import (
 	"github.com/Corray333/employee_dashboard/internal/postgres"
 	gsheets "github.com/Corray333/employee_dashboard/internal/sheets"
 	notion "github.com/Corray333/employee_dashboard/pkg/notion/v2"
+	"github.com/go-chi/chi/v5"
 )
 
 type ProjectController struct {
@@ -17,14 +18,14 @@ type ProjectController struct {
 	transport    *transport.ProjectTransport
 }
 
-func NewProjectController(store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client) *ProjectController {
+func NewProjectController(router *chi.Mux, store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client) *ProjectController {
 
 	postgresRepo := postgres_repo.NewProjectPostgresRepository(store)
 	notionRepo := notion_repo.NewProjectNotionRepository(notionClient)
 
 	service := service.NewProjectService(service.WithPostgresRepository(postgresRepo), service.WithNotionRepository(notionRepo))
 
-	transport := transport.NewProjectTransport(service)
+	transport := transport.NewProjectTransport(router, service)
 
 	return &ProjectController{
 		postgresRepo: postgresRepo,
@@ -35,8 +36,12 @@ func NewProjectController(store *postgres.PostgresClient, notionClient *notion.C
 	}
 }
 
+func (c *ProjectController) AddProjectSheetsUpdater(updater service.ProjectSheetsUpdater) {
+	c.service.AddProjectSheetsUpdater(updater)
+}
+
 func (c *ProjectController) Build() {
-	// c.transport.RegisterRoutes()
+	c.transport.RegisterRoutes()
 }
 
 func (c *ProjectController) Run() {
