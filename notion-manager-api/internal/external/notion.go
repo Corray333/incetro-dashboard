@@ -137,7 +137,7 @@ type Employee struct {
 		} `json:"Номер телефона"`
 		UniqueID struct {
 			UniqueID struct {
-				Number int `json:"number"`
+				Number int64 `json:"number"`
 			} `json:"unique_id"`
 		} `json:"ID"`
 	}
@@ -256,6 +256,7 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 
 	employees = []entities.Employee{}
 	for _, w := range worker.Results {
+		fmt.Println(w.Properties.UniqueID.UniqueID.Number)
 		employees = append(employees, entities.Employee{
 			ID: func() string {
 				if len(w.Properties.Link.People) == 0 {
@@ -335,7 +336,7 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 			}(),
 			Status:   w.Properties.Status.Status.Name,
 			Phone:    w.Properties.PhoneNumber.Phone,
-			UniqueID: int64(w.Properties.UniqueID.UniqueID.Number),
+			UniqueID: w.Properties.UniqueID.UniqueID.Number,
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)
