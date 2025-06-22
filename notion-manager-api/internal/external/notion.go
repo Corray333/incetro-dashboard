@@ -256,7 +256,6 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 
 	employees = []entities.Employee{}
 	for _, w := range worker.Results {
-		fmt.Println(w.Properties.UniqueID.UniqueID.Number)
 		employees = append(employees, entities.Employee{
 			ID: func() string {
 				if len(w.Properties.Link.People) == 0 {
