@@ -11,6 +11,7 @@ services:
       - ./configs/notion-manager-api:/app/configs
       - ./secrets:/app/secrets
     command: make run
+    restart: unless-stopped
   
   tg-task-parser:
     build: 
@@ -21,6 +22,7 @@ services:
       - .env:/app/.env
       - ./configs/notion-manager-api:/app/configs
     command: make run
+    restart: unless-stopped
   
   app:
     image: node:latest
@@ -42,6 +44,7 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - notion-manager-api
+    restart: unless-stopped
 
   certbot:
     image: certbot/certbot
@@ -50,6 +53,7 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    restart: unless-stopped
 
   db:
     image: postgres
@@ -57,5 +61,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
     ports:
       - 5432:5432
