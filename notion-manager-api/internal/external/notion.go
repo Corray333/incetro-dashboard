@@ -135,6 +135,11 @@ type Employee struct {
 			Type  string `json:"type"`
 			Phone string `json:"phone_number"`
 		} `json:"Номер телефона"`
+		UniqueID struct {
+			UniqueID struct {
+				Number int `json:"number"`
+			} `json:"unique_id"`
+		} `json:"ID"`
 	}
 }
 
@@ -328,8 +333,9 @@ func (e *External) GetEmployees(lastSynced int64) (employees []entities.Employee
 				}
 				return w.Properties.Direction.Rollup.Array[0].Select.Name
 			}(),
-			Status: w.Properties.Status.Status.Name,
-			Phone:  w.Properties.PhoneNumber.Phone,
+			Status:   w.Properties.Status.Status.Name,
+			Phone:    w.Properties.PhoneNumber.Phone,
+			UniqueID: int64(w.Properties.UniqueID.UniqueID.Number),
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -279,6 +280,7 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 			"'" + person.Phone,
 			fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://t.me/%s", person.Telegram), person.Telegram),
 			person.FIO,
+			"PPL" + strconv.Itoa(int(person.UniqueID)),
 		}
 
 		vr.Values = append(vr.Values, myval)

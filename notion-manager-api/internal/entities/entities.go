@@ -87,6 +87,7 @@ type Employee struct {
 	TelegramID int64  `json:"telegramID" db:"tg_id"`
 	Geo        string `json:"geo" db:"geo"`
 	FIO        string `json:"fio" db:"fio"`
+	UniqueID   int64  `json:"uniqueID" db:"unique_id"`
 
 	ExpertiseID   string `json:"expertiseID" db:"expertise_id"`
 	ExpertiseName string `json:"expertiseName" db:"expertise_name"`
