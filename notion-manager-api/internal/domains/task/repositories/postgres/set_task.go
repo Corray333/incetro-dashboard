@@ -50,17 +50,28 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 		Select(
 			"tasks.task_id", "tasks.created_time", "tasks.last_edited_time", "tasks.title", "tasks.priority", "tasks.status",
 			"tasks.parent_id AS parent_id", "tasks.creator_id", "tasks.project_id", "tasks.estimate",
-			"tasks.start", "tasks.end", "tasks.previous_id", "tasks.next_id", "tasks.total_hours", "tasks.tbh",
+			"tasks.start", "tasks.end", "tasks.previous_id", "tasks.next_id", "tasks.tbh",
 			"tasks.cp", "tasks.total_estimate", "tasks.plan_fact", "tasks.duration", "tasks.cr",
 			"COALESCE(tasks.ikp, '') AS ikp", "tasks.main_task",
 			"tasks.executor_id", "tasks.responsible_id",
 			"COALESCE(t.title, '') AS parent_name",
 			"COALESCE(exp.name, '') AS expertise",
+			"COALESCE(SUM(times.total_hours), 0) AS total_hours", // <- заменили на сумму
 		).
 		From("tasks").
 		LeftJoin("tasks t ON t.task_id = tasks.parent_id").
 		LeftJoin("employees e ON e.employee_id = tasks.executor_id").
 		LeftJoin("expertise exp ON exp.expertise_id = e.expertise_id").
+		LeftJoin("times ON times.task_id = tasks.task_id"). // <- новое соединение
+		GroupBy(
+			"tasks.task_id", "tasks.created_time", "tasks.last_edited_time", "tasks.title", "tasks.priority", "tasks.status",
+			"tasks.parent_id", "tasks.creator_id", "tasks.project_id", "tasks.estimate",
+			"tasks.start", "tasks.end", "tasks.previous_id", "tasks.next_id", "tasks.tbh",
+			"tasks.cp", "tasks.total_estimate", "tasks.plan_fact", "tasks.duration", "tasks.cr",
+			"tasks.ikp", "tasks.main_task",
+			"tasks.executor_id", "tasks.responsible_id",
+			"t.title", "exp.name",
+		).
 		Limit(uint64(limit)).
 		Offset(uint64(offset))
 
