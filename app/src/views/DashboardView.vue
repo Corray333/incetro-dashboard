@@ -483,7 +483,7 @@ const updateProjectSheets = (projectID: string) =>{
   @apply w-full underline overflow-hidden text-ellipsis whitespace-nowrap;
 }
 .project-icon{
-  @apply w-12 h-12 rounded-full;
+  @apply w-8 h-8 rounded-full;
 }
 
 .messages {
