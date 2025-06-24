@@ -460,7 +460,7 @@ const updateProjectSheets = (projectID: string) =>{
               <img class="project-icon" :src="project.icon" alt="" v-if="project.iconType !== 'emoji'">
               <p class="text-2xl" v-else>{{ project.icon }}</p>
               <a :href="project.sheetsLink">{{ project.name }}</a>
-              <button class="px-2" @click="updateProjectSheets(project.id)">Синхронизация</button>
+              <button class="px-4" @click="updateProjectSheets(project.id)">Синхронизация</button>
             </div>
           </div>
         </div>
@@ -480,7 +480,7 @@ const updateProjectSheets = (projectID: string) =>{
   @apply w-full flex gap-2 items-center;
 }
 .project-el a{
-  @apply w-full text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap;
+  @apply w-full underline overflow-hidden text-ellipsis whitespace-nowrap;
 }
 .project-icon{
   @apply w-12 h-12 rounded-full;
