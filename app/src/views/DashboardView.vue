@@ -273,6 +273,9 @@ const sendFeedback = () => {
 interface project {
   id: string;
   name: string;
+  sheetsLink: string;
+  icon: string;
+  iconType: string;
 }
 
 const projectsWithSheets = ref<project[]>([])
@@ -453,7 +456,13 @@ const updateProjectSheets = (projectID: string) =>{
           </div>
 
           <div class="btns-list">
-            <button v-for="project of projectsWithSheets" :key="project.id" @click="updateProjectSheets(project.id)">{{ project.name }}</button>
+            <div class="project-el" v-for="project of projectsWithSheets" :key="project.id">
+              <img class="project-icon" :src="project.icon" alt="" v-if="project.iconType !== 'emoji'">
+              <p class="text-2xl" v-else>{{ project.icon }}</p>
+              <a :href="project.sheetsLink">{{ project.name }}</a>
+              <div class="w-full"></div>
+              <button @click="updateProjectSheets(project.id)">{{ project.name }}</button>
+            </div>
           </div>
         </div>
       </div>
@@ -467,6 +476,12 @@ const updateProjectSheets = (projectID: string) =>{
 
 .btns-list{
   @apply flex flex-col gap-2 w-full;
+}
+.project-el{
+  @apply w-full flex gap-2 items-center;
+}
+.project-icon{
+  @apply w-12 h-12 rounded-full;
 }
 
 .messages {
