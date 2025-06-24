@@ -459,7 +459,7 @@ const updateProjectSheets = (projectID: string) =>{
             <div class="project-el" v-for="project of projectsWithSheets" :key="project.id">
               <img class="project-icon" :src="project.icon" alt="" v-if="project.iconType !== 'emoji'">
               <p class="text-2xl" v-else>{{ project.icon }}</p>
-              <a :href="project.sheetsLink">{{ project.name }}</a>
+              <a :href="project.sheetsLink" target="_blank">{{ project.name }}</a>
               <button class="px-4" @click="updateProjectSheets(project.id)">Синхронизация</button>
             </div>
           </div>
