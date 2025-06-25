@@ -475,7 +475,7 @@ const updateProjectSheets = (projectID: string) =>{
 
 
 .projects-with-sheets-list{
-  @apply flex flex-col gap-2 w-full;
+  @apply flex flex-col w-full;
 }
 .project-el{
   @apply w-full flex gap-2 items-center border-b border-b-gray-200 py-2;
@@ -484,13 +484,13 @@ const updateProjectSheets = (projectID: string) =>{
   @apply border-b-0;
 }
 .project-el button{
-  @apply min-w-0 min-h-0 w-8 h-8 aspect-square text-xl flex justify-center items-center
+  @apply flex-shrink w-10 h-10 aspect-square text-xl flex justify-center items-center
 }
 .project-el a{
   @apply w-full underline overflow-hidden text-ellipsis whitespace-nowrap;
 }
 .project-icon{
-  @apply w-8 h-8 rounded-full;
+  @apply w-10 h-10 rounded-full;
 }
 
 .messages {
