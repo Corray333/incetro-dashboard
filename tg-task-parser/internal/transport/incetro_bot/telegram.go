@@ -48,7 +48,7 @@ type service interface {
 }
 
 func NewIncetroBot(service service) *IncetroTelegramBot {
-	token := os.Getenv("INCETRO_BOT_TOKEN")
+	token := os.Getenv("BOT_TOKEN")
 	bot, err := gotgbot.NewBot(token, nil)
 	if err != nil {
 		panic("failed to create bot: " + err.Error())
