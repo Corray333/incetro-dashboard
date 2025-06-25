@@ -461,7 +461,7 @@ const updateProjectSheets = (projectID: string) =>{
               <img class="project-icon" :src="project.icon" alt="" v-if="project.iconType !== 'emoji'">
               <p class="text-2xl" v-else>{{ project.icon }}</p>
               <a :href="project.sheetsLink" target="_blank">{{ project.name }}</a>
-              <button class="px-4" @click="updateProjectSheets(project.id)"><ReloadIcon class="text-2xl"/></button>
+              <button class=" min-w-0 aspect-square" @click="updateProjectSheets(project.id)"><ReloadIcon /></button>
             </div>
           </div>
         </div>
@@ -478,7 +478,7 @@ const updateProjectSheets = (projectID: string) =>{
   @apply flex flex-col gap-2 w-full;
 }
 .project-el{
-  @apply w-full flex gap-2 items-center border-b border-b-gray-500;
+  @apply w-full flex gap-2 items-center border-b border-b-gray-500 py-2;
 }
 .project-el:last-child{
   @apply border-b-0;
