@@ -5,14 +5,16 @@ import (
 	"github.com/corray333/tg-task-parser/internal/repositories/notion"
 	"github.com/corray333/tg-task-parser/internal/repositories/storage"
 	"github.com/corray333/tg-task-parser/internal/service"
-	"github.com/corray333/tg-task-parser/internal/transport"
+	"github.com/corray333/tg-task-parser/internal/transport/incetro_bot"
+	"github.com/corray333/tg-task-parser/internal/transport/project_bot"
 	notion_api "github.com/corray333/tg-task-parser/pkg/notion/v2"
 )
 
 type app struct {
 	baseService *base_service.BaseService
 	service     *service.Service
-	transport   *transport.Transport
+	incetro_bot *incetro_bot.IncetroTelegramBot
+	project_bot *project_bot.ProjectBot
 }
 
 func New() *app {
@@ -23,17 +25,19 @@ func New() *app {
 	notionRepo := notion.NewNotionRepository(notionClient)
 	service := service.New(service.WithBaseService(baseService), service.WithRepository(repository), service.WithNotionRepo(notionRepo))
 
-	transport := transport.New(service)
+	incetroBotTransport := incetro_bot.NewIncetroBot(service)
+	projectTransport := project_bot.NewProjectBot(service)
 
 	app := &app{
 		baseService: baseService,
 		service:     service,
-		transport:   transport,
+		incetro_bot: incetroBotTransport,
+		project_bot: projectTransport,
 	}
 
 	return app
 }
 
 func (app *app) Run() {
-	app.transport.Run()
+	app.incetro_bot.Run()
 }

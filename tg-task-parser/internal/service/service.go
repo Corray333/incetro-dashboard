@@ -11,6 +11,7 @@ type repository interface {
 	projectByChatIDGetter
 	messageMetaSetter
 	messageMetaScanner
+	tgMessageSaver
 }
 
 type notionRepo interface {
@@ -29,6 +30,7 @@ type Service struct {
 
 	feedbackAnswerer feedbackAnswerer
 	feedbackCreator  feedbackCreator
+	tgMessageSaver   tgMessageSaver
 }
 
 type option func(*Service)
@@ -97,6 +99,7 @@ func WithRepository(repository repository) option {
 		s.projectByChatIDGetter = repository
 		s.messageMetaSetter = repository
 		s.messageMetaScanner = repository
+		s.tgMessageSaver = repository
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/corray333/tg-task-parser/internal/entities/message"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -107,4 +108,12 @@ func (r *Repository) GetProjectByChatID(ctx context.Context, chatID int64) (uuid
 		return uuid.Nil, err
 	}
 	return projectID, nil
+}
+
+func (r *Repository) SaveMessage(ctx context.Context, message message.Message) error {
+	if _, err := r.db.Exec("INSERT INTO tg_messages (chat_id, message_id, text) VALUES ($1, $2, $3)", message.ChatID, message.MessageID, message.Text); err != nil {
+		slog.Error("Error while saving message", "error", err)
+		return err
+	}
+	return nil
 }

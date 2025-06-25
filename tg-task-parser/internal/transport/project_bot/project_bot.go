@@ -1,4 +1,4 @@
-package transport
+package project_bot
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Transport struct {
+type ProjectBot struct {
 	service    service
 	bot        *gotgbot.Bot
 	dispatcher *ext.Dispatcher
@@ -44,9 +44,10 @@ type service interface {
 	RequestActiveFeedbacks(ctx context.Context, chatID int64, messageID int64, msg *message.Message) ([]feedback.Feedback, error)
 	AnswerFeedback(ctx context.Context, chatID, messageID int64, feedbackID uuid.UUID) error
 	CreateFeedback(ctx context.Context, chatID, messageID int64) (uuid.UUID, error)
+	SaveTgMessage(ctx context.Context, msg message.Message) error
 }
 
-func New(service service) *Transport {
+func NewProjectBot(service service) *ProjectBot {
 	token := os.Getenv("TASK_PARSER_BOT_TOKEN")
 	bot, err := gotgbot.NewBot(token, nil)
 	if err != nil {
@@ -62,7 +63,7 @@ func New(service service) *Transport {
 
 	updater := ext.NewUpdater(dispatcher, nil)
 
-	tr := &Transport{
+	tr := &ProjectBot{
 		service:    service,
 		bot:        bot,
 		dispatcher: dispatcher,
@@ -74,7 +75,7 @@ func New(service service) *Transport {
 	return tr
 }
 
-func (t *Transport) registerHandlers() {
+func (t *ProjectBot) registerHandlers() {
 
 	t.dispatcher.AddHandler(handlers.NewCommand("pinapp", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		fmt.Println("pinapp")
@@ -148,10 +149,18 @@ func (t *Transport) registerHandlers() {
 
 	// Хендлер сообщений
 	t.dispatcher.AddHandler(handlers.NewMessage(nil, func(bot *gotgbot.Bot, ctx *ext.Context) error {
-		fmt.Println("message")
 		msg := ctx.EffectiveMessage
 		if msg == nil {
 			return nil
+		}
+
+		// save each message
+		if err := t.service.SaveTgMessage(context.Background(), message.Message{
+			ChatID:    msg.Chat.Id,
+			MessageID: msg.MessageId,
+			Text:      msg.Text,
+		}); err != nil {
+			slog.Error("Error saving message", "error", err, "message", msg, "chat", msg.Chat, "user", msg.From)
 		}
 
 		if msg.NewChatMembers != nil {
@@ -317,7 +326,7 @@ func (t *Transport) registerHandlers() {
 	}))
 }
 
-func (t *Transport) Run() {
+func (t *ProjectBot) Run() {
 	slog.Info("Bot is running...")
 	err := t.updater.StartPolling(t.bot, &ext.PollingOpts{
 		DropPendingUpdates: true,
@@ -331,7 +340,7 @@ func (t *Transport) Run() {
 	t.updater.Idle()
 }
 
-func (t *Transport) handleBotAddedToChat(bot *gotgbot.Bot, ctx *ext.Context) error {
+func (t *ProjectBot) handleBotAddedToChat(bot *gotgbot.Bot, ctx *ext.Context) error {
 	projects, err := t.service.GetProjects(context.Background())
 	if err != nil {
 		slog.Error("Failed to get projects", "error", err)
