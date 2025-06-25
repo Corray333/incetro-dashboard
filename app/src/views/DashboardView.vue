@@ -461,7 +461,7 @@ const updateProjectSheets = (projectID: string) =>{
               <img class="project-icon" :src="project.icon" alt="" v-if="project.iconType !== 'emoji'">
               <p class="text-2xl" v-else>{{ project.icon }}</p>
               <a :href="project.sheetsLink" target="_blank">{{ project.name }}</a>
-              <button class=" min-w-0 aspect-square" @click="updateProjectSheets(project.id)"><ReloadIcon /></button>
+              <button @click="updateProjectSheets(project.id)"><ReloadIcon /></button>
             </div>
           </div>
         </div>
@@ -482,6 +482,9 @@ const updateProjectSheets = (projectID: string) =>{
 }
 .project-el:last-child{
   @apply border-b-0;
+}
+.project-el button{
+  @apply min-w-0 aspect-square text-xl flex justify-center items-center
 }
 .project-el a{
   @apply w-full underline overflow-hidden text-ellipsis whitespace-nowrap;
