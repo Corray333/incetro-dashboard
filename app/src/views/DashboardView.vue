@@ -3,6 +3,7 @@ import ArrowTopIcon from '@/components/icons/ArrowTopIcon.vue';
 import CheckIcon from '@/components/icons/CheckIcon.vue';
 import LinkIcon from '@/components/icons/LinkIcon.vue';
 import LoadingIcon from '@/components/icons/LoadingIcon.vue';
+import ReloadIcon from '@/components/icons/ReloadIcon.vue';
 import TimesIcon from '@/components/icons/TimesIcon.vue';
 import { DashboardTransport } from '@/transport/dashboard';
 import { computed, onBeforeMount, ref, watch } from 'vue';
@@ -455,12 +456,12 @@ const updateProjectSheets = (projectID: string) =>{
             <!-- <LinkIcon class="text-2xl" /> -->
           </div>
 
-          <div class="btns-list">
+          <div class="projects-with-sheets-list">
             <div class="project-el" v-for="project of projectsWithSheets" :key="project.id">
               <img class="project-icon" :src="project.icon" alt="" v-if="project.iconType !== 'emoji'">
               <p class="text-2xl" v-else>{{ project.icon }}</p>
               <a :href="project.sheetsLink" target="_blank">{{ project.name }}</a>
-              <button class="px-4" @click="updateProjectSheets(project.id)">Синхронизация</button>
+              <button class="px-4" @click="updateProjectSheets(project.id)"><ReloadIcon class="text-2xl"/></button>
             </div>
           </div>
         </div>
@@ -473,11 +474,14 @@ const updateProjectSheets = (projectID: string) =>{
 <style scoped>
 
 
-.btns-list{
+.projects-with-sheets-list{
   @apply flex flex-col gap-2 w-full;
 }
 .project-el{
-  @apply w-full flex gap-2 items-center;
+  @apply w-full flex gap-2 items-center border-b border-b-gray-500;
+}
+.project-el:last-child{
+  @apply border-b-0;
 }
 .project-el a{
   @apply w-full underline overflow-hidden text-ellipsis whitespace-nowrap;
