@@ -484,7 +484,7 @@ const updateProjectSheets = (projectID: string) =>{
   @apply border-b-0;
 }
 .project-el button{
-  @apply min-w-0 aspect-square text-xl flex justify-center items-center
+  @apply min-w-0 min-h-0 aspect-square text-xl flex justify-center items-center
 }
 .project-el a{
   @apply w-full underline overflow-hidden text-ellipsis whitespace-nowrap;
