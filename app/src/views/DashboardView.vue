@@ -478,13 +478,13 @@ const updateProjectSheets = (projectID: string) =>{
   @apply flex flex-col gap-2 w-full;
 }
 .project-el{
-  @apply w-full flex gap-2 items-center border-b border-b-gray-500 py-2;
+  @apply w-full flex gap-2 items-center border-b border-b-gray-200 py-2;
 }
 .project-el:last-child{
   @apply border-b-0;
 }
 .project-el button{
-  @apply min-w-0 min-h-0  aspect-square text-xl flex justify-center items-center
+  @apply min-w-0 min-h-0 w-8 h-8 aspect-square text-xl flex justify-center items-center
 }
 .project-el a{
   @apply w-full underline overflow-hidden text-ellipsis whitespace-nowrap;
