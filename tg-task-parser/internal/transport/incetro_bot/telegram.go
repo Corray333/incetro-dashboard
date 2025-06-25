@@ -159,6 +159,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			ChatID:    msg.Chat.Id,
 			MessageID: msg.MessageId,
 			Text:      msg.Text,
+			FromID:    msg.From.Id,
 		}); err != nil {
 			slog.Error("Error saving message", "error", err, "message", msg, "chat", msg.Chat, "user", msg.From)
 		}

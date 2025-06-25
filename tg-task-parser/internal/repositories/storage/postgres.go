@@ -111,7 +111,7 @@ func (r *Repository) GetProjectByChatID(ctx context.Context, chatID int64) (uuid
 }
 
 func (r *Repository) SaveMessage(ctx context.Context, message message.Message) error {
-	if _, err := r.db.Exec("INSERT INTO tg_messages (chat_id, message_id, text) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", message.ChatID, message.MessageID, message.Text); err != nil {
+	if _, err := r.db.Exec("INSERT INTO tg_messages (chat_id, message_id, text, from_id) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", message.ChatID, message.MessageID, message.Text, message.FromID); err != nil {
 		slog.Error("Error while saving message", "error", err)
 		return err
 	}

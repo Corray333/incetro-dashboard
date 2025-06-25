@@ -19,11 +19,13 @@ const (
 type Mention string
 
 type Message struct {
-	ChatID    int64     `json:"chat_id"`
-	MessageID int64     `json:"message_id"`
-	Text      string    `json:"text"`
-	Hashtags  []Hashtag `json:"hashtags"`
-	Mentions  []Mention `json:"mentions"`
+	ChatID    int64  `json:"chat_id"`
+	MessageID int64  `json:"message_id"`
+	Text      string `json:"text"`
+	FromID    int64  `json:"from_id"`
+
+	Hashtags []Hashtag `json:"hashtags"`
+	Mentions []Mention `json:"mentions"`
 
 	Raw string `json:"raw"`
 }
