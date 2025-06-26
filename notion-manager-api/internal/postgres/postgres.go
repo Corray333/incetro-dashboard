@@ -78,7 +78,6 @@ func (r *PostgresClient) Rollback(ctx context.Context) error {
 	}
 
 	if err := tx.Rollback(); err != nil {
-		slog.Error("Failed to rollback transaction: " + err.Error())
 		return err
 	}
 

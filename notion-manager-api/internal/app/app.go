@@ -1,15 +1,20 @@
 package app
 
 import (
+	"os"
+
+	"github.com/Corray333/employee_dashboard/internal/domains/employee"
 	"github.com/Corray333/employee_dashboard/internal/domains/feedback"
 	"github.com/Corray333/employee_dashboard/internal/domains/project"
 	"github.com/Corray333/employee_dashboard/internal/domains/task"
 	time "github.com/Corray333/employee_dashboard/internal/domains/time"
+	"github.com/Corray333/employee_dashboard/internal/domains/weekday"
 	"github.com/Corray333/employee_dashboard/internal/external"
 	"github.com/Corray333/employee_dashboard/internal/postgres"
 	"github.com/Corray333/employee_dashboard/internal/repositories"
 	"github.com/Corray333/employee_dashboard/internal/service"
 	gsheets "github.com/Corray333/employee_dashboard/internal/sheets"
+	"github.com/Corray333/employee_dashboard/internal/telegram"
 	"github.com/Corray333/employee_dashboard/internal/transport"
 	notion "github.com/Corray333/employee_dashboard/pkg/notion/v2"
 	"google.golang.org/grpc"
@@ -41,6 +46,7 @@ func New() *app {
 	store := postgres.New()
 	notionClient := notion.NewClient()
 	sheetsClient := gsheets.NewSheetsClient()
+	telegramClient := telegram.NewTelegramClient(os.Getenv("BOT_TOKEN"))
 
 	feedbackController := feedback.NewFeedbackController(grpcServer, store, notionClient)
 	app.controllers = append(app.controllers, feedbackController)
@@ -53,6 +59,13 @@ func New() *app {
 
 	taskController := task.NewTaskController(router, store, notionClient, sheetsClient, projectController.GetService())
 	app.controllers = append(app.controllers, taskController)
+
+	employeeController := employee.NewEmployeeController(store, notionClient)
+	app.controllers = append(app.controllers, employeeController)
+
+	weekdayController := weekday.NewWeekdayController(store, notionClient, telegramClient, employeeController.GetService())
+	app.controllers = append(app.controllers, weekdayController)
+
 	projectController.AddProjectSheetsUpdater(taskController.GetService())
 	projectController.AddProjectSheetsUpdater(timeController.GetService())
 
