@@ -3,9 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
-	"github.com/Corray333/employee_dashboard/internal/app"
-	"github.com/Corray333/employee_dashboard/internal/config"
+	"github.com/tmc/langchaingo/agents"
+	"github.com/tmc/langchaingo/chains"
+	"github.com/tmc/langchaingo/llms/ollama"
+	"github.com/tmc/langchaingo/memory"
+	"github.com/tmc/langchaingo/tools"
+	"github.com/tmc/langchaingo/tools/duckduckgo"
 	"github.com/tmc/langchaingo/tools/sqldatabase/postgresql"
 )
 
@@ -39,19 +44,27 @@ func (sdt *SQLDatabaseTool) Call(ctx context.Context, input string) (string, err
 
 func main() {
 
-	config.MustInit()
-	fmt.Println("Start")
+	// config.MustInit()
+	// fmt.Println("Start")
 
-	app.New().Run()
+	// app.New().Run()
 
 	// // Создание контекста
 	// ctx := context.Background()
 
-	// // Инициализация языковой модели Google Gemini
+	// Инициализация языковой модели Google Gemini
 	// llm, err := googleai.New(ctx, googleai.WithAPIKey(os.Getenv("GEMINI_API_KEY")), googleai.WithDefaultModel("gemini-2.0-flash"))
 	// if err != nil {
 	// 	log.Fatalf("Ошибка инициализации LLM: %v", err)
 	// }
+
+	llm, err := ollama.New(
+		ollama.WithModel("gemma3n:e4b"),                           // любой slug из `ollama list`
+		ollama.WithServerURL("http://host.docker.internal:11434"), // не обязателен, это значение по-умолчанию
+	)
+	if err != nil {
+		log.Fatalf("ошибка инициализации LLM: %v", err)
+	}
 
 	// // Получение строки подключения к PostgreSQL из переменной окружения
 	// dsn := os.Getenv("LANGCHAINGO_POSTGRESQL")
@@ -68,24 +81,31 @@ func main() {
 
 	// // Создание SQL-цепочки
 
-	// agentTools := []tools.Tool{
-	// 	&SQLDatabaseTool{
-	// 		db: db.(*postgresql.PostgreSQL),
-	// 	},
-	// }
+	searchTool, err := duckduckgo.New(2, "")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// mem := memory.NewConversationBuffer()
-	// agent := agents.NewConversationalAgent(llm,
-	// 	agentTools,
-	// 	agents.WithMemory(mem), agents.WithMaxIterations(10))
-	// executor := agents.NewExecutor(agent)
-	// // Пример естественного языкового запроса
-	// question := "Какие сейчас есть активные задачи у сотрудника Mark? P.S. Для начала обязательно посмотри, какие есть таблицы postgres, и проверь их схемы."
+	agentTools := []tools.Tool{
+		// &SQLDatabaseTool{
+		// 	// db: db.(*postgresql.PostgreSQL),
 
-	// answer, err := chains.Run(context.Background(), executor, question)
-	// fmt.Println(answer)
-	// if err != nil {
-	// 	log.Fatalf("Ошибка генерации ответа: %v", err)
-	// }
+		// },
+		searchTool,
+	}
+
+	mem := memory.NewConversationBuffer()
+	agent := agents.NewConversationalAgent(llm,
+		agentTools,
+		agents.WithMemory(mem), agents.WithMaxIterations(10))
+	executor := agents.NewExecutor(agent)
+	// Пример естественного языкового запроса
+	question := "Какая команда выиграла Blast Austin Major 2025? В качестве ответа дай просто название команды."
+
+	answer, err := chains.Run(context.Background(), executor, question)
+	fmt.Println(answer)
+	if err != nil {
+		log.Fatalf("Ошибка генерации ответа: %v", err)
+	}
 
 }

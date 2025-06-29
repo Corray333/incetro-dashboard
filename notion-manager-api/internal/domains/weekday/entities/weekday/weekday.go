@@ -41,24 +41,38 @@ func formatDate(d time.Time) string {
 }
 
 func (w Weekday) GetNotifyMsg() string {
-	isSingleDay := false
-	if w.PeriodEnd.IsZero() {
-		isSingleDay = true
-	} else {
-		isSingleDay = w.PeriodStart.Equal(w.PeriodEnd)
-	}
+	username := w.Employee.Username
+	periodPhrase := w.getPeriodPhrase()
+	categoryPhrase := w.getCategoryPhrase()
 
+	msg := fmt.Sprintf("%s %s %s", username, categoryPhrase, periodPhrase)
+	return w.appendDaysCountIfNeeded(msg)
+}
+
+func (w Weekday) getPeriodPhrase() string {
+	start := formatDate(w.PeriodStart)
+	if w.PeriodEnd.IsZero() || w.PeriodStart.Equal(w.PeriodEnd) {
+		return "на " + start
+	}
+	return fmt.Sprintf("с %s по %s", start, formatDate(w.PeriodEnd))
+}
+
+func (w Weekday) getCategoryPhrase() string {
 	if w.Category == CategoryForce {
-		if isSingleDay {
-			return fmt.Sprintf("У %s форс-мажор — будет отсутствовать %s", w.Employee.Username, formatDate(w.PeriodStart))
-		} else {
-			return fmt.Sprintf("У %s форс-мажор — будет отсутствовать с %s по %s", w.Employee.Username, formatDate(w.PeriodStart), formatDate(w.PeriodEnd))
-		}
+		return "форс-мажор — будет отсутствовать"
 	}
+	return fmt.Sprintf("берёт %s", w.Category)
+}
 
-	if isSingleDay {
-		return fmt.Sprintf("%s берёт %s на %s", w.Employee.Username, w.Category, formatDate(w.PeriodStart))
+func (w Weekday) appendDaysCountIfNeeded(msg string) string {
+	var days int
+	if w.PeriodEnd.IsZero() {
+		days = 1
 	} else {
-		return fmt.Sprintf("%s берёт %s с %s по %s", w.Employee.Username, w.Category, formatDate(w.PeriodStart), formatDate(w.PeriodEnd))
+		days = int(w.PeriodEnd.Sub(w.PeriodStart).Hours()/24) + 1
 	}
+	if days >= 5 {
+		return fmt.Sprintf("%s (%d дней)", msg, days)
+	}
+	return msg
 }
