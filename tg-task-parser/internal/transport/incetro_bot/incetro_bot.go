@@ -16,6 +16,7 @@ import (
 	"github.com/corray333/tg-task-parser/internal/entities/feedback"
 	message "github.com/corray333/tg-task-parser/internal/entities/message"
 	"github.com/corray333/tg-task-parser/internal/entities/project"
+	"github.com/corray333/tg-task-parser/internal/entities/topic"
 	"github.com/google/uuid"
 )
 
@@ -45,6 +46,8 @@ type service interface {
 	AnswerFeedback(ctx context.Context, chatID, messageID int64, feedbackID uuid.UUID) error
 	CreateFeedback(ctx context.Context, chatID, messageID int64) (uuid.UUID, error)
 	SaveTgMessage(ctx context.Context, msg message.Message) error
+
+	GetTopics(ctx context.Context) ([]topic.Topic, error)
 }
 
 func NewIncetroBot(service service) *IncetroTelegramBot {
@@ -85,26 +88,40 @@ func (t *IncetroTelegramBot) registerHandlers() {
 	t.dispatcher.AddHandler(handlers.NewCommand("setup", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		chatID := ctx.EffectiveChat.Id
 
-		topics := []struct {
-			name string
-			icon string
-		}{
-			{"Тестирование", "5411138633765757782"},
-			{"Backend", "5350554349074391003"},
-			{"Менеджерская", "5348227245599105972"},
-			{"Mobile", "5409357944619802453"},
-			{"Meeting", "5373251851074415873"},
-			{"Design", "5310039132297242441"},
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("Recovered from panic", "panic", r)
+				_, err := b.SendMessage(chatID, "Произошла ошибка при создании топиков. Пожалуйста, попробуйте еще раз.", &gotgbot.SendMessageOpts{
+					MessageThreadId: ctx.EffectiveMessage.MessageThreadId,
+				})
+				if err != nil {
+					slog.Error("Error sending error message", "error", err)
+				}
+			}
+		}()
+
+		topics, err := t.service.GetTopics(context.Background())
+		if err != nil {
+			slog.Error("Get topics failed", "err", err)
+			return err
 		}
 
 		for _, tp := range topics {
-			_, err := b.CreateForumTopic(chatID, tp.name, &gotgbot.CreateForumTopicOpts{
-				IconCustomEmojiId: tp.icon,
+			_, err := b.CreateForumTopic(chatID, tp.Name, &gotgbot.CreateForumTopicOpts{
+				IconCustomEmojiId: tp.Icon,
 			})
 			if err != nil && !strings.Contains(err.Error(), "MESSAGE_THREAD_ALREADY_EXISTS") {
-				slog.Error("create topic failed", "topic", tp.name, "err", err)
+				slog.Error("create topic failed", "topic", tp.Name, "err", err)
 			}
 		}
+
+		_, err = b.SendMessage(chatID, "Топики успешно созданы.", &gotgbot.SendMessageOpts{
+			MessageThreadId: ctx.EffectiveMessage.MessageThreadId,
+		})
+		if err != nil {
+			slog.Error("Error sending success message", "error", err)
+		}
+
 		return nil
 	}))
 

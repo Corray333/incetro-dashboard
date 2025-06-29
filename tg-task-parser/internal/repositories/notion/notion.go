@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strconv"
 	"strings"
 
+	"github.com/corray333/tg-task-parser/internal/entities/topic"
 	notion "github.com/corray333/tg-task-parser/pkg/notion/v2"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
@@ -74,4 +76,45 @@ func (r *NotionRepository) NewFeedback(ctx context.Context, projectID uuid.UUID,
 
 	return pageID, nil
 
+}
+
+type topicNotion struct {
+	Properties struct {
+		Name struct {
+			Title []struct {
+				PlainText string `json:"plain_text"`
+			} `json:"title"`
+		} `json:"Name"`
+		Icon struct {
+			Number uint64 `json:"number"`
+		} `json:"Icon"`
+	} `json:"properties"`
+}
+
+func (t *topicNotion) toEntity() *topic.Topic {
+	return &topic.Topic{
+		Name: t.Properties.Name.Title[0].PlainText,
+		Icon: strconv.Itoa(int(t.Properties.Icon.Number)),
+	}
+}
+
+func (r *NotionRepository) GetTopics(ctx context.Context) ([]topic.Topic, error) {
+
+	resp, err := r.client.SearchPages(viper.GetString("notion.databases.tasks"), nil)
+	if err != nil {
+		return nil, err
+	}
+	topicsRaw := []topicNotion{}
+
+	if err := json.Unmarshal(resp, &topicsRaw); err != nil {
+		slog.Error("Error unmarshalling feedbacks from notion", "error", err)
+		return nil, err
+	}
+
+	topics := []topic.Topic{}
+	for _, f := range topicsRaw {
+		topics = append(topics, *f.toEntity())
+	}
+
+	return topics, nil
 }
