@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strconv"
 	"strings"
 
 	"github.com/corray333/tg-task-parser/internal/entities/topic"
@@ -86,15 +85,21 @@ type topicNotion struct {
 			} `json:"title"`
 		} `json:"Name"`
 		Icon struct {
-			Number uint64 `json:"number"`
+			RichText []struct {
+				PlainText string `json:"plain_text"`
+			} `json:"rich_text"`
 		} `json:"Icon"`
 	} `json:"properties"`
 }
 
 func (t *topicNotion) toEntity() *topic.Topic {
+	icon := ""
+	for _, r := range t.Properties.Icon.RichText {
+		icon += r.PlainText
+	}
 	return &topic.Topic{
 		Name: t.Properties.Name.Title[0].PlainText,
-		Icon: strconv.Itoa(int(t.Properties.Icon.Number)),
+		Icon: icon,
 	}
 }
 
