@@ -82,6 +82,32 @@ func NewIncetroBot(service service) *IncetroTelegramBot {
 
 func (t *IncetroTelegramBot) registerHandlers() {
 
+	t.dispatcher.AddHandler(handlers.NewCommand("setup", func(b *gotgbot.Bot, ctx *ext.Context) error {
+		chatID := ctx.EffectiveChat.Id
+
+		topics := []struct {
+			name string
+			icon string
+		}{
+			{"Тестирование", "536832417040103770"},
+			{"Backend", "536832417040103768"},
+			{"Менеджерская", "536832417040103745"},
+			{"Mobile", "536832417040103757"},
+			{"Meeting", "536832417040103754"},
+			{"Design", "536832417040103739"},
+		}
+
+		for _, tp := range topics {
+			_, err := b.CreateForumTopic(chatID, tp.name, &gotgbot.CreateForumTopicOpts{
+				IconCustomEmojiId: tp.icon,
+			})
+			if err != nil && !strings.Contains(err.Error(), "MESSAGE_THREAD_ALREADY_EXISTS") {
+				slog.Error("create topic failed", "topic", tp.name, "err", err)
+			}
+		}
+		return nil
+	}))
+
 	t.dispatcher.AddHandler(handlers.NewCommand("pinapp", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		fmt.Println("pinapp")
 		chatId := ctx.EffectiveChat.Id
