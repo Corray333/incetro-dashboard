@@ -115,9 +115,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			}
 		}
 
-		_, err = b.SendMessage(chatID, "Топики успешно созданы.", &gotgbot.SendMessageOpts{
-			MessageThreadId: ctx.EffectiveMessage.MessageThreadId,
-		})
+		_, err = b.SendMessage(chatID, "Топики успешно созданы.", nil)
 		if err != nil {
 			slog.Error("Error sending success message", "error", err)
 		}
