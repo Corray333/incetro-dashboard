@@ -87,10 +87,10 @@ func (t *IncetroTelegramBot) registerHandlers() {
 
 	t.dispatcher.AddHandler(handlers.NewCommand("setup", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		chatID := ctx.EffectiveChat.Id
+		var err error
 
 		defer func() {
-			if r := recover(); r != nil {
-				slog.Error("Recovered from panic", "panic", r)
+			if err != nil {
 				_, err := b.SendMessage(chatID, "Произошла ошибка при создании топиков. Пожалуйста, попробуйте еще раз.", &gotgbot.SendMessageOpts{
 					MessageThreadId: ctx.EffectiveMessage.MessageThreadId,
 				})

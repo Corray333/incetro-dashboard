@@ -100,7 +100,7 @@ func (t *topicNotion) toEntity() *topic.Topic {
 
 func (r *NotionRepository) GetTopics(ctx context.Context) ([]topic.Topic, error) {
 
-	resp, err := r.client.SearchPages(viper.GetString("notion.databases.tasks"), nil)
+	resp, err := r.client.SearchPages(viper.GetString("notion.databases.topics"), nil)
 	if err != nil {
 		return nil, err
 	}
