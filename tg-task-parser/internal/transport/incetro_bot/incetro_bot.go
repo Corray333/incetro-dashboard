@@ -61,6 +61,11 @@ func NewIncetroBot(service service) *IncetroTelegramBot {
 		},
 	})
 
+	stickers, _ := bot.GetForumTopicIconStickers(nil)
+	for _, s := range stickers {
+		fmt.Println(s.CustomEmojiId, s.Emoji)
+	}
+
 	updater := ext.NewUpdater(dispatcher, nil)
 
 	tr := &IncetroTelegramBot{
