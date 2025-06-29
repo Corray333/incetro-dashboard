@@ -112,15 +112,18 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			})
 			if err != nil && !strings.Contains(err.Error(), "MESSAGE_THREAD_ALREADY_EXISTS") {
 				slog.Error("create topic failed", "topic", tp.Name, "err", err)
+				return err
 			}
+
 		}
 
 		_, err = b.SendMessage(chatID, "Топики успешно созданы.", nil)
 		if err != nil {
 			slog.Error("Error sending success message", "error", err)
 		}
+		err = nil
 
-		return nil
+		return err
 	}))
 
 	t.dispatcher.AddHandler(handlers.NewCommand("pinapp", func(b *gotgbot.Bot, ctx *ext.Context) error {
