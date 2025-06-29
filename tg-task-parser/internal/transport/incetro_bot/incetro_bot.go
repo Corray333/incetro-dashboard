@@ -106,6 +106,8 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			return err
 		}
 
+		slog.Info("Topics", "topics", topics)
+
 		for _, tp := range topics {
 			_, err := b.CreateForumTopic(chatID, tp.Name, &gotgbot.CreateForumTopicOpts{
 				IconCustomEmojiId: tp.Icon,
