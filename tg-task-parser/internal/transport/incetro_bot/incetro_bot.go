@@ -127,7 +127,6 @@ func (t *IncetroTelegramBot) registerHandlers() {
 	}))
 
 	t.dispatcher.AddHandler(handlers.NewCommand("pinapp", func(b *gotgbot.Bot, ctx *ext.Context) error {
-		fmt.Println("pinapp")
 		chatId := ctx.EffectiveChat.Id
 
 		// Извлекаем текст после команды
@@ -154,7 +153,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 		}
 
 		// Проверяем наличие закреплённого сообщения
-		if chat.PinnedMessage != nil && chat.PinnedMessage.From != nil && chat.PinnedMessage.From.Id == b.Id {
+		if chat.PinnedMessage != nil && chat.PinnedMessage.From != nil && chat.PinnedMessage.From.Id == b.Id && chat.PinnedMessage.MessageThreadId == ctx.EffectiveMessage.MessageThreadId {
 			// Пытаемся изменить текст существующего закреплённого сообщения
 			_, _, err = b.EditMessageText(args, &gotgbot.EditMessageTextOpts{
 				ChatId:    chatId,
@@ -171,7 +170,8 @@ func (t *IncetroTelegramBot) registerHandlers() {
 		} else {
 			// Отправляем новое сообщение с кнопкой
 			msg, err := b.SendMessage(chatId, args, &gotgbot.SendMessageOpts{
-				ReplyMarkup: gotgbot.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard},
+				ReplyMarkup:     gotgbot.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard},
+				MessageThreadId: ctx.EffectiveMessage.MessageThreadId,
 			})
 			if err != nil {
 				slog.Error("Не удалось отправить сообщение", "error", err)
