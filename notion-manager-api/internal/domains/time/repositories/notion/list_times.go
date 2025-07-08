@@ -20,7 +20,7 @@ func (r *TimeNotionRepository) ListTimes(ctx context.Context, lastUpdate pkg_tim
 		"filter": map[string]interface{}{
 			"timestamp": "last_edited_time",
 			"last_edited_time": map[string]interface{}{
-				"after": lastUpdate.Format(notion.TIME_LAYOUT),
+				"on_or_after": lastUpdate.Format(notion.TIME_LAYOUT),
 			},
 		},
 		"sorts": []map[string]interface{}{

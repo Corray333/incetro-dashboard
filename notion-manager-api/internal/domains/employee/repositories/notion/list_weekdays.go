@@ -19,7 +19,7 @@ func (r *EmployeeNotionRepository) ListWeekdays(ctx context.Context, lastUpdate 
 		"filter": map[string]interface{}{
 			"timestamp": "last_edited_time",
 			"last_edited_time": map[string]interface{}{
-				"after": lastUpdate.Format(notion.TIME_LAYOUT),
+				"on_or_after": lastUpdate.Format(notion.TIME_LAYOUT),
 			},
 		},
 		"sorts": []map[string]interface{}{
