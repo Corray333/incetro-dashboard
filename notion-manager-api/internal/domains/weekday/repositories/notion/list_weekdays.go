@@ -18,8 +18,8 @@ func (r *WeekdayNotionRepository) ListWeekdays(ctx context.Context, lastUpdate t
 	filter := map[string]interface{}{
 		"filter": map[string]interface{}{
 			"timestamp": "last_edited_time",
-			"on_or_after": map[string]interface{}{
-				"after": lastUpdate.Format(notion.TIME_LAYOUT),
+			"last_edited_time": map[string]interface{}{
+				"on_or_after": lastUpdate.Format(notion.TIME_LAYOUT),
 			},
 		},
 		"sorts": []map[string]interface{}{
