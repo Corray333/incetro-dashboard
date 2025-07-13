@@ -15,7 +15,7 @@ func (t *TelegramClient) GetBot() *gotgbot.Bot {
 func NewTelegramClient(token string) *TelegramClient {
 	bot, err := gotgbot.NewBot(token, nil)
 	if err != nil {
-		panic("failed to create bot: " + err.Error())
+		panic("failed to create bot", "error", err)
 	}
 
 	tr := &TelegramClient{

@@ -123,20 +123,20 @@ func (s *Service) GetUserRole(username string, userID int64) entities.DashboardR
 func (s *Service) CheckInvalid() {
 	tasks, _, err := s.external.GetTasks("created_time", CheckAfter, "", true)
 	if err != nil {
-		slog.Error("error getting tasks: " + err.Error())
+		slog.Error("error getting tasks", "error", err)
 	}
 
 	invalid := s.ValidateTasks(tasks)
 	if len(invalid) > 0 {
 		if err := s.repo.SetInvalidRows(invalid); err != nil {
-			slog.Error("error setting invalid rows: " + err.Error())
+			slog.Error("error setting invalid rows", "error", err)
 		}
 	}
 
 	fmt.Println("Getting times")
 	times, _, err := s.external.GetTimes("created_time", CheckAfter, "", true)
 	if err != nil {
-		slog.Error("error getting times: " + err.Error())
+		slog.Error("error getting times", "error", err)
 	}
 
 	invalidTimes := s.ValidateTimes(times)
@@ -145,12 +145,12 @@ func (s *Service) CheckInvalid() {
 	grouped := s.groupByEmployeeID(invalid)
 	for _, rows := range grouped {
 		if err := s.external.SendNotification(rows); err != nil {
-			slog.Error("error sending notification: " + err.Error())
+			slog.Error("error sending notification", "error", err)
 			continue
 		}
 
 		if err := s.repo.MarkInvalidRowsAsSent(rows); err != nil {
-			slog.Error("error marking invalid rows as sent: " + err.Error())
+			slog.Error("error marking invalid rows as sent", "error", err)
 			continue
 		}
 	}
@@ -191,20 +191,20 @@ func (s *Service) UpdateGoogleSheets(ctx context.Context) error {
 		return err
 	}
 
+	expertises, err := s.repo.GetExpertises()
+	if err != nil {
+		return err
+	}
+	slog.Info("Getting expertises", "expertises", expertises)
+	if err := s.external.UpdateExpertiseSheet(srv, expertises); err != nil {
+		return err
+	}
+
 	employees, err := s.repo.GetEmployees()
 	if err != nil {
 		return err
 	}
 	if err := s.external.UpdatePeopleSheet(srv, employees); err != nil {
-		return err
-	}
-
-	expertises, err := s.repo.GetExpertises()
-	if err != nil {
-		return err
-	}
-
-	if err := s.external.UpdateExpertiseSheet(srv, expertises); err != nil {
 		return err
 	}
 
@@ -250,18 +250,18 @@ func (s *Service) StartOutboxWorker() {
 	for {
 		times, err := s.repo.GetTimesMsg()
 		if err != nil {
-			slog.Error("error getting times: " + err.Error())
+			slog.Error("error getting times", "error", err)
 			continue
 		}
 		for _, time := range times {
 			if err := s.external.WriteOfTime(&time); err != nil {
-				slog.Error("error sending time to notion: " + err.Error())
+				slog.Error("error sending time to notion", "error", err)
 				continue
 			}
 
 			// TODO: maybe add compensation of notion query
 			if err := s.repo.MarkTimeAsSent(time.ID); err != nil {
-				slog.Error("error marking time as sent: " + err.Error())
+				slog.Error("error marking time as sent", "error", err)
 				continue
 			}
 		}
@@ -337,11 +337,11 @@ func (s *Service) Actualize() (updated bool, err error) {
 		fmt.Println("Getting not correct person times")
 		times, _, err := s.external.GetNotCorrectPersonTimes()
 		if err != nil {
-			slog.Error("error getting not correct person times: " + err.Error())
+			slog.Error("error getting not correct person times", "error", err)
 			return
 		}
 		if err := s.SetProfileInTimes(times); err != nil {
-			slog.Error("error setting profile in times: " + err.Error())
+			slog.Error("error setting profile in times", "error", err)
 			return
 		}
 	}()
@@ -454,7 +454,7 @@ func (s *Service) ValidateTasks(tasks []entities.Task) []entities.Row {
 func (s *Service) NotifyEmployeesAboutSalary(ctx context.Context) error {
 	employees, err := s.repo.GetEmployeesByNotificationFlag(ctx, entities.NotificationFlagFinance)
 	if err != nil {
-		slog.Error("error getting employees by notification flag: " + err.Error())
+		slog.Error("error getting employees by notification flag", "error", err)
 		return err
 	}
 	for _, employee := range employees {

@@ -35,7 +35,7 @@ func (r *BaseService) CreateTask(ctx context.Context, task *message.Message, pro
 				for _, user := range task.Mentions {
 					employeeID, err := r.GetEmployeeByTgUsername(ctx, string(user))
 					if err != nil {
-						slog.Error("Notion error while getting employee ID: " + err.Error())
+						slog.Error("Notion error while getting employee ID", "error", err)
 						return nil
 					}
 					executor = append(executor, map[string]interface{}{
@@ -70,13 +70,13 @@ func (r *BaseService) CreateTask(ctx context.Context, task *message.Message, pro
 	// Создаем страницу задачи в Notion
 	res, err := notion.CreatePage(viper.GetString("notion.databases.tasks"), req, nil, "")
 	if err != nil {
-		slog.Error("Notion error while creating task: " + err.Error())
+		slog.Error("Notion error while creating task", "error", err)
 		return "", err
 	}
 
 	var pageCreated PageCreated
 	if err := json.Unmarshal(res, &pageCreated); err != nil {
-		slog.Error("Error while unmarshaling page created: " + err.Error())
+		slog.Error("Error while unmarshaling page created", "error", err)
 		return "", err
 	}
 

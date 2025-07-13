@@ -11,13 +11,13 @@ import (
 
 func MustInit() {
 	if err := godotenv.Load("../.env"); err != nil {
-		panic("error while loading .env file: " + err.Error())
+		panic("error while loading .env file", "error", err)
 	}
 	// Setup viper getting file in ./configs directory. File has name like local.yaml or prod.yaml, depends on env variable ENV
 	viper.SetConfigName(os.Getenv("ENV"))
 	viper.AddConfigPath("../configs")
 	if err := viper.ReadInConfig(); err != nil {
-		panic("error while reading config file: " + err.Error())
+		panic("error while reading config file", "error", err)
 	}
 	SetupLogger()
 }
