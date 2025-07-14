@@ -67,9 +67,9 @@ func entityToSheetsProject(project *project.Project) []interface{} {
 
 	return []interface{}{
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(project.ID.String(), "-", "")), project.Name),
-		project.Status,
 		project.Type,
+		project.ManagerID,
+		project.Status,
 		clientName,
-		project.SheetsLink,
 	}
 }

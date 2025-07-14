@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/Corray333/employee_dashboard/internal/domains/client/entities/client"
@@ -112,6 +113,7 @@ func (s *ProjectService) UpdateSheets(ctx context.Context) error {
 	// Populate client data for each project
 	for i := range projects {
 		if projects[i].ClientID != nil {
+			fmt.Println("Project client: ", projects[i].ClientID)
 			clients, err := s.clientsByIDsGetter.GetClientsByIDs(ctx, []uuid.UUID{*projects[i].ClientID})
 			if err != nil {
 				slog.Error("Error getting client for project", "projectID", projects[i].ID, "clientID", *projects[i].ClientID, "error", err)
