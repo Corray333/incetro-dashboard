@@ -37,10 +37,10 @@ func (r *WeekdayPostgresRepository) SetWeekday(ctx context.Context, weekday *wee
 			created_at  = EXCLUDED.created_at,
 			updated_at  = EXCLUDED.updated_at,
 			notified    = CASE
-							-- IS DISTINCT FROM корректно работает с NULL:
+							-- IS DISTINCT FROM корректно работает с NULL:
 							WHEN EXCLUDED.updated_at IS DISTINCT FROM weekdays.updated_at
 							THEN EXCLUDED.notified     -- время изменилось → обновляем флаг
-							ELSE weekdays.notified     -- время то же → оставляем как было
+							ELSE weekdays.notified     -- время то же → оставляем как было
 						END;
 	`, weekdayDBFromEntity(weekday))
 	if err != nil {
