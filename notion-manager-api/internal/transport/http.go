@@ -146,7 +146,7 @@ func (t *Transport) handleNotionWebhooks(w http.ResponseWriter, r *http.Request)
 	case notinoWebhookTypePageDeleted:
 		if data.Entity.Type == notionEntityTypePage && data.Data.Parent.Type == notionEntityTypeDatabase {
 			parentID := strings.ReplaceAll(data.Data.Parent.ID, "-", "")
-			
+
 			if parentID == viper.GetString("notion.databases.feedback") {
 				feedbackID, err := uuid.Parse(data.Entity.ID)
 				if err != nil {
@@ -159,6 +159,7 @@ func (t *Transport) handleNotionWebhooks(w http.ResponseWriter, r *http.Request)
 					return
 				}
 			} else if parentID == viper.GetString("notion.databases.tasks") {
+				slog.Info("Deleting task", "task_id", data.Entity.ID)
 				taskID, err := uuid.Parse(data.Entity.ID)
 				if err != nil {
 					http.Error(w, fmt.Sprintf("Error parsing task ID: %s", err.Error()), http.StatusBadRequest)
