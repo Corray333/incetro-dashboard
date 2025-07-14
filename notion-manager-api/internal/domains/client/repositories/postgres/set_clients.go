@@ -6,17 +6,18 @@ import (
 
 	"github.com/Corray333/employee_dashboard/internal/domains/client/entities/client"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type clientDB struct {
-	ID         uuid.UUID `db:"client_id"`
-	Name       string    `db:"name"`
-	Status     string    `db:"status"`
-	Source     string    `db:"source"`
-	UniqueID   string    `db:"unique_id"`
-	CreatedAt  time.Time `db:"created_at"`
-	UpdatedAt  time.Time `db:"updated_at"`
-	ProjectIDs []string  `db:"project_ids"`
+	ID         uuid.UUID      `db:"client_id"`
+	Name       string         `db:"name"`
+	Status     string         `db:"status"`
+	Source     string         `db:"source"`
+	UniqueID   string         `db:"unique_id"`
+	CreatedAt  time.Time      `db:"created_at"`
+	UpdatedAt  time.Time      `db:"updated_at"`
+	ProjectIDs pq.StringArray `db:"project_ids"`
 }
 
 func clientDBFromEntity(c *client.Client) *clientDB {
@@ -33,7 +34,7 @@ func clientDBFromEntity(c *client.Client) *clientDB {
 		UniqueID:   c.UniqueID,
 		CreatedAt:  c.CreatedAt,
 		UpdatedAt:  c.UpdatedAt,
-		ProjectIDs: projectIDs,
+		ProjectIDs: pq.StringArray(projectIDs),
 	}
 }
 
