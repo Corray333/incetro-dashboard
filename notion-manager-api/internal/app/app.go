@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/client"
 	"github.com/Corray333/employee_dashboard/internal/domains/employee"
 	"github.com/Corray333/employee_dashboard/internal/domains/feedback"
 	"github.com/Corray333/employee_dashboard/internal/domains/project"
@@ -66,6 +67,9 @@ func New() *app {
 	weekdayController := weekday.NewWeekdayController(store, notionClient, telegramClient, employeeController.GetService())
 	app.controllers = append(app.controllers, weekdayController)
 
+	clientController := client.NewClientController(store, notionClient, sheetsClient)
+	app.controllers = append(app.controllers, clientController)
+
 	projectController.AddProjectSheetsUpdater(taskController.GetService())
 	projectController.AddProjectSheetsUpdater(timeController.GetService())
 
@@ -74,6 +78,7 @@ func New() *app {
 	service := service.New(storage, external)
 	service.AddUpdateSubscriber(timeController.GetService())
 	service.AddUpdateSubscriber(taskController.GetService())
+	service.AddUpdateSubscriber(clientController.GetService())
 
 	transport := transport.New(router, service)
 	transport.RegisterRoutes()

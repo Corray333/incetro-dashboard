@@ -123,20 +123,20 @@ func (s *Service) GetUserRole(username string, userID int64) entities.DashboardR
 func (s *Service) CheckInvalid() {
 	tasks, _, err := s.external.GetTasks("created_time", CheckAfter, "", true)
 	if err != nil {
-		slog.Error("error getting tasks", "error", err)
+		slog.Error("error getting tasks: " + err.Error())
 	}
 
 	invalid := s.ValidateTasks(tasks)
 	if len(invalid) > 0 {
 		if err := s.repo.SetInvalidRows(invalid); err != nil {
-			slog.Error("error setting invalid rows", "error", err)
+			slog.Error("error setting invalid rows: " + err.Error())
 		}
 	}
 
 	fmt.Println("Getting times")
 	times, _, err := s.external.GetTimes("created_time", CheckAfter, "", true)
 	if err != nil {
-		slog.Error("error getting times", "error", err)
+		slog.Error("error getting times: " + err.Error())
 	}
 
 	invalidTimes := s.ValidateTimes(times)
@@ -145,12 +145,12 @@ func (s *Service) CheckInvalid() {
 	grouped := s.groupByEmployeeID(invalid)
 	for _, rows := range grouped {
 		if err := s.external.SendNotification(rows); err != nil {
-			slog.Error("error sending notification", "error", err)
+			slog.Error("error sending notification: " + err.Error())
 			continue
 		}
 
 		if err := s.repo.MarkInvalidRowsAsSent(rows); err != nil {
-			slog.Error("error marking invalid rows as sent", "error", err)
+			slog.Error("error marking invalid rows as sent: " + err.Error())
 			continue
 		}
 	}
@@ -250,18 +250,18 @@ func (s *Service) StartOutboxWorker() {
 	for {
 		times, err := s.repo.GetTimesMsg()
 		if err != nil {
-			slog.Error("error getting times", "error", err)
+			slog.Error("error getting times: " + err.Error())
 			continue
 		}
 		for _, time := range times {
 			if err := s.external.WriteOfTime(&time); err != nil {
-				slog.Error("error sending time to notion", "error", err)
+				slog.Error("error sending time to notion: " + err.Error())
 				continue
 			}
 
 			// TODO: maybe add compensation of notion query
 			if err := s.repo.MarkTimeAsSent(time.ID); err != nil {
-				slog.Error("error marking time as sent", "error", err)
+				slog.Error("error marking time as sent: " + err.Error())
 				continue
 			}
 		}
@@ -337,11 +337,11 @@ func (s *Service) Actualize() (updated bool, err error) {
 		fmt.Println("Getting not correct person times")
 		times, _, err := s.external.GetNotCorrectPersonTimes()
 		if err != nil {
-			slog.Error("error getting not correct person times", "error", err)
+			slog.Error("error getting not correct person times: " + err.Error())
 			return
 		}
 		if err := s.SetProfileInTimes(times); err != nil {
-			slog.Error("error setting profile in times", "error", err)
+			slog.Error("error setting profile in times: " + err.Error())
 			return
 		}
 	}()
@@ -454,7 +454,7 @@ func (s *Service) ValidateTasks(tasks []entities.Task) []entities.Row {
 func (s *Service) NotifyEmployeesAboutSalary(ctx context.Context) error {
 	employees, err := s.repo.GetEmployeesByNotificationFlag(ctx, entities.NotificationFlagFinance)
 	if err != nil {
-		slog.Error("error getting employees by notification flag", "error", err)
+		slog.Error("error getting employees by notification flag: " + err.Error())
 		return err
 	}
 	for _, employee := range employees {

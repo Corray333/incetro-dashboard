@@ -51,7 +51,7 @@ func NewProjectBot(service service) *ProjectBot {
 	token := os.Getenv("TASK_PARSER_BOT_TOKEN")
 	bot, err := gotgbot.NewBot(token, nil)
 	if err != nil {
-		panic("failed to create bot", "error", err)
+		panic("failed to create bot: " + err.Error())
 	}
 
 	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{
@@ -335,7 +335,7 @@ func (t *ProjectBot) Run() {
 		},
 	})
 	if err != nil {
-		panic("failed to start polling", "error", err)
+		panic("failed to start polling: " + err.Error())
 	}
 	t.updater.Idle()
 }

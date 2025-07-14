@@ -10,7 +10,7 @@ import (
 func (s *TimePostgresRepository) CreateTimeWriteOf(ctx context.Context, time *entity_time.TimeOutboxMsg) error {
 	tx, isNew, err := s.GetTx(ctx)
 	if err != nil {
-		slog.Error("error getting tx", "error", err)
+		slog.Error("error getting tx: " + err.Error())
 		return err
 	}
 	if isNew {
@@ -25,7 +25,7 @@ func (s *TimePostgresRepository) CreateTimeWriteOf(ctx context.Context, time *en
 
 	if isNew {
 		if err := tx.Commit(); err != nil {
-			slog.Error("error committing tx", "error", err)
+			slog.Error("error committing tx: " + err.Error())
 			return err
 		}
 	}

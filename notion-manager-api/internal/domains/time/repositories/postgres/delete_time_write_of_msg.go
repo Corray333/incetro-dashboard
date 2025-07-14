@@ -10,7 +10,7 @@ import (
 func (s *TimePostgresRepository) MarkTimeWriteOfAsSent(ctx context.Context, time *entity_time.TimeOutboxMsg) error {
 	tx, isNew, err := s.GetTx(ctx)
 	if err != nil {
-		slog.Error("error getting tx", "error", err)
+		slog.Error("error getting tx: " + err.Error())
 		return err
 	}
 	if isNew {
@@ -18,13 +18,13 @@ func (s *TimePostgresRepository) MarkTimeWriteOfAsSent(ctx context.Context, time
 	}
 
 	if _, err := tx.Exec("DELETE FROM time_outbox WHERE time_id = $1", time.ID); err != nil {
-		slog.Error("error marking time as sent", "error", err)
+		slog.Error("error marking time as sent: " + err.Error())
 		return err
 	}
 
 	if isNew {
 		if err := tx.Commit(); err != nil {
-			slog.Error("error committing tx", "error", err)
+			slog.Error("error committing tx: " + err.Error())
 			return err
 		}
 	}

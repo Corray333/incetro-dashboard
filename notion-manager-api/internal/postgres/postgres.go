@@ -48,7 +48,7 @@ func New() *PostgresClient {
 func (r *PostgresClient) Begin(ctx context.Context) (context.Context, error) {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		slog.Error("Failed to begin transaction", "error", err)
+		slog.Error("Failed to begin transaction: " + err.Error())
 		return nil, err
 	}
 
@@ -63,7 +63,7 @@ func (r *PostgresClient) Commit(ctx context.Context) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		slog.Error("Failed to commit transaction", "error", err)
+		slog.Error("Failed to commit transaction: " + err.Error())
 		return err
 	}
 

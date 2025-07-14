@@ -41,7 +41,7 @@ func New() *Storage {
 
 func (s *Storage) GetEmployees() (employees []entities.Employee, err error) {
 	if err := s.db.Select(&employees, "SELECT employees.*, expertise.name as expertise_name FROM employees NATURAL JOIN expertise"); err != nil {
-		slog.Error("error getting employees", "error", err)
+		slog.Error("error getting employees: " + err.Error())
 		return nil, err
 	}
 
@@ -50,7 +50,7 @@ func (s *Storage) GetEmployees() (employees []entities.Employee, err error) {
 
 func (s *Storage) GetProjects(userID string) (projects []entities.Project, err error) {
 	if err := s.db.Select(&projects, "SELECT projects.*, username as manager FROM projects JOIN employees ON projects.manager_id = employees.profile_id"); err != nil {
-		slog.Error("error getting projects", "error", err)
+		slog.Error("error getting projects: " + err.Error())
 		return nil, err
 	}
 
@@ -98,7 +98,7 @@ func (s *Storage) GetActiveTasks(userID string, projectID string) (tasks []entit
 	args := []interface{}{projectID, userID, pq.Array(statuses)}
 
 	if err := s.db.Select(&tasks, query, args...); err != nil {
-		slog.Error("error getting tasks", "error", err)
+		slog.Error("error getting tasks: " + err.Error())
 		return nil, err
 	}
 
@@ -111,7 +111,7 @@ func (s *Storage) GetQuarterTasks(quarter int) (tasks []entities.Task, err error
         SELECT tasks.task_id, tasks.status FROM task_tag NATURAL JOIN tasks 
         WHERE tag = $1
     `, "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
-		slog.Error("error getting tasks", "error", err)
+		slog.Error("error getting tasks: " + err.Error())
 		return nil, err
 	}
 	if len(tasks) == 0 {
@@ -149,7 +149,7 @@ func (s *Storage) SetEmployeeTelegramID(username string, telegramID int64) error
 func (s *Storage) SetEmployees(employees []entities.Employee) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("error starting transaction", "error", err)
+		slog.Error("error starting transaction: " + err.Error())
 		return err
 	}
 	defer tx.Rollback()
@@ -165,7 +165,7 @@ func (s *Storage) SetEmployees(employees []entities.Employee) error {
 				expertiseID = sql.NullString{String: employee.ExpertiseID, Valid: true}
 			} else {
 				// Обработка ошибки парсинга UUID
-				slog.Error("invalid UUID format for ExpertiseID", "error", err)
+				slog.Error("invalid UUID format for ExpertiseID: " + err.Error())
 				return err
 			}
 		} else {
@@ -180,7 +180,7 @@ func (s *Storage) SetEmployees(employees []entities.Employee) error {
 
 		err := tx.QueryRow(query, employee.ID, employee.Username, employee.Email, employee.Icon, employee.ProfileID, employee.Telegram, employee.Geo, expertiseID, employee.Direction, employee.Status, employee.Phone, employee.FIO, employee.UniqueID).Scan(&tgID)
 		if err != nil {
-			slog.Error("error setting employees", "error", err)
+			slog.Error("error setting employees: " + err.Error())
 			return err
 		}
 
@@ -209,7 +209,7 @@ func (s *Storage) GetEmployeesByNotificationFlag(ctx context.Context, flag entit
 		WHERE enf.flag = $1
 	`
 	if err := s.db.Select(&employees, query, flag); err != nil {
-		slog.Error("error getting employees by notification flag", "error", err)
+		slog.Error("error getting employees by notification flag: " + err.Error())
 		return nil, err
 	}
 
@@ -268,7 +268,7 @@ func (s *Storage) GetTasksOfEmployee(employeeUsername string, period_start, peri
 		) AND tag = $4
 	`
 	if err := s.db.Select(&tasks, query, employeeUsername, time.Unix(period_start, 0), time.Unix(period_end, 0), "Q"+strconv.Itoa(quarter)); err != nil && err != sql.ErrNoRows {
-		slog.Error("error getting tasks of employee", "error", err)
+		slog.Error("error getting tasks of employee: " + err.Error())
 		return nil, err
 	}
 	if len(tasks) == 0 {
@@ -382,7 +382,7 @@ func (s *Storage) SetTimes(times []entities.Time) error {
 	for _, time := range times {
 		_, err := tx.Exec("INSERT INTO times (time_id, employee, description) VALUES ($1, $2, $3) ON CONFLICT (time_id) DO UPDATE SET  employee = $2, description = $3", time.ID, time.Employee, time.Description)
 		if err != nil {
-			slog.Error("error setting times", "error", err)
+			slog.Error("error setting times: " + err.Error())
 			return err
 		}
 	}
@@ -392,7 +392,7 @@ func (s *Storage) SetTimes(times []entities.Time) error {
 
 func (s *Storage) MarkTimeAsSent(timeID int64) error {
 	if _, err := s.db.Exec("DELETE FROM time_outbox WHERE time_id = $1", timeID); err != nil {
-		slog.Error("error marking time as sent", "error", err)
+		slog.Error("error marking time as sent: " + err.Error())
 		return err
 	}
 
@@ -402,7 +402,7 @@ func (s *Storage) MarkTimeAsSent(timeID int64) error {
 func (s *Storage) GetSystemInfo() (*entities.System, error) {
 	system := entities.System{}
 	if err := s.db.Get(&system, "SELECT * FROM system"); err != nil {
-		slog.Error("error getting system info", "error", err)
+		slog.Error("error getting system info: " + err.Error())
 		return nil, err
 	}
 
@@ -412,14 +412,14 @@ func (s *Storage) GetSystemInfo() (*entities.System, error) {
 func (s *Storage) SetSystemInfo(system *entities.System) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("error starting transaction", "error", err)
+		slog.Error("error starting transaction: " + err.Error())
 		return err
 	}
 	defer tx.Rollback()
 
 	_, err = tx.Exec("UPDATE system SET projects_db_last_sync = $1, employee_db_last_sync = $2", system.ProjectsDBLastSynced, system.EmployeeDBLastSynced)
 	if err != nil {
-		slog.Error("error updating system info", "error", err)
+		slog.Error("error updating system info: " + err.Error())
 		return err
 	}
 
@@ -431,7 +431,7 @@ func (s *Storage) GetEmployeeByID(employeeID string) (employee entities.Employee
 		if err == sql.ErrNoRows {
 			return entities.Employee{}, nil
 		}
-		slog.Error("error getting employee by id", "error", err)
+		slog.Error("error getting employee by id: " + err.Error())
 		return entities.Employee{}, err
 	}
 
@@ -441,20 +441,20 @@ func (s *Storage) GetEmployeeByID(employeeID string) (employee entities.Employee
 func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Expertise) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
-		slog.Error("error starting transaction", "error", err)
+		slog.Error("error starting transaction: " + err.Error())
 		return err
 	}
 	defer tx.Rollback()
 
 	if _, err := tx.Exec("DELETE FROM expertise"); err != nil {
-		slog.Error("error deleting expertises", "error", err)
+		slog.Error("error deleting expertises: " + err.Error())
 		return err
 	}
 
 	for _, expertise := range expertises {
 		_, err := tx.Exec("INSERT INTO expertise (expertise_id, name, direction, description) VALUES ($1, $2, $3, $4) ON CONFLICT (expertise_id) DO UPDATE SET direction = $3, description = $4", expertise.ID, expertise.Name, expertise.Direction, expertise.Description)
 		if err != nil {
-			slog.Error("error setting expertises", "error", err)
+			slog.Error("error setting expertises: " + err.Error())
 			return err
 		}
 	}
@@ -464,7 +464,7 @@ func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Exper
 
 func (s *Storage) GetExpertises() (expertises []entities.Expertise, err error) {
 	if err := s.db.Select(&expertises, "SELECT * FROM expertise"); err != nil {
-		slog.Error("error getting expertises", "error", err)
+		slog.Error("error getting expertises: " + err.Error())
 		return nil, err
 	}
 
@@ -473,7 +473,7 @@ func (s *Storage) GetExpertises() (expertises []entities.Expertise, err error) {
 
 func (s *Storage) GetExtertiseByID(ctx context.Context, id string) (expertise entities.Expertise, err error) {
 	if err := s.db.Get(&expertise, "SELECT * FROM expertise WHERE expertise_id = $1", id); err != nil {
-		slog.Error("error getting expertise by id", "error", err)
+		slog.Error("error getting expertise by id: " + err.Error())
 		return entities.Expertise{}, err
 	}
 

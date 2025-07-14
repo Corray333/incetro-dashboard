@@ -639,7 +639,7 @@ func (e *External) SetProfileInTime(timeID, profileID string) error {
 
 	_, err := notion.UpdatePage(timeID, req)
 	if err != nil {
-		slog.Error("error updating time page in notion", "error", err)
+		slog.Error("error updating time page in notion: " + err.Error())
 		return err
 	}
 	return nil
@@ -878,7 +878,7 @@ func (e *External) WriteOfTime(timeToWriteOf *entities.TimeMsg) error {
 
 	_, err := notion.CreatePage(viper.GetString("notion.databases.times"), req, nil, "")
 	if err != nil {
-		slog.Error("error creating time page in notion", "error", err)
+		slog.Error("error creating time page in notion: " + err.Error())
 		return err
 	}
 	return nil
@@ -1213,14 +1213,14 @@ func (e *External) CreateMindmapTasks(projectName string, tasks []mindmap.Task) 
 	}
 	projectsResp, err := notion.SearchPages(os.Getenv("PROJECTS_DB"), projectFilter)
 	if err != nil {
-		slog.Error("Notion error while searching projects", "error", err)
+		slog.Error("Notion error while searching projects: " + err.Error())
 		return err
 	}
 
 	// Извлекаем ID проекта
 	projects := Projects{}
 	if err := json.Unmarshal(projectsResp, &projects); err != nil {
-		slog.Error("Error unmarshalling projects response", "error", err)
+		slog.Error("Error unmarshalling projects response: " + err.Error())
 		return err
 	}
 
@@ -1293,13 +1293,13 @@ func createMindmapTask(projectID string, task *mindmap.Task, parentID string, le
 	// Создаем страницу задачи в Notion
 	resp, err := notion.CreatePage(viper.GetString("notion.databases.tasks"), req, content, "")
 	if err != nil {
-		slog.Error("Notion error while creating task", "error", err)
+		slog.Error("Notion error while creating task: " + err.Error())
 		return err
 	}
 
 	var page PageCreated
 	if err := json.Unmarshal(resp, &page); err != nil {
-		slog.Error("Error unmarshalling response", "error", err)
+		slog.Error("Error unmarshalling response: " + err.Error())
 		return err
 	}
 

@@ -46,7 +46,7 @@ func CheckTelegramAuth(initData string) (TelegramCredentials, error) {
 		if strings.HasPrefix(chunk, "user=") {
 			parsedData = strings.TrimPrefix(chunk, "user=")
 			if err := json.Unmarshal([]byte(parsedData), user); err != nil {
-				slog.Error("Failed to unmarshal user data", "error", err)
+				slog.Error("Failed to unmarshal user data: " + err.Error())
 				return TelegramCredentials{}, err
 			}
 		}
@@ -107,7 +107,7 @@ func NewTelegramCredentialsMiddleware() func(next http.Handler) http.Handler {
 			creds, err := CheckTelegramAuth(authHeader)
 			if err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				slog.Error("Unauthorized", "error", err)
+				slog.Error("Unauthorized: " + err.Error())
 				return
 			}
 			r = r.WithContext(context.WithValue(r.Context(), entities.ContextKeyUserCredentials, creds))
