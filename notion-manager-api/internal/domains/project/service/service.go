@@ -90,6 +90,10 @@ func (s *ProjectService) Run() {
 
 }
 
+func (s *ProjectService) AcceptUpdate(ctx context.Context) {
+	go s.UpdateSheets(ctx)
+}
+
 func (s *ProjectService) UpdateProjectSheets(ctx context.Context, projectID uuid.UUID) error {
 	for _, updater := range s.projectSheetsUpdaters {
 		if err := updater.UpdateProjectSheets(ctx, projectID); err != nil {
