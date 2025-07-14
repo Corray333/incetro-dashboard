@@ -6,6 +6,7 @@ import (
 
 	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type projectPostgres struct {
@@ -50,6 +51,33 @@ func (r *ProjectPostgresRepository) ListProjectsWithLinkedSheets(ctx context.Con
 	var projects []projectPostgres
 	if err := r.DB().Select(&projects, "SELECT * FROM projects WHERE sheets_link != ''"); err != nil {
 		slog.Error("Error listing projects with linked sheets", "error", err)
+		return nil, err
+	}
+
+	var result []project.Project
+	for _, p := range projects {
+		result = append(result, p.ToEntity())
+	}
+	return result, nil
+}
+
+func (r *ProjectPostgresRepository) GetProjectsByIDs(ctx context.Context, projectIDs []uuid.UUID) ([]project.Project, error) {
+	if len(projectIDs) == 0 {
+		return []project.Project{}, nil
+	}
+
+	var projects []projectPostgres
+	query, args, err := sqlx.In("SELECT * FROM projects WHERE project_id IN (?)", projectIDs)
+	if err != nil {
+		slog.Error("Error building query for projects by IDs", "error", err)
+		return nil, err
+	}
+
+	// Rebind the query to use PostgreSQL-style placeholders ($1, $2, ...)
+	query = r.DB().Rebind(query)
+
+	if err := r.DB().Select(&projects, query, args...); err != nil {
+		slog.Error("Error getting projects by IDs", "error", err)
 		return nil, err
 	}
 

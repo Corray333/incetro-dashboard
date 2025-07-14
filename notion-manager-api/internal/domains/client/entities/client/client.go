@@ -3,6 +3,7 @@ package client
 import (
 	"time"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/google/uuid"
 )
 
@@ -15,4 +16,5 @@ type Client struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	ProjectIDs  []uuid.UUID `json:"project_ids"`
+	Projects    []project.Project `json:"projects"`
 }

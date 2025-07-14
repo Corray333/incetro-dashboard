@@ -60,13 +60,13 @@ func (r *ClientSheetsRepository) UpdateSheetsClients(ctx context.Context, sheetI
 }
 
 func entityToSheetsClient(client *client.Client) []interface{} {
-	projectIDsStr := ""
-	if len(client.ProjectIDs) > 0 {
-		projectIDStrs := make([]string, len(client.ProjectIDs))
-		for i, id := range client.ProjectIDs {
-			projectIDStrs[i] = id.String()
+	projectNamesStr := ""
+	if len(client.Projects) > 0 {
+		projectNames := make([]string, len(client.Projects))
+		for i, project := range client.Projects {
+			projectNames[i] = project.Name
 		}
-		projectIDsStr = strings.Join(projectIDStrs, ", ")
+		projectNamesStr = strings.Join(projectNames, ", ")
 	}
 
 	return []interface{}{
@@ -74,6 +74,6 @@ func entityToSheetsClient(client *client.Client) []interface{} {
 		string(client.Status),
 		client.Source,
 		client.UniqueID,
-		projectIDsStr,
+		projectNamesStr,
 	}
 }

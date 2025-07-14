@@ -67,7 +67,7 @@ func New() *app {
 	weekdayController := weekday.NewWeekdayController(store, notionClient, telegramClient, employeeController.GetService())
 	app.controllers = append(app.controllers, weekdayController)
 
-	clientController := client.NewClientController(store, notionClient, sheetsClient)
+	clientController := client.NewClientController(store, notionClient, sheetsClient, projectController.GetService())
 	app.controllers = append(app.controllers, clientController)
 
 	projectController.AddProjectSheetsUpdater(taskController.GetService())

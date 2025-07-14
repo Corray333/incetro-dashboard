@@ -9,6 +9,7 @@ import (
 type ProjectService struct {
 	projectsLister          projectsLister
 	projectWithSheetsLister projectWithSheetsLister
+	projectsByIDsGetter     projectsByIDsGetter
 
 	projectSheetsUpdaters []ProjectSheetsUpdater
 }
@@ -20,6 +21,7 @@ type ProjectSheetsUpdater interface {
 type postgresRepository interface {
 	projectsLister
 	projectWithSheetsLister
+	projectsByIDsGetter
 }
 type notionRepository interface {
 	// feedbacksRawLister
@@ -45,6 +47,7 @@ func WithPostgresRepository(repository postgresRepository) option {
 	return func(s *ProjectService) {
 		s.projectsLister = repository
 		s.projectWithSheetsLister = repository
+		s.projectsByIDsGetter = repository
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Corray333/employee_dashboard/internal/domains/client/entities/client"
+	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 )
 
 type clientsNotionLister interface {
@@ -82,6 +83,20 @@ func (s *ClientService) UpdateSheets(ctx context.Context) error {
 	if err != nil {
 		slog.Error("Error getting clients", "error", err)
 		return err
+	}
+
+	// Populate project data for each client
+	for i := range clients {
+		if len(clients[i].ProjectIDs) > 0 && s.projectsByIDsGetter != nil {
+			projects, err := s.projectsByIDsGetter.GetProjectsByIDs(ctx, clients[i].ProjectIDs)
+			if err != nil {
+				slog.Error("Error getting projects for client", "error", err, "client_id", clients[i].ID)
+				// Continue with empty projects rather than failing
+				clients[i].Projects = []project.Project{}
+			} else {
+				clients[i].Projects = projects
+			}
+		}
 	}
 
 	if s.sheetsClientsUpdater != nil {

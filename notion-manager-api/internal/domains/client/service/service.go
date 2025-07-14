@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/Corray333/employee_dashboard/internal/postgres"
+	"github.com/google/uuid"
 )
 
 type ClientService struct {
@@ -13,6 +15,7 @@ type ClientService struct {
 	transactioner              postgres.Transactioner
 	clientLister               clientLister
 	sheetsClientsUpdater       sheetsClientsUpdater
+	projectsByIDsGetter        projectsByIDsGetter
 }
 
 type postgresRepository interface {
@@ -28,6 +31,10 @@ type notionRepository interface {
 
 type sheetsRepository interface {
 	sheetsClientsUpdater
+}
+
+type projectsByIDsGetter interface {
+	GetProjectsByIDs(ctx context.Context, projectIDs []uuid.UUID) ([]project.Project, error)
 }
 
 type option func(*ClientService)
@@ -60,6 +67,12 @@ func WithNotionRepository(repository notionRepository) option {
 func WithSheetsRepository(repository sheetsRepository) option {
 	return func(s *ClientService) {
 		s.sheetsClientsUpdater = repository
+	}
+}
+
+func WithProjectService(projectService projectsByIDsGetter) option {
+	return func(s *ClientService) {
+		s.projectsByIDsGetter = projectService
 	}
 }
 

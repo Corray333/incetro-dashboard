@@ -5,6 +5,7 @@ import (
 	postgres_repo "github.com/Corray333/employee_dashboard/internal/domains/client/repositories/postgres"
 	sheets_repo "github.com/Corray333/employee_dashboard/internal/domains/client/repositories/sheets"
 	"github.com/Corray333/employee_dashboard/internal/domains/client/service"
+	project_service "github.com/Corray333/employee_dashboard/internal/domains/project/service"
 	"github.com/Corray333/employee_dashboard/internal/postgres"
 	gsheets "github.com/Corray333/employee_dashboard/internal/sheets"
 	notion "github.com/Corray333/employee_dashboard/pkg/notion/v2"
@@ -18,7 +19,7 @@ type ClientController struct {
 	// transport    *transport.ClientTransport
 }
 
-func NewClientController(store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client) *ClientController {
+func NewClientController(store *postgres.PostgresClient, notionClient *notion.Client, sheetsClient *gsheets.Client, projectService *project_service.ProjectService) *ClientController {
 	postgresRepo := postgres_repo.NewClientPostgresRepository(store)
 	notionRepo := notion_repo.NewClientNotionRepository(notionClient)
 	sheetsRepo := sheets_repo.NewClientSheetsRepository(sheetsClient)
@@ -27,6 +28,7 @@ func NewClientController(store *postgres.PostgresClient, notionClient *notion.Cl
 		service.WithPostgresRepository(postgresRepo),
 		service.WithNotionRepository(notionRepo),
 		service.WithSheetsRepository(sheetsRepo),
+		service.WithProjectService(projectService),
 	)
 
 	// transport := transport.NewClientTransport(grpcServer, service)
