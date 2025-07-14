@@ -37,7 +37,22 @@ func (p *projectPostgres) ToEntity() project.Project {
 
 func (r *ProjectPostgresRepository) ListProjects(ctx context.Context) ([]project.Project, error) {
 	var projects []projectPostgres
-	if err := r.DB().Select(&projects, "SELECT * FROM projects ORDER BY project_id "); err != nil {
+	query := `
+		SELECT 
+			p.project_id,
+			p.name,
+			p.icon,
+			p.icon_type,
+			p.status,
+			p.type,
+			p.manager_id,
+			p.sheets_link,
+			c.client_id
+		FROM projects p
+		LEFT JOIN clients c ON p.project_id::text = ANY(c.project_ids)
+		ORDER BY p.project_id
+	`
+	if err := r.DB().Select(&projects, query); err != nil {
 		slog.Error("Error listing projects", "error", err)
 		return nil, err
 	}
@@ -51,7 +66,23 @@ func (r *ProjectPostgresRepository) ListProjects(ctx context.Context) ([]project
 
 func (r *ProjectPostgresRepository) ListProjectsWithLinkedSheets(ctx context.Context) ([]project.Project, error) {
 	var projects []projectPostgres
-	if err := r.DB().Select(&projects, "SELECT * FROM projects WHERE sheets_link != ''"); err != nil {
+	query := `
+		SELECT 
+			p.project_id,
+			p.name,
+			p.icon,
+			p.icon_type,
+			p.status,
+			p.type,
+			p.manager_id,
+			p.sheets_link,
+			c.client_id
+		FROM projects p
+		LEFT JOIN clients c ON p.project_id::text = ANY(c.project_ids)
+		WHERE p.sheets_link != ''
+		ORDER BY p.project_id
+	`
+	if err := r.DB().Select(&projects, query); err != nil {
 		slog.Error("Error listing projects with linked sheets", "error", err)
 		return nil, err
 	}
