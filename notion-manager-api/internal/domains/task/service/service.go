@@ -6,6 +6,7 @@ import (
 	"time"
 
 	entity_task "github.com/Corray333/employee_dashboard/internal/domains/task/entities/task"
+	"github.com/google/uuid"
 )
 
 type TaskService struct {
@@ -21,6 +22,7 @@ type TaskService struct {
 
 	taskLister         taskLister
 	sheetsTasksUpdater sheetsTasksUpdater
+	taskDeleter        taskDeleter
 
 	projectsLister projectsLister
 }
@@ -33,6 +35,7 @@ type postgresRepository interface {
 	tasksLastUpdateGetter
 	tasksLastUpdateSetter
 	taskLister
+	taskDeleter
 }
 
 type notionRepository interface {
@@ -71,6 +74,7 @@ func WithPostgresRepository(repository postgresRepository) option {
 		s.tasksLastUpdateGetter = repository
 		s.tasksLastUpdateSetter = repository
 		s.taskLister = repository
+		s.taskDeleter = repository
 	}
 }
 
@@ -102,6 +106,10 @@ type notionTaskCreator interface {
 
 type taskOutboxMsgDeleter interface {
 	DeleteTaskOutboxMsg(ctx context.Context, task *entity_task.TaskOutboxMsg) error
+}
+
+type taskDeleter interface {
+	DeleteTask(ctx context.Context, taskID uuid.UUID) error
 }
 
 func (s *TaskService) processTaskMsgs(ctx context.Context) error {
@@ -144,4 +152,9 @@ func (s *TaskService) StartTaskOutboxWorker(ctx context.Context) {
 			return
 		}
 	}
+}
+
+// DeleteTask deletes a task by its ID
+func (s *TaskService) DeleteTask(ctx context.Context, taskID uuid.UUID) error {
+	return s.taskDeleter.DeleteTask(ctx, taskID)
 }

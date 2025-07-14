@@ -52,7 +52,14 @@ func New() *app {
 	feedbackController := feedback.NewFeedbackController(grpcServer, store, notionClient)
 	app.controllers = append(app.controllers, feedbackController)
 
-	projectController := project.NewProjectController(router, store, notionClient, sheetsClient)
+	employeeController := employee.NewEmployeeController(store, notionClient)
+	app.controllers = append(app.controllers, employeeController)
+
+	// Create client controller first (without project service dependency)
+	clientController := client.NewClientController(store, notionClient, sheetsClient, nil)
+	app.controllers = append(app.controllers, clientController)
+
+	projectController := project.NewProjectController(router, store, notionClient, sheetsClient, clientController.GetService())
 	app.controllers = append(app.controllers, projectController)
 
 	timeController := time.NewTimeController(router, store, notionClient, sheetsClient, projectController.GetService())
@@ -61,14 +68,12 @@ func New() *app {
 	taskController := task.NewTaskController(router, store, notionClient, sheetsClient, projectController.GetService())
 	app.controllers = append(app.controllers, taskController)
 
-	employeeController := employee.NewEmployeeController(store, notionClient)
-	app.controllers = append(app.controllers, employeeController)
-
 	weekdayController := weekday.NewWeekdayController(store, notionClient, telegramClient, employeeController.GetService())
 	app.controllers = append(app.controllers, weekdayController)
 
-	clientController := client.NewClientController(store, notionClient, sheetsClient, projectController.GetService())
-	app.controllers = append(app.controllers, clientController)
+	// Update client controller with project service after project controller is created
+	clientController = client.NewClientController(store, notionClient, sheetsClient, projectController.GetService())
+	app.controllers[len(app.controllers)-4] = clientController
 
 	projectController.AddProjectSheetsUpdater(taskController.GetService())
 	projectController.AddProjectSheetsUpdater(timeController.GetService())
@@ -78,6 +83,10 @@ func New() *app {
 	service := service.New(storage, external)
 	service.AddUpdateSubscriber(timeController.GetService())
 	service.AddUpdateSubscriber(taskController.GetService())
+
+	// Set task and time services for deletion operations
+	service.SetTaskService(taskController.GetService())
+	service.SetTimeService(timeController.GetService())
 	service.AddUpdateSubscriber(clientController.GetService())
 
 	transport := transport.New(router, service)

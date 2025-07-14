@@ -463,7 +463,7 @@ func (s *Storage) SetExpertises(ctx context.Context, expertises []entities.Exper
 }
 
 func (s *Storage) GetExpertises() (expertises []entities.Expertise, err error) {
-	if err := s.db.Select(&expertises, "SELECT * FROM expertise"); err != nil {
+	if err := s.db.Select(&expertises, "SELECT * FROM expertise ORDER BY expertise_id"); err != nil {
 		slog.Error("error getting expertises: " + err.Error())
 		return nil, err
 	}

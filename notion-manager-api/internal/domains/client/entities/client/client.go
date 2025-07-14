@@ -3,18 +3,21 @@ package client
 import (
 	"time"
 
-	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/google/uuid"
 )
 
+type projectI interface {
+	GetName() string
+}
+
 type Client struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Status      Status    `json:"status"`
-	Source      string    `json:"source"`
-	UniqueID    string    `json:"unique_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	ProjectIDs  []uuid.UUID `json:"project_ids"`
-	Projects    []project.Project `json:"projects"`
+	ID         uuid.UUID   `json:"id"`
+	Name       string      `json:"name"`
+	Status     Status      `json:"status"`
+	Source     string      `json:"source"`
+	UniqueID   string      `json:"unique_id"`
+	CreatedAt  time.Time   `json:"created_at"`
+	UpdatedAt  time.Time   `json:"updated_at"`
+	ProjectIDs []uuid.UUID `json:"project_ids"`
+	Projects   []projectI  `json:"projects"`
 }

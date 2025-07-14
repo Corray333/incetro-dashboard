@@ -69,7 +69,37 @@ func (r *ClientPostgresRepository) ListClients(ctx context.Context, filter *clie
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += " ORDER BY created_at DESC"
+	query += " ORDER BY client_id DESC"
+
+	var clientsDB []clientDB
+	err := r.DB().SelectContext(ctx, &clientsDB, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	clients := make([]client.Client, len(clientsDB))
+	for i, c := range clientsDB {
+		clients[i] = *c.ToEntity()
+	}
+
+	return clients, nil
+}
+
+func (r *ClientPostgresRepository) GetClientsByIDs(ctx context.Context, clientIDs []uuid.UUID) ([]client.Client, error) {
+	if len(clientIDs) == 0 {
+		return []client.Client{}, nil
+	}
+
+	query := `SELECT client_id, name, status, source, unique_id, created_at, updated_at, project_ids FROM clients WHERE client_id IN (`
+	placeholders := make([]string, len(clientIDs))
+	args := make([]interface{}, len(clientIDs))
+
+	for i, id := range clientIDs {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	query += strings.Join(placeholders, ",") + ")"
 
 	var clientsDB []clientDB
 	err := r.DB().SelectContext(ctx, &clientsDB, query, args...)

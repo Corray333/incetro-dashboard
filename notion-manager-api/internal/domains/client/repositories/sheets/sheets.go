@@ -64,7 +64,7 @@ func entityToSheetsClient(client *client.Client) []interface{} {
 	if len(client.Projects) > 0 {
 		projectNames := make([]string, len(client.Projects))
 		for i, project := range client.Projects {
-			projectNames[i] = project.Name
+			projectNames[i] = project.GetName()
 		}
 		projectNamesStr = strings.Join(projectNames, ", ")
 	}

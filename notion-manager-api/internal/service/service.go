@@ -81,12 +81,22 @@ type updateSubscriber interface {
 	AcceptUpdate(ctx context.Context)
 }
 
+type taskService interface {
+	DeleteTask(ctx context.Context, taskID uuid.UUID) error
+}
+
+type timeService interface {
+	DeleteTime(ctx context.Context, timeID uuid.UUID) error
+}
+
 type Service struct {
 	repo     repository
 	external external
 	cron     *gocron.Scheduler
 
-	updateSubs []updateSubscriber
+	updateSubs  []updateSubscriber
+	taskService taskService
+	timeService timeService
 }
 
 func New(repo repository, external external) *Service {
@@ -104,6 +114,14 @@ func New(repo repository, external external) *Service {
 
 func (s *Service) AddUpdateSubscriber(sub updateSubscriber) {
 	s.updateSubs = append(s.updateSubs, sub)
+}
+
+func (s *Service) SetTaskService(taskSvc taskService) {
+	s.taskService = taskSvc
+}
+
+func (s *Service) SetTimeService(timeSvc timeService) {
+	s.timeService = timeSvc
 }
 
 func (s *Service) Run() {
@@ -509,4 +527,18 @@ func (s *Service) updateProjectsEstimates(ctx context.Context) error {
 
 func (s *Service) DeleteFeedback(ctx context.Context, feedbackID uuid.UUID) error {
 	return s.repo.DeleteFeedback(ctx, feedbackID)
+}
+
+func (s *Service) DeleteTask(ctx context.Context, taskID uuid.UUID) error {
+	if s.taskService == nil {
+		return fmt.Errorf("task service not available")
+	}
+	return s.taskService.DeleteTask(ctx, taskID)
+}
+
+func (s *Service) DeleteTime(ctx context.Context, timeID uuid.UUID) error {
+	if s.timeService == nil {
+		return fmt.Errorf("time service not available")
+	}
+	return s.timeService.DeleteTime(ctx, timeID)
 }

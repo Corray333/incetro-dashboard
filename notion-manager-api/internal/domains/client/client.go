@@ -24,20 +24,33 @@ func NewClientController(store *postgres.PostgresClient, notionClient *notion.Cl
 	notionRepo := notion_repo.NewClientNotionRepository(notionClient)
 	sheetsRepo := sheets_repo.NewClientSheetsRepository(sheetsClient)
 
-	service := service.NewClientService(
-		service.WithPostgresRepository(postgresRepo),
-		service.WithNotionRepository(notionRepo),
-		service.WithSheetsRepository(sheetsRepo),
-		service.WithProjectService(projectService),
-	)
+	if projectService != nil {
+		service := service.NewClientService(
+			service.WithPostgresRepository(postgresRepo),
+			service.WithNotionRepository(notionRepo),
+			service.WithSheetsRepository(sheetsRepo),
+			service.WithProjectService(projectService),
+		)
 
-	// transport := transport.NewClientTransport(grpcServer, service)
+		return &ClientController{
+			postgresRepo: postgresRepo,
+			notionRepo:   notionRepo,
+			sheetsRepo:   sheetsRepo,
+			service:      service,
+		}
+	} else {
+		service := service.NewClientService(
+			service.WithPostgresRepository(postgresRepo),
+			service.WithNotionRepository(notionRepo),
+			service.WithSheetsRepository(sheetsRepo),
+		)
 
-	return &ClientController{
-		postgresRepo: postgresRepo,
-		notionRepo:   notionRepo,
-		sheetsRepo:   sheetsRepo,
-		service:      service,
+		return &ClientController{
+			postgresRepo: postgresRepo,
+			notionRepo:   notionRepo,
+			sheetsRepo:   sheetsRepo,
+			service:      service,
+		}
 	}
 }
 

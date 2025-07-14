@@ -48,6 +48,8 @@ type service interface {
 	GetUserRole(username string, userID int64) entities.DashboardRole
 
 	DeleteFeedback(ctx context.Context, feedbackID uuid.UUID) error
+	DeleteTask(ctx context.Context, taskID uuid.UUID) error
+	DeleteTime(ctx context.Context, timeID uuid.UUID) error
 }
 
 func New(router *chi.Mux, service service) *Transport {
@@ -142,16 +144,42 @@ func (t *Transport) handleNotionWebhooks(w http.ResponseWriter, r *http.Request)
 	fmt.Println("Data: ", data)
 	switch data.Type {
 	case notinoWebhookTypePageDeleted:
-		if data.Entity.Type == notionEntityTypePage && data.Data.Parent.Type == notionEntityTypeDatabase && strings.ReplaceAll(data.Data.Parent.ID, "-", "") == viper.GetString("notion.databases.feedback") {
-			feedbackID, err := uuid.Parse(data.Entity.ID)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error parsing feedback ID: %s", err.Error()), http.StatusBadRequest)
-				return
-			}
+		if data.Entity.Type == notionEntityTypePage && data.Data.Parent.Type == notionEntityTypeDatabase {
+			parentID := strings.ReplaceAll(data.Data.Parent.ID, "-", "")
+			
+			if parentID == viper.GetString("notion.databases.feedback") {
+				feedbackID, err := uuid.Parse(data.Entity.ID)
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error parsing feedback ID: %s", err.Error()), http.StatusBadRequest)
+					return
+				}
 
-			if err := t.service.DeleteFeedback(r.Context(), feedbackID); err != nil {
-				http.Error(w, fmt.Sprintf("Error deleting feedback: %s", err.Error()), http.StatusInternalServerError)
-				return
+				if err := t.service.DeleteFeedback(r.Context(), feedbackID); err != nil {
+					http.Error(w, fmt.Sprintf("Error deleting feedback: %s", err.Error()), http.StatusInternalServerError)
+					return
+				}
+			} else if parentID == viper.GetString("notion.databases.tasks") {
+				taskID, err := uuid.Parse(data.Entity.ID)
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error parsing task ID: %s", err.Error()), http.StatusBadRequest)
+					return
+				}
+
+				if err := t.service.DeleteTask(r.Context(), taskID); err != nil {
+					http.Error(w, fmt.Sprintf("Error deleting task: %s", err.Error()), http.StatusInternalServerError)
+					return
+				}
+			} else if parentID == viper.GetString("notion.databases.times") {
+				timeID, err := uuid.Parse(data.Entity.ID)
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error parsing time ID: %s", err.Error()), http.StatusBadRequest)
+					return
+				}
+
+				if err := t.service.DeleteTime(r.Context(), timeID); err != nil {
+					http.Error(w, fmt.Sprintf("Error deleting time: %s", err.Error()), http.StatusInternalServerError)
+					return
+				}
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/client/entities/client"
 	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/Corray333/employee_dashboard/internal/postgres"
 	"github.com/google/uuid"
@@ -82,4 +83,8 @@ func (s *ClientService) Run() {
 
 func (s *ClientService) AcceptUpdate(ctx context.Context) {
 	go s.UpdateSheets(ctx)
+}
+
+func (s *ClientService) GetClientsByIDs(ctx context.Context, clientIDs []uuid.UUID) ([]client.Client, error) {
+	return s.clientLister.GetClientsByIDs(ctx, clientIDs)
 }

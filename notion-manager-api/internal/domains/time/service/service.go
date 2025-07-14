@@ -4,6 +4,7 @@ import (
 	"context"
 
 	entity_time "github.com/Corray333/employee_dashboard/internal/domains/time/entities/time"
+	"github.com/google/uuid"
 )
 
 type TimeService struct {
@@ -18,6 +19,7 @@ type TimeService struct {
 	timeWriteOfSentMarker    timeWriteOfSentMarker
 	timeWriteOfNotion        timeWriteOfNotion
 	projectsLister           projectsLister
+	timeDeleter              timeDeleter
 }
 
 type postgresRepository interface {
@@ -28,6 +30,7 @@ type postgresRepository interface {
 	timeWriteOfCreater
 	timeOutboxMsgGetter
 	timeWriteOfSentMarker
+	timeDeleter
 }
 type notionRepository interface {
 	timeRawLister
@@ -63,6 +66,7 @@ func WithPostgresRepository(repository postgresRepository) option {
 		s.timeWriteOfCreater = repository
 		s.timeOutboxMsgGetter = repository
 		s.timeWriteOfSentMarker = repository
+		s.timeDeleter = repository
 	}
 }
 
@@ -88,4 +92,13 @@ func WithProjectRepository(repository projectsLister) option {
 func (s *TimeService) Run() {
 	go s.TimeSync(context.Background())
 	go s.StartWriteOfOutboxWorker(context.Background())
+}
+
+type timeDeleter interface {
+	DeleteTime(ctx context.Context, timeID uuid.UUID) error
+}
+
+// DeleteTime deletes a time entry by its ID
+func (s *TimeService) DeleteTime(ctx context.Context, timeID uuid.UUID) error {
+	return s.timeDeleter.DeleteTime(ctx, timeID)
 }

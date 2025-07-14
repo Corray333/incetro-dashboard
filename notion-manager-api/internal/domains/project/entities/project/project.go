@@ -3,24 +3,31 @@ package project
 import (
 	"time"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/client/entities/client"
 	"github.com/google/uuid"
 )
 
 type Project struct {
-	ID         uuid.UUID `json:"id"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-	Name       string    `json:"name"`
-	Icon       string    `json:"icon"`
-	IconType   string    `json:"iconType"`
-	Status     string    `json:"status"`
-	Type       string    `json:"type"`
-	SheetsLink string    `json:"sheetsLink"`
-	ManagerID  uuid.UUID `json:"managerID"`
+	ID         uuid.UUID      `json:"id"`
+	CreatedAt  time.Time      `json:"createdAt"`
+	UpdatedAt  time.Time      `json:"updatedAt"`
+	Name       string         `json:"name"`
+	Icon       string         `json:"icon"`
+	IconType   string         `json:"iconType"`
+	Status     string         `json:"status"`
+	Type       string         `json:"type"`
+	SheetsLink string         `json:"sheetsLink"`
+	ManagerID  uuid.UUID      `json:"managerID"`
+	ClientID   *uuid.UUID     `json:"clientID,omitempty"`
+	Client     *client.Client `json:"client,omitempty"`
 
 	// TotalHours float64   `json:"totalHours"`
 	// CreatedAt  time.Time `json:"createdAt"`
 	// UpdatedAt  time.Time `json:"updatedAt"`
+}
+
+func (p *Project) GetName() string {
+	return p.Name
 }
 
 // type Project struct {

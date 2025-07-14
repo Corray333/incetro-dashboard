@@ -10,14 +10,15 @@ import (
 )
 
 type projectPostgres struct {
-	ID         uuid.UUID `db:"project_id"`
-	Name       string    `db:"name"`
-	Icon       string    `db:"icon"`
-	IconType   string    `db:"icon_type"`
-	Status     string    `db:"status"`
-	Type       string    `db:"type"`
-	ManagerID  uuid.UUID `db:"manager_id"`
-	SheetsLink string    `db:"sheets_link"`
+	ID         uuid.UUID  `db:"project_id"`
+	Name       string     `db:"name"`
+	Icon       string     `db:"icon"`
+	IconType   string     `db:"icon_type"`
+	Status     string     `db:"status"`
+	Type       string     `db:"type"`
+	ManagerID  uuid.UUID  `db:"manager_id"`
+	SheetsLink string     `db:"sheets_link"`
+	ClientID   *uuid.UUID `db:"client_id"`
 }
 
 func (p *projectPostgres) ToEntity() project.Project {
@@ -30,12 +31,13 @@ func (p *projectPostgres) ToEntity() project.Project {
 		Type:       p.Type,
 		ManagerID:  p.ManagerID,
 		SheetsLink: p.SheetsLink,
+		ClientID:   p.ClientID,
 	}
 }
 
 func (r *ProjectPostgresRepository) ListProjects(ctx context.Context) ([]project.Project, error) {
 	var projects []projectPostgres
-	if err := r.DB().Select(&projects, "SELECT * FROM projects"); err != nil {
+	if err := r.DB().Select(&projects, "SELECT * FROM projects ORDER BY project_id "); err != nil {
 		slog.Error("Error listing projects", "error", err)
 		return nil, err
 	}

@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"log/slog"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/client/entities/client"
+	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
 	"github.com/google/uuid"
 )
 
@@ -10,6 +13,8 @@ type ProjectService struct {
 	projectsLister          projectsLister
 	projectWithSheetsLister projectWithSheetsLister
 	projectsByIDsGetter     projectsByIDsGetter
+	clientsByIDsGetter      clientsByIDsGetter
+	sheetsRepository        sheetsRepository
 
 	projectSheetsUpdaters []ProjectSheetsUpdater
 }
@@ -22,6 +27,14 @@ type postgresRepository interface {
 	projectsLister
 	projectWithSheetsLister
 	projectsByIDsGetter
+}
+
+type clientsByIDsGetter interface {
+	GetClientsByIDs(ctx context.Context, clientIDs []uuid.UUID) ([]client.Client, error)
+}
+
+type sheetsRepository interface {
+	UpdateSheetsProjects(ctx context.Context, sheetID string, projects []project.Project) error
 }
 type notionRepository interface {
 	// feedbacksRawLister
@@ -51,6 +64,18 @@ func WithPostgresRepository(repository postgresRepository) option {
 	}
 }
 
+func WithClientService(clientService clientsByIDsGetter) option {
+	return func(s *ProjectService) {
+		s.clientsByIDsGetter = clientService
+	}
+}
+
+func WithSheetsRepository(repo sheetsRepository) option {
+	return func(s *ProjectService) {
+		s.sheetsRepository = repo
+	}
+}
+
 func WithProjectsLister(lister projectsLister) option {
 	return func(s *ProjectService) {
 		s.projectsLister = lister
@@ -72,4 +97,27 @@ func (s *ProjectService) UpdateProjectSheets(ctx context.Context, projectID uuid
 		}
 	}
 	return nil
+}
+
+func (s *ProjectService) UpdateSheets(ctx context.Context) error {
+	projects, err := s.projectsLister.ListProjects(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Populate client data for each project
+	for i := range projects {
+		if projects[i].ClientID != nil {
+			clients, err := s.clientsByIDsGetter.GetClientsByIDs(ctx, []uuid.UUID{*projects[i].ClientID})
+			if err != nil {
+				slog.Error("Error getting client for project", "projectID", projects[i].ID, "clientID", *projects[i].ClientID, "error", err)
+				continue
+			}
+			if len(clients) > 0 {
+				projects[i].Client = &clients[0]
+			}
+		}
+	}
+
+	return s.sheetsRepository.UpdateSheetsProjects(ctx, "", projects)
 }

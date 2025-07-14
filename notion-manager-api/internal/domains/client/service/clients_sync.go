@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Corray333/employee_dashboard/internal/domains/client/entities/client"
-	"github.com/Corray333/employee_dashboard/internal/domains/project/entities/project"
+	"github.com/google/uuid"
 )
 
 type clientsNotionLister interface {
@@ -23,6 +23,7 @@ type clientSetter interface {
 
 type clientLister interface {
 	ListClients(ctx context.Context, filter *client.Filter) ([]client.Client, error)
+	GetClientsByIDs(ctx context.Context, clientIDs []uuid.UUID) ([]client.Client, error)
 }
 
 type sheetsClientsUpdater interface {
@@ -92,9 +93,11 @@ func (s *ClientService) UpdateSheets(ctx context.Context) error {
 			if err != nil {
 				slog.Error("Error getting projects for client", "error", err, "client_id", clients[i].ID)
 				// Continue with empty projects rather than failing
-				clients[i].Projects = []project.Project{}
+				// clients[i].Projects = []project.Project{}
 			} else {
-				clients[i].Projects = projects
+				for j := range projects {
+					clients[i].Projects = append(clients[i].Projects, &projects[j])
+				}
 			}
 		}
 	}
