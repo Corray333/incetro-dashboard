@@ -32,7 +32,7 @@ func (r *ClientSheetsRepository) UpdateSheetsClients(ctx context.Context, sheetI
 		sheetID = viper.GetString("sheets.id")
 	}
 
-	appendRange := viper.GetString("sheets.clients_sheet") + "!A3:"
+	appendRange := viper.GetString("sheets.clients_sheet") + "!A2:"
 	rowLen := len(entityToSheetsClient(&clients[0]))
 	lastColLetter := string(rune('A' + rowLen - 1))
 	appendRange += lastColLetter

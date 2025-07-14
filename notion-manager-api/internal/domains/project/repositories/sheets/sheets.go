@@ -32,7 +32,7 @@ func (r *ProjectSheetsRepository) UpdateSheetsProjects(ctx context.Context, shee
 		sheetID = viper.GetString("sheets.id")
 	}
 
-	appendRange := viper.GetString("sheets.projects_sheet") + "!A3:"
+	appendRange := viper.GetString("sheets.projects_sheet") + "!A2:"
 	rowLen := len(entityToSheetsProject(&projects[0]))
 	lastColLetter := string(rune('A' + rowLen - 1))
 	appendRange += lastColLetter
