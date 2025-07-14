@@ -74,8 +74,6 @@ func entityToSheetsClient(client *client.Client) []interface{} {
 		string(client.Status),
 		client.Source,
 		client.UniqueID,
-		client.CreatedAt.Format("02/01/2006 15:04:05"),
-		client.UpdatedAt.Format("02/01/2006 15:04:05"),
 		projectIDsStr,
 	}
 }
