@@ -49,7 +49,17 @@ func (s *Storage) GetEmployees() (employees []entities.Employee, err error) {
 }
 
 func (s *Storage) GetProjects(userID string) (projects []entities.Project, err error) {
-	if err := s.db.Select(&projects, "SELECT projects.*, COALESCE(username, '') as manager FROM projects LEFT JOIN employees ON projects.manager_id = employees.profile_id WHERE projects.name != ''"); err != nil {
+	query := `
+		SELECT 
+			projects.*, 
+			COALESCE(employees.username, '') as manager,
+			COALESCE(clients.name, '') as client
+		FROM projects 
+		LEFT JOIN employees ON projects.manager_id = employees.profile_id 
+		LEFT JOIN clients ON projects.project_id = ANY(clients.project_ids)
+		WHERE projects.name != ''
+	`
+	if err := s.db.Select(&projects, query); err != nil {
 		slog.Error("error getting projects: " + err.Error())
 		return nil, err
 	}
@@ -286,8 +296,13 @@ func (s *Storage) SetProjects(projects []entities.Project) error {
 	}
 	defer tx.Rollback()
 
+	if _, err := tx.Exec("DELETE FROM projects"); err != nil {
+		slog.Error("Error deleting projects", "error", err)
+		return err
+	}
+
 	for _, project := range projects {
-		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id, sheets_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7, sheets_link = $8", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID, project.SheetsLink)
+		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id, sheets_link, unique_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7, sheets_link = $8, unique_id = $9", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID, project.SheetsLink, project.UniqueID)
 		if err != nil {
 			slog.Error("Error setting projects", "error", err)
 			return err

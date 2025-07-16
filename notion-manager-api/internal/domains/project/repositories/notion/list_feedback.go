@@ -104,6 +104,11 @@ type projectNotion struct {
 			Type string `json:"type"`
 			URL  string `json:"url"`
 		} `json:"GSL"`
+		ID struct {
+			UniqueID struct {
+				Number int64 `json:"number"`
+			} `json:"unique_id"`
+		} `json:"ID"`
 	} `json:"properties"`
 }
 
@@ -144,5 +149,6 @@ func (p *projectNotion) ToEntity() *project.Project {
 		Type:       p.Properties.ProjectType.Select.Name,
 		SheetsLink: p.Properties.GSL.URL,
 		UpdatedAt:  lastEdited,
+		UniqueID:   p.Properties.ID.UniqueID.Number,
 	}
 }

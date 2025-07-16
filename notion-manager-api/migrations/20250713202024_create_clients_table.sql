@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS clients (
     unique_id TEXT,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,
-    project_ids TEXT[] DEFAULT '{}'
+    project_ids UUID[] DEFAULT '{}'
 );
 
 CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status);

@@ -18,6 +18,7 @@ type Project struct {
 	Type       string         `json:"type"`
 	SheetsLink string         `json:"sheetsLink"`
 	ManagerID  uuid.UUID      `json:"managerID"`
+	UniqueID   int64          `json:"uniqueID"`
 	ClientID   *uuid.UUID     `json:"clientID,omitempty"`
 	Client     *client.Client `json:"client,omitempty"`
 

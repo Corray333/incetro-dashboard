@@ -244,6 +244,8 @@ func (e *External) UpdateProjectsSheet(srv *sheets.Service, projects []entities.
 			project.Type,
 			project.Manager,
 			project.Status,
+			project.UniqueID,
+			project.Client,
 		}
 
 		vr.Values = append(vr.Values, myval)

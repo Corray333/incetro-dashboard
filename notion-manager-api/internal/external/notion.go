@@ -744,6 +744,11 @@ type Project struct {
 			Type string `json:"type"`
 			URL  string `json:"url"`
 		} `json:"GSL"`
+		ID struct {
+			UniqueID struct {
+				Number int64 `json:"number"`
+			} `json:"unique_id"`
+		} `json:"ID"`
 	} `json:"properties"`
 }
 
@@ -824,6 +829,7 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 				}
 				return ""
 			}(),
+			UniqueID: w.Properties.ID.UniqueID.Number,
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)

@@ -67,6 +67,9 @@ type Project struct {
 	Status   string `json:"status" db:"status" example:"В работе"`
 	Type     string `json:"type" db:"type" example:"Личный"`
 	Manager  string `json:"manager" db:"manager" example:"Mark"`
+	Client   string `json:"client" db:"client" example:"Behance"`
+
+	UniqueID int64 `json:"uniqueID" db:"unique_id"`
 
 	SheetsLink string `json:"sheetsLink" db:"sheets_link"`
 
