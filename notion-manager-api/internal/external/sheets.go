@@ -253,7 +253,7 @@ func (e *External) UpdateProjectsSheet(srv *sheets.Service, projects []entities.
 	}
 
 	rowCount := len(projects)
-	writeRange := fmt.Sprintf("Projects!A2:D%d", 1+rowCount) // A2 до последней строки
+	writeRange := fmt.Sprintf("Projects!A2:F%d", 1+rowCount) // A2 до последней строки
 
 	_, err := srv.Spreadsheets.Values.Update(spreadsheetId, writeRange, &vr).
 		ValueInputOption("USER_ENTERED").
