@@ -49,7 +49,7 @@ func (s *Storage) GetEmployees() (employees []entities.Employee, err error) {
 }
 
 func (s *Storage) GetProjects(userID string) (projects []entities.Project, err error) {
-	if err := s.db.Select(&projects, "SELECT projects.name, COALESCE(username, '') as manager FROM projects LEFT JOIN employees ON projects.manager_id = employees.profile_id WHERE projects.name != ''"); err != nil {
+	if err := s.db.Select(&projects, "SELECT projects.*, COALESCE(username, '') as manager FROM projects LEFT JOIN employees ON projects.manager_id = employees.profile_id WHERE projects.name != ''"); err != nil {
 		slog.Error("error getting projects: " + err.Error())
 		return nil, err
 	}
