@@ -19,6 +19,7 @@ type projectPostgres struct {
 	ManagerID  uuid.UUID  `db:"manager_id"`
 	SheetsLink string     `db:"sheets_link"`
 	ClientID   *uuid.UUID `db:"client_id"`
+	UniqueID   int64      `db:"unique_id"`
 }
 
 func (p *projectPostgres) ToEntity() project.Project {
