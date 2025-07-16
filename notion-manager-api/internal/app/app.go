@@ -88,7 +88,7 @@ func New() *app {
 	service.SetTaskService(taskController.GetService())
 	service.SetTimeService(timeController.GetService())
 	service.AddUpdateSubscriber(clientController.GetService())
-	service.AddUpdateSubscriber(projectController.GetService())
+	// service.AddUpdateSubscriber(projectController.GetService())
 
 	transport := transport.New(router, service)
 	transport.RegisterRoutes()
