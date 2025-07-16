@@ -57,6 +57,12 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 		actualSheetID = 0
 	}
 
+	clearValues := &sheets.ClearValuesRequest{}
+	if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, appendRange, clearValues).Do(); err != nil {
+		slog.Error("Error clearing old values", "error", err)
+		return err
+	}
+
 	deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
 		Requests: []*sheets.Request{
 			{
@@ -64,8 +70,8 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 					Range: &sheets.DimensionRange{
 						SheetId:    actualSheetID,
 						Dimension:  "ROWS",
-						StartIndex: 2,             // Row 3 (0-indexed)
-						EndIndex:   int64(100000), // Delete all existing data rows
+						StartIndex: 2,                 // Row 3 (0-indexed)
+						EndIndex:   int64(len(tasks)), // Delete all existing data rows
 					},
 				},
 			},
