@@ -766,12 +766,6 @@ type emoji struct {
 
 func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, lastUpdate int64, err error) {
 	filter := map[string]interface{}{
-		"filter": map[string]interface{}{
-			"timestamp": "last_edited_time",
-			"last_edited_time": map[string]interface{}{
-				"after": time.Unix(lastSynced, 0).Format(notion.TIME_LAYOUT),
-			},
-		},
 		"sorts": []map[string]interface{}{
 			{
 				"timestamp": "created_time",
