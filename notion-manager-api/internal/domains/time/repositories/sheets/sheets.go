@@ -22,20 +22,59 @@ func NewTimeSheetsRepository(client *gsheets.Client) *TimeSheetsRepository {
 	}
 }
 
+// getSheetIDByName retrieves the sheet ID by sheet name
+func (r *TimeSheetsRepository) getSheetIDByName(ctx context.Context, spreadsheetID, sheetName string) (int64, error) {
+	spreadsheet, err := r.client.Svc().Spreadsheets.Get(spreadsheetID).Do()
+	if err != nil {
+		return 0, err
+	}
+
+	for _, sheet := range spreadsheet.Sheets {
+		if sheet.Properties.Title == sheetName {
+			return sheet.Properties.SheetId, nil
+		}
+	}
+
+	return 0, fmt.Errorf("sheet with name '%s' not found", sheetName)
+}
+
 func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, sheetID string, times []entity_time.Time) error {
 	if len(times) == 0 {
 		return nil
 	}
 
+	sheetName := viper.GetString("sheets.time_sheet")
 	appendRange := viper.GetString("sheets.time_sheet") + "!A3:"
 	rowLen := len(entityToSheetsTime(&times[0]))
 	lastColLetter := string(rune('A' + rowLen - 1))
 	appendRange += lastColLetter
 
-	clearValues := &sheets.ClearValuesRequest{}
-	_, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, appendRange, clearValues).Do()
+	// Get the actual sheet ID by name
+	actualSheetID, err := r.getSheetIDByName(ctx, sheetID, sheetName)
 	if err != nil {
-		slog.Error("Error clearing old values", "error", err)
+		slog.Error("Error getting sheet ID by name", "error", err, "sheetName", sheetName)
+		// Fallback to sheet ID 0 if we can't find the sheet
+		actualSheetID = 0
+	}
+
+	deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
+		Requests: []*sheets.Request{
+			{
+				DeleteDimension: &sheets.DeleteDimensionRequest{
+					Range: &sheets.DimensionRange{
+						SheetId:    actualSheetID,
+						Dimension:  "ROWS",
+						StartIndex: 2,             // Row 3 (0-indexed)
+						EndIndex:   int64(100000), // Delete all existing data rows
+					},
+				},
+			},
+		},
+	}
+
+	_, err = r.client.Svc().Spreadsheets.BatchUpdate(sheetID, deleteRequest).Do()
+	if err != nil {
+		slog.Error("Error deleting old rows", "error", err)
 		return err
 	}
 

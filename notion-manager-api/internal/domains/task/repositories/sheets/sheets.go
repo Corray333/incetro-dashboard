@@ -57,35 +57,25 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 		actualSheetID = 0
 	}
 
-	// First, get the current data to determine how many rows to delete
-	currentData, err := r.client.Svc().Spreadsheets.Values.Get(sheetID, appendRange).Do()
-	if err != nil {
-		slog.Error("Error getting current data", "error", err)
-		return err
-	}
-
-	// Delete existing rows if there are any (starting from row 3, which is index 2)
-	if currentData != nil && len(currentData.Values) > 0 {
-		deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
-			Requests: []*sheets.Request{
-				{
-					DeleteDimension: &sheets.DeleteDimensionRequest{
-						Range: &sheets.DimensionRange{
-							SheetId:    actualSheetID,
-							Dimension:  "ROWS",
-							StartIndex: 2,            // Row 3 (0-indexed)
-							EndIndex:   int64(10000), // Delete all existing data rows
-						},
+	deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
+		Requests: []*sheets.Request{
+			{
+				DeleteDimension: &sheets.DeleteDimensionRequest{
+					Range: &sheets.DimensionRange{
+						SheetId:    actualSheetID,
+						Dimension:  "ROWS",
+						StartIndex: 2,             // Row 3 (0-indexed)
+						EndIndex:   int64(100000), // Delete all existing data rows
 					},
 				},
 			},
-		}
+		},
+	}
 
-		_, err = r.client.Svc().Spreadsheets.BatchUpdate(sheetID, deleteRequest).Do()
-		if err != nil {
-			slog.Error("Error deleting old rows", "error", err)
-			return err
-		}
+	_, err = r.client.Svc().Spreadsheets.BatchUpdate(sheetID, deleteRequest).Do()
+	if err != nil {
+		slog.Error("Error deleting old rows", "error", err)
+		return err
 	}
 
 	// Now append new data
