@@ -58,7 +58,7 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, sheetID st
 	}
 
 	clearValues := &sheets.ClearValuesRequest{}
-	if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, sheetName+"!A2:", clearValues).Do(); err != nil {
+	if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, sheetName+"!A2:"+lastColLetter, clearValues).Do(); err != nil {
 		slog.Error("Error clearing old values", "error", err)
 		return err
 	}
