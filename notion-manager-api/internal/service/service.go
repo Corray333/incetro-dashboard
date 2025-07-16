@@ -337,6 +337,7 @@ func (s *Service) Actualize() (updated bool, err error) {
 	if err != nil {
 		return false, err
 	}
+	fmt.Println("Got projects: ", projects)
 	if err := s.repo.SetProjects(projects); err != nil {
 		return false, err
 	}
