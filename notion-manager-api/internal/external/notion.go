@@ -15,6 +15,7 @@ import (
 	"github.com/Corray333/employee_dashboard/pkg/mindmap"
 	"github.com/Corray333/employee_dashboard/pkg/notion"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -744,6 +745,11 @@ type Project struct {
 			Type string `json:"type"`
 			URL  string `json:"url"`
 		} `json:"GSL"`
+		Client struct {
+			Relation []struct {
+				ID string `json:"id"`
+			} `json:"relation"`
+		} `json:"Клиент"`
 		ID struct {
 			UniqueID struct {
 				Number int64 `json:"number"`
@@ -824,6 +830,16 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 				return ""
 			}(),
 			UniqueID: w.Properties.ID.UniqueID.Number,
+			ClientID: func() uuid.UUID {
+				if len(w.Properties.Client.Relation) == 0 {
+					return uuid.Nil
+				}
+				id, err := uuid.Parse(w.Properties.Client.Relation[0].ID)
+				if err != nil {
+					return uuid.Nil
+				}
+				return id
+			}(),
 		})
 
 		lastEditedTime, err := time.Parse(notion.TIME_LAYOUT_IN, w.LastEditedTime)

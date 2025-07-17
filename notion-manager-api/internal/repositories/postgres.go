@@ -56,8 +56,9 @@ func (s *Storage) GetProjects(userID string) (projects []entities.Project, err e
 			COALESCE(clients.name, '') as client
 		FROM projects 
 		LEFT JOIN employees ON projects.manager_id = employees.profile_id 
-		LEFT JOIN clients ON projects.project_id = ANY(clients.project_ids)
+		LEFT JOIN clients ON projects.client_id = clients.client_id
 		WHERE projects.name != ''
+		ORDER BY projects.unique_id ASC
 	`
 	if err := s.db.Select(&projects, query); err != nil {
 		slog.Error("error getting projects: " + err.Error())
