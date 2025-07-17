@@ -41,7 +41,7 @@ func (r *EmployeePostgresRepository) ListEmployees(ctx context.Context, filter *
 		query = query.Where(squirrel.Eq{"profile_id": filter.ProfileID})
 	}
 
-	query = query.OrderBy("employee_id")
+	query = query.OrderBy("unique_id")
 
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
