@@ -288,11 +288,19 @@ func (e *External) UpdatePeopleSheet(srv *sheets.Service, people []entities.Empl
 		vr.Values = append(vr.Values, myval)
 
 	}
+	// clear sheet firstly
+	clearRange := "People!A2:J"
+	clearValues := &sheets.ClearValuesRequest{}
+	_, err := srv.Spreadsheets.Values.Clear(spreadsheetId, clearRange, clearValues).Do()
+	if err != nil {
+		slog.Error("Error clearing old values", "error", err)
+		return err
+	}
 
 	rowCount := len(people)
 	writeRange := fmt.Sprintf("People!A2:J%d", 1+rowCount) // A2 до последней строки
 
-	_, err := srv.Spreadsheets.Values.Update(spreadsheetId, writeRange, &vr).
+	_, err = srv.Spreadsheets.Values.Update(spreadsheetId, writeRange, &vr).
 		ValueInputOption("USER_ENTERED").
 		Do()
 	if err != nil {
