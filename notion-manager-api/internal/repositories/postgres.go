@@ -303,7 +303,7 @@ func (s *Storage) SetProjects(projects []entities.Project) error {
 	}
 
 	for _, project := range projects {
-		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id, sheets_link, unique_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7, sheets_link = $8, unique_id = $9", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID, project.SheetsLink, project.UniqueID)
+		_, err := tx.Exec("INSERT INTO projects (project_id, name, icon, icon_type, status, type, manager_id, sheets_link, unique_id, client_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (project_id) DO UPDATE SET name = $2, icon = $3, icon_type = $4, status = $5, type = $6, manager_id = $7, sheets_link = $8, unique_id = $9, client_id = $10", project.ID, project.Name, project.Icon, project.IconType, project.Status, project.Type, project.ManagerID, project.SheetsLink, project.UniqueID, project.ClientID)
 		if err != nil {
 			slog.Error("Error setting projects", "error", err)
 			return err
