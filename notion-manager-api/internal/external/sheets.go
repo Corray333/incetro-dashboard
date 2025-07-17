@@ -240,7 +240,7 @@ func (e *External) UpdateProjectsSheet(srv *sheets.Service, projects []entities.
 		title := project.Name
 
 		myval := []interface{}{
-			fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", project.ID), title),
+			fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(project.ID, "-", "")), title),
 			project.Type,
 			project.Manager,
 			project.Status,

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS clients (
     name TEXT NOT NULL,
     status TEXT NOT NULL,
     source TEXT,
-    unique_id TEXT,
+    unique_id BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,
     project_ids UUID[] DEFAULT '{}'

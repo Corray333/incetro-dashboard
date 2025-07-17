@@ -3,7 +3,6 @@ package notion
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -59,7 +58,7 @@ type Client struct {
 		ID struct {
 			UniqueID struct {
 				Prefix string `json:"prefix"`
-				Number int    `json:"number"`
+				Number int64  `json:"number"`
 			} `json:"unique_id"`
 		} `json:"ID"`
 		Source struct {
@@ -102,10 +101,7 @@ func (c *Client) ToEntity() *client.Client {
 		name = c.Properties.Name.Title[0].PlainText
 	}
 
-	uniqueID := ""
-	if c.Properties.ID.UniqueID.Prefix != "" {
-		uniqueID = fmt.Sprintf("%s%d", c.Properties.ID.UniqueID.Prefix, c.Properties.ID.UniqueID.Number)
-	}
+	uniqueID := c.Properties.ID.UniqueID.Number
 
 	projectIDs := make([]uuid.UUID, 0, len(c.Properties.Projects.Relation))
 	for _, project := range c.Properties.Projects.Relation {

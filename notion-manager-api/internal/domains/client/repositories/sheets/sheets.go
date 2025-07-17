@@ -125,20 +125,11 @@ func (r *ClientSheetsRepository) clearFormatting(ctx context.Context, sheetID, a
 }
 
 func entityToSheetsClient(client *client.Client) []interface{} {
-	projectNamesStr := ""
-	if len(client.Projects) > 0 {
-		projectNames := make([]string, len(client.Projects))
-		for i, project := range client.Projects {
-			projectNames[i] = project.GetName()
-		}
-		projectNamesStr = strings.Join(projectNames, ", ")
-	}
 
 	return []interface{}{
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(client.ID.String(), "-", "")), client.Name),
 		string(client.Status),
 		client.Source,
 		client.UniqueID,
-		projectNamesStr,
 	}
 }

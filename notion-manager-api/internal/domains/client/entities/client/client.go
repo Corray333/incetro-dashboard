@@ -15,7 +15,7 @@ type Client struct {
 	Name       string      `json:"name"`
 	Status     Status      `json:"status"`
 	Source     string      `json:"source"`
-	UniqueID   string      `json:"unique_id"`
+	UniqueID   int64       `json:"unique_id"`
 	CreatedAt  time.Time   `json:"created_at"`
 	UpdatedAt  time.Time   `json:"updated_at"`
 	ProjectIDs []uuid.UUID `json:"project_ids"`

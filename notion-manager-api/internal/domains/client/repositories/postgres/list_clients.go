@@ -69,7 +69,7 @@ func (r *ClientPostgresRepository) ListClients(ctx context.Context, filter *clie
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += " ORDER BY client_id DESC"
+	query += " ORDER BY unique_id ASC"
 
 	var clientsDB []clientDB
 	err := r.DB().SelectContext(ctx, &clientsDB, query, args...)

@@ -14,7 +14,7 @@ type clientDB struct {
 	Name       string         `db:"name"`
 	Status     string         `db:"status"`
 	Source     string         `db:"source"`
-	UniqueID   string         `db:"unique_id"`
+	UniqueID   int64          `db:"unique_id"`
 	CreatedAt  time.Time      `db:"created_at"`
 	UpdatedAt  time.Time      `db:"updated_at"`
 	ProjectIDs pq.StringArray `db:"project_ids"`
