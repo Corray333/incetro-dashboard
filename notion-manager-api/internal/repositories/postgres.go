@@ -40,7 +40,7 @@ func New() *Storage {
 }
 
 func (s *Storage) GetEmployees() (employees []entities.Employee, err error) {
-	if err := s.db.Select(&employees, "SELECT employees.*, expertise.name as expertise_name FROM employees NATURAL JOIN expertise"); err != nil {
+	if err := s.db.Select(&employees, "SELECT employees.*, expertise.name as expertise_name FROM employees NATURAL JOIN expertise ORDER BY unique_id"); err != nil {
 		slog.Error("error getting employees: " + err.Error())
 		return nil, err
 	}
