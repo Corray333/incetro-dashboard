@@ -32,7 +32,14 @@ func (s *Service) SendIncorrectTimeNotifications(ctx context.Context) error {
 		return nil
 	}
 
-	messageText := "У тебя есть ошибочные списания. Перейди по [ссылке](https://www.notion.so/incetro/22f27b05040480fa8c32e74eabf19777?v=22f27b05040480f39bd0000c39afede1) и исправь, пожалуйста."
+	// messageText := "У тебя есть ошибочные списания. Перейди по [ссылке](https://www.notion.so/incetro/22f27b05040480fa8c32e74eabf19777?v=22f27b05040480f39bd0000c39afede1) и исправь, пожалуйста."
+	messageText := `
+		Я нашел у тебя в Notion ошибочные списания
+
+		Перейди пжлст по [ссылочке](https://notion.so/incetro/22f27b05040480fa8c32e74eabf19777) чтобы поправить их
+
+		Они сгруппированы по типу ошибки, поэтому тебе будет легко понять, что поменять, чтобы записи стали корректными
+	`
 
 	// Отправляем уведомления каждому сотруднику
 	for _, employeeID := range employeeIDs {
