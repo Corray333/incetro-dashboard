@@ -172,7 +172,7 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 
 func entityToSheetsTask(task *task.Task) []interface{} {
 	return []interface{}{
-		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(task.ID.String(), "-", "")), task.Task),
+		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(task.ID.String(), "-", "")), strings.ReplaceAll(task.Task, "\"", "\"\"")),
 		task.Priority,
 		string(task.Status),
 		task.Start.Format("02/01/2006"),
