@@ -142,16 +142,14 @@ func (r *NotionRepository) GetEmployeesWithIncorrectTimeEntries(ctx context.Cont
 	}
 
 	// Парсим JSON ответ
-	var response struct {
-		Results []struct {
-			Properties struct {
-				Person struct {
-					Relation []struct {
-						ID string `json:"id"`
-					} `json:"relation"`
-				} `json:"Person"`
-			} `json:"properties"`
-		} `json:"results"`
+	var response []struct {
+		Properties struct {
+			Person struct {
+				Relation []struct {
+					ID string `json:"id"`
+				} `json:"relation"`
+			} `json:"Person"`
+		} `json:"properties"`
 	}
 
 	if err := json.Unmarshal(resp, &response); err != nil {
@@ -161,7 +159,7 @@ func (r *NotionRepository) GetEmployeesWithIncorrectTimeEntries(ctx context.Cont
 
 	// Извлекаем уникальные UUID сотрудников
 	employeeMap := make(map[uuid.UUID]bool)
-	for _, result := range response.Results {
+	for _, result := range response {
 		for _, person := range result.Properties.Person.Relation {
 			employeeUUID, err := uuid.Parse(person.ID)
 			if err != nil {
