@@ -21,7 +21,7 @@ func (r *TaskNotionRepository) ListTasks(ctx context.Context, lastUpdate time.Ti
 		},
 		"sorts": []map[string]interface{}{
 			{
-				"timestamp": "created_time",
+				"timestamp": "last_edited_time",
 				"direction": "ascending",
 			},
 		},

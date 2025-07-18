@@ -25,7 +25,7 @@ func (r *TimeNotionRepository) ListTimes(ctx context.Context, lastUpdate pkg_tim
 		},
 		"sorts": []map[string]interface{}{
 			{
-				"timestamp": "created_time",
+				"timestamp": "last_edited_time",
 				"direction": "ascending",
 			},
 		},

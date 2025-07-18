@@ -23,7 +23,7 @@ func (r *ClientNotionRepository) ListClients(ctx context.Context, lastUpdate tim
 		},
 		"sorts": []map[string]interface{}{
 			{
-				"timestamp": "created_time",
+				"timestamp": "last_edited_time",
 				"direction": "ascending",
 			},
 		},
