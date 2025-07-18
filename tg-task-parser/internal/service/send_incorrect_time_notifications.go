@@ -32,11 +32,23 @@ func (s *Service) SendIncorrectTimeNotifications(ctx context.Context) error {
 		return nil
 	}
 
+	// Обеспечиваем уникальность ID сотрудников
+	uniqueEmployeeIDs := make([]uuid.UUID, 0, len(employeeIDs))
+	seenIDs := make(map[uuid.UUID]bool)
+	for _, id := range employeeIDs {
+		if !seenIDs[id] {
+			seenIDs[id] = true
+			uniqueEmployeeIDs = append(uniqueEmployeeIDs, id)
+		}
+	}
+
+	slog.Info("Processing unique employees", "total_entries", len(employeeIDs), "unique_employees", len(uniqueEmployeeIDs))
+
 	// messageText := "У тебя есть ошибочные списания. Перейди по [ссылке](https://www.notion.so/incetro/22f27b05040480fa8c32e74eabf19777?v=22f27b05040480f39bd0000c39afede1) и исправь, пожалуйста."
 	messageText := "Я нашел у тебя в Notion ошибочные списания\n\nПерейди пжлст по [ссылочке](https://notion.so/incetro/22f27b05040480fa8c32e74eabf19777) чтобы поправить их\n\nОни сгруппированы по типу ошибки, поэтому тебе будет легко понять, что поменять, чтобы записи стали корректными"
 
-	// Отправляем уведомления каждому сотруднику
-	for _, employeeID := range employeeIDs {
+	// Отправляем уведомления каждому уникальному сотруднику
+	for _, employeeID := range uniqueEmployeeIDs {
 		// Получаем tg_id сотрудника
 		tgID, err := s.repository.GetEmployeeTgIDByID(ctx, employeeID)
 		if err != nil {
