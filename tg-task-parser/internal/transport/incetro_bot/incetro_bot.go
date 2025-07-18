@@ -48,6 +48,7 @@ type service interface {
 	SaveTgMessage(ctx context.Context, msg message.Message) error
 
 	GetTopics(ctx context.Context) ([]topic.Topic, error)
+	UpdateEmployeeTgID(ctx context.Context, username string, tgID int64) error
 }
 
 func NewIncetroBot(service service) *IncetroTelegramBot {
@@ -84,6 +85,41 @@ func NewIncetroBot(service service) *IncetroTelegramBot {
 }
 
 func (t *IncetroTelegramBot) registerHandlers() {
+
+	t.dispatcher.AddHandler(handlers.NewCommand("start", func(b *gotgbot.Bot, ctx *ext.Context) error {
+		user := ctx.EffectiveUser
+		if user == nil || user.Username == "" {
+			_, err := b.SendMessage(ctx.EffectiveChat.Id, "У вас не установлен username в Telegram. Пожалуйста, установите username в настройках Telegram.", nil)
+			if err != nil {
+				slog.Error("Error sending username required message", "error", err)
+			}
+			return nil
+		}
+
+		err := t.service.UpdateEmployeeTgID(context.Background(), user.Username, user.Id)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Пользователь с username @%s не найден в базе данных.", user.Username), nil)
+				if sendErr != nil {
+					slog.Error("Error sending user not found message", "error", sendErr)
+				}
+			} else {
+				slog.Error("Error updating employee tg_id", "error", err)
+				_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Произошла ошибка при привязке аккаунта.", nil)
+				if sendErr != nil {
+					slog.Error("Error sending error message", "error", sendErr)
+				}
+			}
+			return nil
+		}
+
+		_, err = b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Аккаунт @%s успешно привязан!", user.Username), nil)
+		if err != nil {
+			slog.Error("Error sending success message", "error", err)
+		}
+
+		return nil
+	}))
 
 	t.dispatcher.AddHandler(handlers.NewCommand("setup", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		chatID := ctx.EffectiveChat.Id

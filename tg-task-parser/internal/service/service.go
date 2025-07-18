@@ -1,5 +1,11 @@
 package service
 
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
+
 type baseService interface {
 	taskCreator
 	projectsGetter
@@ -12,12 +18,19 @@ type repository interface {
 	messageMetaSetter
 	messageMetaScanner
 	tgMessageSaver
+	employeeTgIDUpdater
+	employeeTgIDByIDGetter
+}
+
+type employeeTgIDByIDGetter interface {
+	GetEmployeeTgIDByID(ctx context.Context, employeeID uuid.UUID) (int64, error)
 }
 
 type notionRepo interface {
 	feedbackAnswerer
 	feedbackCreator
 	topicsGetter
+	employeesWithIncorrectTimeGetter
 }
 
 type Service struct {
@@ -29,10 +42,17 @@ type Service struct {
 	messageMetaSetter     messageMetaSetter
 	messageMetaScanner    messageMetaScanner
 
-	feedbackAnswerer feedbackAnswerer
-	feedbackCreator  feedbackCreator
-	tgMessageSaver   tgMessageSaver
-	topicsGetter     topicsGetter
+	feedbackAnswerer    feedbackAnswerer
+	feedbackCreator     feedbackCreator
+	tgMessageSaver      tgMessageSaver
+	topicsGetter        topicsGetter
+	employeeTgIDUpdater employeeTgIDUpdater
+	employeeTgIDByIDGetter employeeTgIDByIDGetter
+	incorrectTimeNotificationSender incorrectTimeNotificationSender
+
+	repository repository
+	notionRepo notionRepo
+	tgRepo     tgMessageSender
 }
 
 type option func(*Service)
@@ -102,6 +122,9 @@ func WithRepository(repository repository) option {
 		s.messageMetaSetter = repository
 		s.messageMetaScanner = repository
 		s.tgMessageSaver = repository
+		s.employeeTgIDUpdater = repository
+		s.employeeTgIDByIDGetter = repository
+		s.repository = repository
 	}
 }
 
@@ -122,5 +145,12 @@ func WithNotionRepo(notionRepo notionRepo) option {
 		s.feedbackAnswerer = notionRepo
 		s.feedbackCreator = notionRepo
 		s.topicsGetter = notionRepo
+		s.notionRepo = notionRepo
+	}
+}
+
+func WithTgRepo(tgRepo tgMessageSender) option {
+	return func(s *Service) {
+		s.tgRepo = tgRepo
 	}
 }

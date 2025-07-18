@@ -123,3 +123,60 @@ func (r *NotionRepository) GetTopics(ctx context.Context) ([]topic.Topic, error)
 
 	return topics, nil
 }
+
+func (r *NotionRepository) GetEmployeesWithIncorrectTimeEntries(ctx context.Context) ([]uuid.UUID, error) {
+	req := map[string]interface{}{
+		"filter": map[string]interface{}{
+			"property": "Ошибки",
+			"formula": map[string]interface{}{
+				"string": map[string]interface{}{
+					"is_not_empty": true,
+				},
+			},
+		},
+	}
+	resp, err := r.client.SearchPages(viper.GetString("notion.databases.times"), req)
+	if err != nil {
+		slog.Error("Error searching incorrect times", "error", err)
+		return nil, err
+	}
+
+	// Парсим JSON ответ
+	var response struct {
+		Results []struct {
+			Properties struct {
+				Person struct {
+					Relation []struct {
+						ID string `json:"id"`
+					} `json:"relation"`
+				} `json:"Person"`
+			} `json:"properties"`
+		} `json:"results"`
+	}
+
+	if err := json.Unmarshal(resp, &response); err != nil {
+		slog.Error("Error unmarshaling response", "error", err)
+		return nil, err
+	}
+
+	// Извлекаем уникальные UUID сотрудников
+	employeeMap := make(map[uuid.UUID]bool)
+	for _, result := range response.Results {
+		for _, person := range result.Properties.Person.Relation {
+			employeeUUID, err := uuid.Parse(person.ID)
+			if err != nil {
+				slog.Error("Error parsing employee UUID", "error", err, "id", person.ID)
+				continue
+			}
+			employeeMap[employeeUUID] = true
+		}
+	}
+
+	// Преобразуем map в slice
+	employees := make([]uuid.UUID, 0, len(employeeMap))
+	for employeeUUID := range employeeMap {
+		employees = append(employees, employeeUUID)
+	}
+
+	return employees, nil
+}

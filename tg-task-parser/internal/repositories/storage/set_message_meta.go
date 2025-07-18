@@ -6,7 +6,7 @@ import (
 	"log/slog"
 )
 
-func (r *Repository) SetMessageMeta(ctx context.Context, chatID, messageID int64, meta any) error {
+func (r *PostgresRepository) SetMessageMeta(ctx context.Context, chatID, messageID int64, meta any) error {
 	tx, isNew, err := r.getTx(ctx)
 	if err != nil {
 		return err
