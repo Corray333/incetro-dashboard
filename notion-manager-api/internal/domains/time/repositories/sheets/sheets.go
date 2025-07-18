@@ -104,7 +104,7 @@ func entityToSheetsTime(time *entity_time.Time) []interface{} {
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.ID.String(), "-", "")), strings.ReplaceAll(time.WhatDid, "\"", "\"\"")),
 		time.TotalHours,
 		time.WorkDate.Format("02/01/2006"),
-		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.TaskID.String(), "-", "")), time.TaskName),
+		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(time.TaskID.String(), "-", "")), strings.ReplaceAll(time.TaskName, "\"", "\"\"")),
 		time.ProjectName,
 		time.WhoDid,
 		time.TaskID,
