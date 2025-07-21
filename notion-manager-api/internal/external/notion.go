@@ -699,10 +699,11 @@ type Project struct {
 	CreatedTime    string `json:"created_time"`
 	LastEditedTime string `json:"last_edited_time"`
 	Icon           struct {
-		Type     string   `json:"type"`
-		External external `json:"external"`
-		File     file     `json:"file"`
-		Emoji    string   `json:"emoji"`
+		Type        string   `json:"type"`
+		External    external `json:"external"`
+		File        file     `json:"file"`
+		Emoji       string   `json:"emoji"`
+		CustomEmoji file     `json:"custom_emoji"`
 	} `json:"icon"`
 	Properties struct {
 		Name struct {
@@ -811,6 +812,9 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 				}
 				if w.Icon.Type == "file" {
 					return w.Icon.File.Url
+				}
+				if w.Icon.Type == "custom_emoji" {
+					return w.Icon.CustomEmoji.Url
 				}
 				return ""
 			}(),
