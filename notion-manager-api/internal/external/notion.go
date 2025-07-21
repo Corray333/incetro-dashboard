@@ -818,8 +818,13 @@ func (e *External) GetProjects(lastSynced int64) (projects []entities.Project, l
 				}
 				return ""
 			}(),
-			IconType: w.Icon.Type,
-			Status:   w.Properties.Status.Status.Name,
+			IconType: func() string {
+				if w.Icon.Type == "custom_emoji" {
+					return "file"
+				}
+				return w.Icon.Type
+			}(),
+			Status: w.Properties.Status.Status.Name,
 			ManagerID: func() string {
 				if len(w.Properties.Manager.Relation) == 0 {
 					return ""
