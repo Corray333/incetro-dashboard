@@ -79,7 +79,7 @@ func (r *ProjectPostgresRepository) ListProjectsWithLinkedSheets(ctx context.Con
 			p.sheets_link,
 			c.client_id
 		FROM projects p
-		LEFT JOIN clients c ON p.project_id::text = ANY(c.project_ids)
+		LEFT JOIN clients c ON p.project_id::UUID = ANY(c.project_ids)
 		WHERE p.sheets_link != ''
 		ORDER BY p.project_id
 	`
