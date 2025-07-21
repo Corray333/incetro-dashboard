@@ -73,7 +73,7 @@ func New() *app {
 
 	// Update client controller with project service after project controller is created
 	clientController = client.NewClientController(store, notionClient, sheetsClient, projectController.GetService())
-	app.controllers[len(app.controllers)-4] = clientController
+	app.controllers = append(app.controllers, clientController)
 
 	projectController.AddProjectSheetsUpdater(taskController.GetService())
 	projectController.AddProjectSheetsUpdater(timeController.GetService())
