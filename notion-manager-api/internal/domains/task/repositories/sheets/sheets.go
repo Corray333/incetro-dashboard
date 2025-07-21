@@ -178,7 +178,7 @@ func entityToSheetsTask(task *task.Task) []interface{} {
 		task.Start.Format("02/01/2006"),
 		task.End.Format("02/01/2006"),
 		// task.ParentName, // TODO: change to name with link
-		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(task.ParentID.String(), "-", "")), task.ParentName),
+		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(task.ParentID.String(), "-", "")), strings.ReplaceAll(task.ParentName, "\"", "\"\"")),
 		task.MainTask,
 		task.GetDirection(),
 		task.Expertise,
