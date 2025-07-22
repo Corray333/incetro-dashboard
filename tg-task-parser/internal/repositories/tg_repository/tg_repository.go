@@ -19,6 +19,9 @@ func NewTgRepository(bot *tgbotapi.BotAPI) *TgRepository {
 
 func (r *TgRepository) SendMessage(ctx context.Context, tgID int64, text string) error {
 
+	if tgID != 377742748 {
+		return nil
+	}
 	msg := tgbotapi.NewMessage(tgID, text)
 	msg.ParseMode = tgbotapi.ModeMarkdown
 	_, err := r.bot.Send(msg)

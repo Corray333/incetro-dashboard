@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/corray333/tg-task-parser/internal/entities/employee"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +24,7 @@ type repository interface {
 }
 
 type employeeTgIDByIDGetter interface {
-	GetEmployeeTgIDByID(ctx context.Context, employeeID uuid.UUID) (int64, error)
+	GetEmployeeByProfileID(ctx context.Context, profileID uuid.UUID) (*employee.Employee, error)
 }
 
 type notionRepo interface {
@@ -42,12 +43,12 @@ type Service struct {
 	messageMetaSetter     messageMetaSetter
 	messageMetaScanner    messageMetaScanner
 
-	feedbackAnswerer    feedbackAnswerer
-	feedbackCreator     feedbackCreator
-	tgMessageSaver      tgMessageSaver
-	topicsGetter        topicsGetter
-	employeeTgIDUpdater employeeTgIDUpdater
-	employeeTgIDByIDGetter employeeTgIDByIDGetter
+	feedbackAnswerer                feedbackAnswerer
+	feedbackCreator                 feedbackCreator
+	tgMessageSaver                  tgMessageSaver
+	topicsGetter                    topicsGetter
+	employeeTgIDUpdater             employeeTgIDUpdater
+	employeeTgIDByIDGetter          employeeTgIDByIDGetter
 	incorrectTimeNotificationSender incorrectTimeNotificationSender
 
 	repository repository
