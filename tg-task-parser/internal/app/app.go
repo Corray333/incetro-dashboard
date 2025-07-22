@@ -1,8 +1,6 @@
 package app
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
 	"os"
 
@@ -47,7 +45,7 @@ func New() *app {
 		service.WithNotionRepo(notionRepo),
 		service.WithTgRepo(tgRepo),
 	)
-	fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
+	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 
 	incetroBotTransport := incetro_bot.NewIncetroBot(service)
 	projectTransport := project_bot.NewProjectBot(service)
