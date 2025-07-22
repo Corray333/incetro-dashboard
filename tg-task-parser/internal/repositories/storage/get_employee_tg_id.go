@@ -26,7 +26,7 @@ func (e *employeeDB) ToEmployee() *employee.Employee {
 
 func (r *PostgresRepository) GetEmployeeByProfileID(ctx context.Context, profileID uuid.UUID) (*employee.Employee, error) {
 	empl := &employeeDB{}
-	if err := r.db.Get(&empl, "SELECT employee_id, tg_id, tg_username, fio FROM employees WHERE profile_id = $1", profileID); err != nil {
+	if err := r.db.Get(empl, "SELECT employee_id, tg_id, tg_username, fio FROM employees WHERE profile_id = $1", profileID); err != nil {
 		slog.Error("Error while getting employee tg_id by ID", "profile_id", profileID, "error", err)
 		return nil, err
 	}
