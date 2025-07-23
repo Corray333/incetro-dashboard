@@ -57,31 +57,37 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 		actualSheetID = 0
 	}
 
-	clearValues := &sheets.ClearValuesRequest{}
-	if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, sheetName+"!A2:"+lastColLetter, clearValues).Do(); err != nil {
-		slog.Error("Error clearing old values", "error", err)
+	// Get current sheet data to determine how many rows exist
+	readRange := sheetName + "!A:A"
+	resp, err := r.client.Svc().Spreadsheets.Values.Get(sheetID, readRange).Do()
+	if err != nil {
+		slog.Error("Error getting current sheet data", "error", err)
 		return err
 	}
 
-	deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
-		Requests: []*sheets.Request{
-			{
-				DeleteDimension: &sheets.DeleteDimensionRequest{
-					Range: &sheets.DimensionRange{
-						SheetId:    actualSheetID,
-						Dimension:  "ROWS",
-						StartIndex: 2,                 // Row 3 (0-indexed)
-						EndIndex:   int64(len(tasks)), // Delete all existing data rows
+	// Calculate how many rows currently exist (excluding header rows)
+	currentRowCount := len(resp.Values)
+	if currentRowCount > 2 { // Only delete if there are data rows (more than 2 header rows)
+		deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
+			Requests: []*sheets.Request{
+				{
+					DeleteDimension: &sheets.DeleteDimensionRequest{
+						Range: &sheets.DimensionRange{
+							SheetId:    actualSheetID,
+							Dimension:  "ROWS",
+							StartIndex: 2,                        // Row 3 (0-indexed)
+							EndIndex:   int64(currentRowCount), // Delete only existing data rows
+						},
 					},
 				},
 			},
-		},
-	}
+		}
 
-	_, err = r.client.Svc().Spreadsheets.BatchUpdate(sheetID, deleteRequest).Do()
-	if err != nil {
-		slog.Error("Error deleting old rows", "error", err)
-		return err
+		_, err = r.client.Svc().Spreadsheets.BatchUpdate(sheetID, deleteRequest).Do()
+		if err != nil {
+			slog.Error("Error deleting old rows", "error", err)
+			return err
+		}
 	}
 
 	// Now append new data
