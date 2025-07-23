@@ -65,11 +65,11 @@ func New() *app {
 }
 
 func (app *app) Run() {
+	go app.incetro_bot.Run()
+	go app.project_bot.Run()
 	// Запускаем cron сервис
 	if err := app.cronService.Start(); err != nil {
 		slog.Error("Failed to start cron service", "error", err)
 	}
-
-	app.incetro_bot.Run()
-	app.project_bot.Run()
+	select {}
 }

@@ -408,7 +408,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 }
 
 func (t *IncetroTelegramBot) Run() {
-	slog.Info("Bot is running...")
+	slog.Info("Incetro bot is running...")
 	err := t.updater.StartPolling(t.bot, &ext.PollingOpts{
 		DropPendingUpdates: true,
 		GetUpdatesOpts: &gotgbot.GetUpdatesOpts{

@@ -72,6 +72,7 @@ func NewProjectBot(service service) *ProjectBot {
 
 	tr.registerHandlers()
 
+	slog.Info("project bot created")
 	return tr
 }
 
@@ -328,7 +329,7 @@ func (t *ProjectBot) registerHandlers() {
 }
 
 func (t *ProjectBot) Run() {
-	slog.Info("Bot is running...")
+	slog.Info("Project bot is running...")
 	err := t.updater.StartPolling(t.bot, &ext.PollingOpts{
 		DropPendingUpdates: true,
 		GetUpdatesOpts: &gotgbot.GetUpdatesOpts{
