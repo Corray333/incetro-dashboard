@@ -71,4 +71,5 @@ func (app *app) Run() {
 	}
 
 	app.incetro_bot.Run()
+	app.project_bot.Run()
 }
