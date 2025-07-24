@@ -69,18 +69,18 @@ func (s *Service) SendIncorrectTimeNotifications(ctx context.Context) error {
 			continue // Пропускаем этого сотрудника и продолжаем с остальными
 		}
 
-		// Добавляем в статистику для менеджеров
-		employeeStatsList = append(employeeStatsList, employeeStats{
-			Name:       empl.FIO,
-			TgUsername: empl.TgUsername,
-			ErrorCount: errorCounts[employeeID],
-		})
-
 		// Отправляем сообщение сотруднику
 		if err := s.tgRepo.SendMessage(ctx, empl.TgID, messageText); err != nil {
 			slog.Error("Failed to send message to employee", "employee_id", employeeID, "tg_id", empl.TgID, "error", err)
 			continue // Пропускаем этого сотрудника и продолжаем с остальными
 		}
+
+		// Добавляем в статистику для менеджеров только после успешной отправки
+		employeeStatsList = append(employeeStatsList, employeeStats{
+			Name:       empl.FIO,
+			TgUsername: empl.TgUsername,
+			ErrorCount: errorCounts[employeeID],
+		})
 
 		slog.Info("Successfully sent notification", "employee_id", employeeID, "tg_id", empl.TgID)
 	}

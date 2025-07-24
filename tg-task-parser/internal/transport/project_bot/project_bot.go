@@ -148,7 +148,6 @@ func (t *ProjectBot) registerHandlers() {
 		return nil
 	}))
 
-	fmt.Println("new message handler")
 	// Хендлер сообщений
 	t.dispatcher.AddHandler(handlers.NewMessage(nil, func(bot *gotgbot.Bot, ctx *ext.Context) error {
 		slog.Info("new message", "message", ctx.EffectiveMessage)
