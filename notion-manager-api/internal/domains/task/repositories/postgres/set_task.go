@@ -102,6 +102,35 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 			slog.Error("Ошибка при получении тегов задачи", "error", err)
 			return nil, err
 		}
+
+		// Если у задачи пустая дата начала, попробуем найти даты из дочерних задач
+		if t.Start.IsZero() {
+			var childDates struct {
+				MinStart *time.Time `db:"min_start"`
+				MaxEnd   *time.Time `db:"max_end"`
+			}
+
+			childQuery := `
+				SELECT 
+					MIN(CASE WHEN start != '0001-01-01 00:00:00+00' THEN start END) as min_start,
+					MAX(CASE WHEN "end" != '0001-01-01 00:00:00+00' THEN "end" END) as max_end
+				FROM tasks 
+				WHERE parent_id = $1
+			`
+
+			if err := r.DB().GetContext(ctx, &childDates, childQuery, t.ID); err != nil {
+				slog.Error("Ошибка при получении дат дочерних задач", "error", err, "task_id", t.ID)
+			} else {
+				// Устанавливаем даты из дочерних задач, если они найдены
+				if childDates.MinStart != nil {
+					t.Start = *childDates.MinStart
+				}
+				if childDates.MaxEnd != nil && t.End.IsZero() {
+					t.End = *childDates.MaxEnd
+				}
+			}
+		}
+
 		result = append(result, *t.toEntity())
 	}
 

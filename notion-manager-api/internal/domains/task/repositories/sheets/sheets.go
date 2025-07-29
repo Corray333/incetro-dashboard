@@ -75,7 +75,7 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 						Range: &sheets.DimensionRange{
 							SheetId:    actualSheetID,
 							Dimension:  "ROWS",
-							StartIndex: 2,                        // Row 3 (0-indexed)
+							StartIndex: 2,                      // Row 3 (0-indexed)
 							EndIndex:   int64(currentRowCount), // Delete only existing data rows
 						},
 					},
@@ -177,12 +177,27 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 // Если задачи не имеют одного из полей — ставить прочерк или n/a.
 
 func entityToSheetsTask(task *task.Task) []interface{} {
+	// Форматирование даты начала
+	var startDate string
+	if !task.Start.IsZero() {
+		startDate = task.Start.Format("02/01/2006")
+	}
+
+	// Форматирование даты окончания
+	var endDate string
+	if !task.End.IsZero() {
+		endDate = task.End.Format("02/01/2006")
+	} else if !task.Start.IsZero() {
+		// Если есть дата начала, но нет даты окончания, то дата окончания равна дате начала
+		endDate = task.Start.Format("02/01/2006")
+	}
+
 	return []interface{}{
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(task.ID.String(), "-", "")), strings.ReplaceAll(task.Task, "\"", "\"\"")),
 		task.Priority,
 		string(task.Status),
-		task.Start.Format("02/01/2006"),
-		task.End.Format("02/01/2006"),
+		startDate,
+		endDate,
 		// task.ParentName, // TODO: change to name with link
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(task.ParentID.String(), "-", "")), strings.ReplaceAll(task.ParentName, "\"", "\"\"")),
 		task.MainTask,
