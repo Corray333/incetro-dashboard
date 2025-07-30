@@ -58,8 +58,17 @@ func (w Weekday) getPeriodPhrase() string {
 }
 
 func (w Weekday) getCategoryPhrase() string {
+	isUpdate := w.UpdatedAt.Sub(w.CreatedAt) > 5*time.Minute
+
 	if w.Category == CategoryForce {
+		if isUpdate {
+			return "обновляет форс-мажор — будет отсутствовать"
+		}
 		return "форс-мажор — будет отсутствовать"
+	}
+
+	if isUpdate {
+		return fmt.Sprintf("обновляет %s", w.Category)
 	}
 	return fmt.Sprintf("берёт %s", w.Category)
 }
@@ -71,8 +80,16 @@ func (w Weekday) appendDaysCountIfNeeded(msg string) string {
 	} else {
 		days = int(w.PeriodEnd.Sub(w.PeriodStart).Hours()/24) + 1
 	}
+
 	if days >= 5 {
+		if w.Reason != "" {
+			return fmt.Sprintf("%s (%d дней, %s)", msg, days, w.Reason)
+		}
 		return fmt.Sprintf("%s (%d дней)", msg, days)
+	}
+
+	if w.Reason != "" {
+		return fmt.Sprintf("%s (%s)", msg, w.Reason)
 	}
 	return msg
 }
