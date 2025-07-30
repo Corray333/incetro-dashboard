@@ -94,6 +94,7 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 	var vr sheets.ValueRange
 
 	for _, time := range tasks {
+		fmt.Printf("Task: %v\n", entityToSheetsTask(&time))
 		vr.Values = append(vr.Values, entityToSheetsTask(&time))
 	}
 

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -117,10 +118,10 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 				FROM tasks 
 				WHERE parent_id = $1
 			`
-
 			if err := r.DB().GetContext(ctx, &childDates, childQuery, t.ID); err != nil {
 				slog.Error("Ошибка при получении дат дочерних задач", "error", err, "task_id", t.ID)
 			} else {
+				fmt.Printf("Child dates: %v\n for task %v\n", childDates, t.ID)
 				// Устанавливаем даты из дочерних задач, если они найдены
 				if childDates.MinStart != nil {
 					t.Start = *childDates.MinStart
