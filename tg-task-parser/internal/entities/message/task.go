@@ -49,7 +49,7 @@ func ParseMessage(mainText, replyText string) (*Message, error) {
 	}
 
 	// Найдем все хэштэги и упоминания без префиксов
-	hashtags := hashtagRegex.FindAllStringSubmatch(fullText, -1)
+	hashtags := hashtagRegex.FindAllStringSubmatch(mainText, -1)
 	for _, hashtag := range hashtags {
 		task.Hashtags = append(task.Hashtags, Hashtag(hashtag[1])) // Добавляем без "#"
 	}
