@@ -205,6 +205,6 @@ func entityToSheetsTask(task *task.Task) []interface{} {
 		task.GetDirection(),
 		task.Expertise,
 		task.TotalHours,
-		task.TotalEstimate,
+		task.TotalEstimate + task.SH,
 	}
 }

@@ -26,6 +26,7 @@ type taskDB struct {
 	Estimate       float64   `db:"estimate"`
 	Start          time.Time `db:"start"`
 	End            time.Time `db:"end"`
+	SH             float64   `db:"sh"`
 	PreviousID     uuid.UUID `db:"previous_id"`
 	NextID         uuid.UUID `db:"next_id"`
 	TotalHours     float64   `db:"total_hours"`
@@ -50,6 +51,7 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Select(
 			"tasks.task_id", "tasks.created_time", "tasks.last_edited_time", "tasks.title", "tasks.priority", "tasks.status",
+			"tasks.sh",
 			"tasks.parent_id AS parent_id", "tasks.creator_id", "tasks.project_id", "tasks.estimate",
 			"tasks.start", "tasks.end", "tasks.previous_id", "tasks.next_id", "tasks.tbh",
 			"tasks.cp", "tasks.total_estimate", "tasks.plan_fact", "tasks.duration", "tasks.cr",
@@ -152,6 +154,7 @@ func entityToTaskDB(task *task.Task) *taskDB {
 		Estimate:       task.Estimate,
 		Start:          task.Start,
 		End:            task.End,
+		SH:             task.SH,
 		PreviousID:     task.PreviousID,
 		NextID:         task.NextID,
 		TotalHours:     task.TotalHours,
@@ -188,10 +191,11 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *task.Task) e
 		INSERT INTO tasks (
 			task_id, created_time, last_edited_time, title, priority, status, parent_id,
 			creator_id, project_id, estimate, start, "end", previous_id, next_id,
-			total_hours, tbh, cp, total_estimate, plan_fact, duration, cr, ikp, main_task, executor_id, responsible_id
+			total_hours, tbh, cp, total_estimate, plan_fact, duration, cr, ikp, main_task, executor_id, responsible_id, sh
 		) VALUES (
 			:task_id, :created_time, :last_edited_time, :title, :priority, :status, :parent_id,
 			:creator_id, :project_id, :estimate, :start, :end, :previous_id, :next_id,
+			:sh
 			:total_hours, :tbh, :cp, :total_estimate, :plan_fact, :duration, :cr, :ikp, :main_task, :executor_id, :responsible_id
 		)
 		ON CONFLICT (task_id) DO UPDATE SET
@@ -218,7 +222,9 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *task.Task) e
 			ikp = :ikp,
 			main_task = :main_task,
 			executor_id = :executor_id,
-			responsible_id = :responsible_id;
+			responsible_id = :responsible_id,
+			sh = :sh
+		)
 	`, taskDB)
 	if err != nil {
 		slog.Error("Error setting task", "error", err)

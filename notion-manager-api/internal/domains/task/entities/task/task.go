@@ -48,6 +48,7 @@ type Task struct {
 	Tags          []Tag     `json:"tags"`
 	Start         time.Time `json:"start"`
 	End           time.Time `json:"end"`
+	SH            float64   `json:"sh"`
 
 	PreviousID    uuid.UUID   `json:"previous_ids"`
 	NextID        uuid.UUID   `json:"next_ids"`

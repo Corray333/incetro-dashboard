@@ -114,7 +114,9 @@ type taskNotion struct {
 				Name string `json:"name"`
 			} `json:"status"`
 		} `json:"Статус"`
-
+		SH struct {
+			Number float64 `json:"number"`
+		} `json:"SH"`
 		Time struct {
 			Relation []struct {
 				ID string `json:"id"`
@@ -294,6 +296,7 @@ func (t *taskNotion) toEntity() *entity_task.Task {
 		CR:             t.Properties.CR.Formula.Number,
 		IKP:            t.Properties.IKP.Select.Name,
 		MainTask:       t.Properties.MainTask.Formula.String,
+		SH:             t.Properties.SH.Number,
 	}
 
 	if len(t.Properties.ParentTask.Relation) > 0 {
