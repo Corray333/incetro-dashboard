@@ -224,7 +224,6 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *task.Task) e
 			executor_id = :executor_id,
 			responsible_id = :responsible_id,
 			sh = :sh
-		)
 	`, taskDB)
 	if err != nil {
 		slog.Error("Error setting task", "error", err)
