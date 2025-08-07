@@ -37,7 +37,7 @@ func (s *TaskService) TaskSync(ctx context.Context) {
 
 	for {
 		if err := s.updateTasks(ctx); err != nil {
-			slog.Error("Notion time sync error", "error", err)
+			slog.Error("Notion tasks sync error", "error", err)
 		}
 
 		select {
@@ -61,8 +61,10 @@ func (s *TaskService) updateTasks(ctx context.Context) error {
 		return err
 	}
 	if len(times) == 0 {
+		slog.Info("No tasks found")
 		return nil
 	}
+	slog.Info("Found tasks", "count", len(times))
 
 	lastTime := time.Time{}
 	for _, task := range times {
