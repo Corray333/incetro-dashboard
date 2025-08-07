@@ -195,7 +195,7 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *task.Task) e
 		) VALUES (
 			:task_id, :created_time, :last_edited_time, :title, :priority, :status, :parent_id,
 			:creator_id, :project_id, :estimate, :start, :end, :previous_id, :next_id,
-			:sh
+			:sh,
 			:total_hours, :tbh, :cp, :total_estimate, :plan_fact, :duration, :cr, :ikp, :main_task, :executor_id, :responsible_id
 		)
 		ON CONFLICT (task_id) DO UPDATE SET
