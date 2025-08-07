@@ -190,8 +190,8 @@ func (r *TaskPostgresRepository) SetTask(ctx context.Context, task *task.Task) e
 	_, err = tx.NamedExec(`
 		INSERT INTO tasks (
 			task_id, created_time, last_edited_time, title, priority, status, parent_id,
-			creator_id, project_id, estimate, start, "end", previous_id, next_id,
-			total_hours, tbh, cp, total_estimate, plan_fact, duration, cr, ikp, main_task, executor_id, responsible_id, sh
+			creator_id, project_id, estimate, start, "end", previous_id, next_id, sh,
+			total_hours, tbh, cp, total_estimate, plan_fact, duration, cr, ikp, main_task, executor_id, responsible_id
 		) VALUES (
 			:task_id, :created_time, :last_edited_time, :title, :priority, :status, :parent_id,
 			:creator_id, :project_id, :estimate, :start, :end, :previous_id, :next_id,

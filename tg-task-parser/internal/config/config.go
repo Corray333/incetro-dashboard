@@ -9,6 +9,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+type YaTrackerConfig struct {
+	QueueID   int    `mapstructure:"queue_id"`
+	ProjectID int    `mapstructure:"project_id"`
+	OrgID     string `mapstructure:"org_id"`
+	APIURL    string `mapstructure:"api_url"`
+}
+
 func MustInit() {
 	if err := godotenv.Load("../.env"); err != nil {
 		panic("error while loading .env file: " + err.Error())
@@ -26,4 +33,16 @@ func SetupLogger() {
 	handler := logger.NewHandler(nil)
 	log := slog.New(handler)
 	slog.SetDefault(log)
+}
+
+func GetYaTrackerConfig() YaTrackerConfig {
+	var config YaTrackerConfig
+	if err := viper.UnmarshalKey("yatracker", &config); err != nil {
+		panic("error while unmarshaling yatracker config: " + err.Error())
+	}
+	return config
+}
+
+func GetYaTrackerToken() string {
+	return os.Getenv("YA_TRACKER_TOKEN")
 }
