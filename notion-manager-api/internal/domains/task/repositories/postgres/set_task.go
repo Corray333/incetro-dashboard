@@ -107,27 +107,30 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 			return nil, err
 		}
 
-		// Если у задачи пустая дата начала, попробуем найти даты из дочерних задач
-		if t.Start.IsZero() {
-			var childDates struct {
-				MinStart   *time.Time `db:"min_start"`
-				MaxEnd     *time.Time `db:"max_end"`
-				ChildCount int        `db:"child_count"`
-			}
+		// Запрашиваем информацию о дочерних задачах всегда
+		var childDates struct {
+			MinStart   *time.Time `db:"min_start"`
+			MaxEnd     *time.Time `db:"max_end"`
+			ChildCount int        `db:"child_count"`
+		}
 
-			childQuery := `
-				SELECT 
-					MIN(CASE WHEN start != '0001-01-01 00:00:00+00' THEN start END) as min_start,
-					MAX(CASE WHEN "end" != '0001-01-01 00:00:00+00' THEN "end" END) as max_end,
-					COUNT(*) as child_count
-				FROM tasks 
-				WHERE parent_id = $1
-			`
-			if err := r.DB().GetContext(ctx, &childDates, childQuery, t.ID); err != nil {
-				slog.Error("Ошибка при получении дат дочерних задач", "error", err, "task_id", t.ID)
-			} else {
-				fmt.Printf("Child dates: %v\n for task %v\n", childDates, t.ID)
-				// Устанавливаем даты из дочерних задач, если они найдены
+		childQuery := `
+			SELECT 
+				MIN(CASE WHEN start != '0001-01-01 00:00:00+00' THEN start END) as min_start,
+				MAX(CASE WHEN "end" != '0001-01-01 00:00:00+00' THEN "end" END) as max_end,
+				COUNT(*) as child_count
+			FROM tasks 
+			WHERE parent_id = $1
+		`
+		if err := r.DB().GetContext(ctx, &childDates, childQuery, t.ID); err != nil {
+			slog.Error("Ошибка при получении дат дочерних задач", "error", err, "task_id", t.ID)
+		} else {
+			fmt.Printf("Child dates: %v\n for task %v\n", childDates, t.ID)
+			// Устанавливаем ChildCount всегда
+			t.ChildCount = childDates.ChildCount
+			
+			// Если у задачи пустая дата начала, попробуем найти даты из дочерних задач
+			if t.Start.IsZero() {
 				if childDates.MinStart != nil {
 					t.Start = *childDates.MinStart
 				}
