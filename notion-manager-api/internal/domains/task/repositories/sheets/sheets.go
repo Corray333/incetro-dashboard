@@ -194,6 +194,7 @@ func generateParentTaskRows(tasks []task.Task) [][]interface{} {
 	var rows [][]interface{}
 
 	for _, t := range tasks {
+		fmt.Printf("Childs count: %d\n", t.ChildCount)
 		// Проверяем, является ли задача родительской
 		if t.ChildCount > 0 && !t.Start.IsZero() {
 			startDate := t.Start
