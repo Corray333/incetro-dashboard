@@ -128,7 +128,7 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 			fmt.Printf("Child dates: %v\n for task %v\n", childDates, t.ID)
 			// Устанавливаем ChildCount всегда
 			t.ChildCount = childDates.ChildCount
-			
+
 			// Если у задачи пустая дата начала, попробуем найти даты из дочерних задач
 			if t.Start.IsZero() {
 				if childDates.MinStart != nil {

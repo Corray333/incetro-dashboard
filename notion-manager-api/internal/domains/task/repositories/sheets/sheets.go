@@ -103,15 +103,13 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 	// Генерируем дополнительные строки по статусам и месяцам
 	monthStatusRows := generateMonthStatusRows(tasks)
 	for _, row := range monthStatusRows {
-		// vr.Values = append(vr.Values, row)
-		fmt.Printf("MonthStatusRow: %v\n", row)
+		vr.Values = append(vr.Values, row)
 	}
 
 	// Генерируем дополнительные строки для родительских задач
 	parentTaskRows := generateParentTaskRows(tasks)
 	for _, row := range parentTaskRows {
-		// vr.Values = append(vr.Values, row)
-		fmt.Printf("ParentTaskRow: %v\n", row)
+		vr.Values = append(vr.Values, row)
 	}
 
 	_, err = r.client.Svc().Spreadsheets.Values.Append(sheetID, appendRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
@@ -194,7 +192,6 @@ func generateParentTaskRows(tasks []task.Task) [][]interface{} {
 	var rows [][]interface{}
 
 	for _, t := range tasks {
-		fmt.Printf("Childs count: %d\n", t.ChildCount)
 		// Проверяем, является ли задача родительской
 		if t.ChildCount > 0 && !t.Start.IsZero() {
 			startDate := t.Start
