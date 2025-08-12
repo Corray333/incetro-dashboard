@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/Corray333/employee_dashboard/internal/domains/task/entities/task"
 	gsheets "github.com/Corray333/employee_dashboard/internal/sheets"
@@ -93,9 +94,24 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 	// Now append new data
 	var vr sheets.ValueRange
 
-	for _, time := range tasks {
-		fmt.Printf("Task: %v\n", entityToSheetsTask(&time))
-		vr.Values = append(vr.Values, entityToSheetsTask(&time))
+	// Добавляем основные строки задач
+	for _, t := range tasks {
+		fmt.Printf("Task: %v\n", entityToSheetsTask(&t))
+		vr.Values = append(vr.Values, entityToSheetsTask(&t))
+	}
+
+	// Генерируем дополнительные строки по статусам и месяцам
+	monthStatusRows := generateMonthStatusRows(tasks)
+	for _, row := range monthStatusRows {
+		// vr.Values = append(vr.Values, row)
+		fmt.Printf("MonthStatusRow: %v\n", row)
+	}
+
+	// Генерируем дополнительные строки для родительских задач
+	parentTaskRows := generateParentTaskRows(tasks)
+	for _, row := range parentTaskRows {
+		// vr.Values = append(vr.Values, row)
+		fmt.Printf("ParentTaskRow: %v\n", row)
 	}
 
 	_, err = r.client.Svc().Spreadsheets.Values.Append(sheetID, appendRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
@@ -105,6 +121,116 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 	}
 
 	return nil
+}
+
+// generateMonthStatusRows создает строки для каждой комбинации месяца и статуса
+func generateMonthStatusRows(tasks []task.Task) [][]interface{} {
+	var rows [][]interface{}
+
+	// Собираем все уникальные комбинации месяц-статус
+	monthStatusMap := make(map[string]task.Status)
+
+	for _, t := range tasks {
+		// Обрабатываем период от startDate до endDate
+		if !t.Start.IsZero() {
+			startDate := t.Start
+			endDate := t.End
+			if endDate.IsZero() {
+				endDate = startDate
+			}
+
+			// Проходим по всем месяцам в периоде
+			current := time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, startDate.Location())
+			end := time.Date(endDate.Year(), endDate.Month(), 1, 0, 0, 0, 0, endDate.Location())
+
+			for current.Before(end) || current.Equal(end) {
+				monthKey := current.Format("2006-01")
+				monthStatusKey := monthKey + "|" + string(t.Status)
+				monthStatusMap[monthStatusKey] = t.Status
+
+				current = current.AddDate(0, 1, 0)
+			}
+		}
+	}
+
+	// Создаем строки для каждой комбинации
+	for monthStatusKey, status := range monthStatusMap {
+		parts := strings.Split(monthStatusKey, "|")
+		if len(parts) != 2 {
+			continue
+		}
+
+		monthStr := parts[0]
+		parsedTime, err := time.Parse("2006-01", monthStr)
+		if err != nil {
+			continue
+		}
+
+		// Создаем строку с первым днем месяца
+		firstDayOfMonth := parsedTime.Format("02/01/2006")
+
+		row := []interface{}{
+			"",              // Название задачи пустое
+			"",              // Приоритет пустой
+			string(status),  // Статус
+			firstDayOfMonth, // startDate
+			firstDayOfMonth, // endDate
+			"",              // Родительская задача пустая
+			"",              // Главная задача пустая
+			"",              // Направление пустое
+			"",              // Экспертиза пустая
+			"",              // TotalHours пустое
+			"",              // TotalEstimate пустое
+		}
+
+		rows = append(rows, row)
+	}
+
+	return rows
+}
+
+// generateParentTaskRows создает строки для родительских задач по месяцам
+func generateParentTaskRows(tasks []task.Task) [][]interface{} {
+	var rows [][]interface{}
+
+	for _, t := range tasks {
+		// Проверяем, является ли задача родительской
+		if t.ChildCount > 0 && !t.Start.IsZero() {
+			startDate := t.Start
+			endDate := t.End
+			if endDate.IsZero() {
+				endDate = startDate
+			}
+
+			// Проходим по всем месяцам в периоде родительской задачи
+			current := time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, startDate.Location())
+			end := time.Date(endDate.Year(), endDate.Month(), 1, 0, 0, 0, 0, endDate.Location())
+
+			for current.Before(end) || current.Equal(end) {
+				firstDayOfMonth := current.Format("02/01/2006")
+
+				row := []interface{}{
+					"",              // Название задачи пустое
+					"",              // Приоритет пустой
+					"",              // Статус пустой
+					firstDayOfMonth, // startDate
+					firstDayOfMonth, // endDate
+					// Родительская задача с гиперссылкой
+					fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(t.ID.String(), "-", "")), strings.ReplaceAll(t.Task, "\"", "\"\"")),
+					"", // Главная задача пустая
+					"", // Направление пустое
+					"", // Экспертиза пустая
+					"", // TotalHours пустое
+					"", // TotalEstimate пустое
+				}
+
+				rows = append(rows, row)
+				current = current.AddDate(0, 1, 0)
+			}
+		}
+	}
+
+	return rows
 }
 
 // func entityToSheetsTime(time *task.Task) []interface{} {

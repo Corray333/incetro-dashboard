@@ -67,6 +67,7 @@ type Task struct {
 	ProjectName string `json:"project_name"`
 	Expertise   string `json:"expertise"`
 	Direction   string `json:"direction"`
+	ChildCount  int    `json:"child_count"`
 }
 
 func (t *Task) GetDirection() string {

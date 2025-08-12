@@ -28,6 +28,10 @@ func New() *app {
 
 	baseService := base_service.NewBaseService()
 	repository := storage.NewRepository()
+	// yaTrackerRepo := yatracker.NewYaTrackerRepository()
+	// fmt.Println(yaTrackerRepo.CreateTas(context.Background(), &task.Task{
+	// 	Text: "Test task",
+	// }))
 	notionClient := notion_api.NewClient()
 	notionRepo := notion.NewNotionRepository(notionClient)
 

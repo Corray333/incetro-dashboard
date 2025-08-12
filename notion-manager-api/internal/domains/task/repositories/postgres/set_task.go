@@ -44,6 +44,7 @@ type taskDB struct {
 	ProjectName string `db:"project_name"`
 	ParentName  string `db:"parent_name"`
 	Direction   string `db:"direction"`
+	ChildCount  int    `db:"child_count"`
 }
 
 func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filter, limit, offset int) ([]task.Task, error) {
@@ -109,14 +110,16 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 		// Если у задачи пустая дата начала, попробуем найти даты из дочерних задач
 		if t.Start.IsZero() {
 			var childDates struct {
-				MinStart *time.Time `db:"min_start"`
-				MaxEnd   *time.Time `db:"max_end"`
+				MinStart   *time.Time `db:"min_start"`
+				MaxEnd     *time.Time `db:"max_end"`
+				ChildCount int        `db:"child_count"`
 			}
 
 			childQuery := `
 				SELECT 
 					MIN(CASE WHEN start != '0001-01-01 00:00:00+00' THEN start END) as min_start,
-					MAX(CASE WHEN "end" != '0001-01-01 00:00:00+00' THEN "end" END) as max_end
+					MAX(CASE WHEN "end" != '0001-01-01 00:00:00+00' THEN "end" END) as max_end,
+					COUNT(*) as child_count
 				FROM tasks 
 				WHERE parent_id = $1
 			`
@@ -284,5 +287,6 @@ func (t *taskDB) toEntity() *task.Task {
 		ProjectName: t.ProjectName,
 		ParentName:  t.ParentName,
 		Direction:   t.Direction,
+		ChildCount:  t.ChildCount,
 	}
 }
