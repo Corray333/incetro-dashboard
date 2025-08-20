@@ -1,13 +1,17 @@
 package app
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 	"os"
 
+	"github.com/corray333/tg-task-parser/internal/entities/task"
 	"github.com/corray333/tg-task-parser/internal/repositories/base_service"
 	"github.com/corray333/tg-task-parser/internal/repositories/notion"
 	"github.com/corray333/tg-task-parser/internal/repositories/storage"
 	"github.com/corray333/tg-task-parser/internal/repositories/tg_repository"
+	"github.com/corray333/tg-task-parser/internal/repositories/yatracker"
 	"github.com/corray333/tg-task-parser/internal/service"
 	"github.com/corray333/tg-task-parser/internal/transport/cron"
 	"github.com/corray333/tg-task-parser/internal/transport/incetro_bot"
@@ -28,10 +32,13 @@ func New() *app {
 
 	baseService := base_service.NewBaseService()
 	repository := storage.NewRepository()
-	// yaTrackerRepo := yatracker.NewYaTrackerRepository()
+	yaTrackerRepo := yatracker.NewYaTrackerRepository()
 	// fmt.Println(yaTrackerRepo.CreateTas(context.Background(), &task.Task{
 	// 	Text: "Test task",
 	// }))
+	fmt.Println(yaTrackerRepo.SearchTasksByName(context.Background(), &task.Task{
+		Text: "Test task",
+	}))
 	notionClient := notion_api.NewClient()
 	notionRepo := notion.NewNotionRepository(notionClient)
 
@@ -48,6 +55,7 @@ func New() *app {
 		service.WithRepository(repository),
 		service.WithNotionRepo(notionRepo),
 		service.WithTgRepo(tgRepo),
+		service.WithYaTrackerRepo(yaTrackerRepo),
 	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 

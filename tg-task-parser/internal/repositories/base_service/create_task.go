@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/corray333/tg-task-parser/internal/entities/message"
+	"github.com/corray333/tg-task-parser/internal/entities/task"
 	"github.com/corray333/tg-task-parser/pkg/notion"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
@@ -15,7 +15,7 @@ type PageCreated struct {
 	ID string `json:"id"`
 }
 
-func (r *BaseService) CreateTask(ctx context.Context, task *message.Message, projectID uuid.UUID) (string, error) {
+func (r *BaseService) CreateTask(ctx context.Context, t *task.Task, projectID uuid.UUID) (string, error) {
 	req := map[string]interface{}{
 		"Task": map[string]interface{}{
 			"type": "title",
@@ -23,7 +23,7 @@ func (r *BaseService) CreateTask(ctx context.Context, task *message.Message, pro
 				{
 					"type": "text",
 					"text": map[string]interface{}{
-						"content": task.Text,
+						"content": t.Text,
 					},
 				},
 			},
@@ -32,7 +32,7 @@ func (r *BaseService) CreateTask(ctx context.Context, task *message.Message, pro
 			"type": "people",
 			"people": func() []map[string]interface{} {
 				executor := []map[string]interface{}{}
-				for _, user := range task.Mentions {
+				for _, user := range t.Mentions {
 					employeeID, err := r.GetEmployeeByTgUsername(ctx, string(user))
 					if err != nil {
 						slog.Error("Notion error while getting employee ID: " + err.Error())
@@ -49,7 +49,7 @@ func (r *BaseService) CreateTask(ctx context.Context, task *message.Message, pro
 			"type": "multi_select",
 			"multi_select": func() []map[string]interface{} {
 				tags := []map[string]interface{}{}
-				for _, tag := range task.Hashtags {
+				for _, tag := range t.Hashtags {
 					tags = append(tags, map[string]interface{}{
 						"name": tag,
 					})

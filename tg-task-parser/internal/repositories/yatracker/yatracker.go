@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/corray333/tg-task-parser/internal/config"
@@ -31,13 +33,27 @@ type CreateTaskResponse struct {
 	Summary string `json:"summary"`
 }
 
+// Issue описывает минимальный набор полей задачи, который нам нужен при поиске
+type Issue struct {
+	Self    string `json:"self"`
+	Key     string `json:"key"`
+	Summary string `json:"summary"`
+}
+
+// SearchIssuesRequest — тело запроса для поиска задач
+type SearchIssuesRequest struct {
+	Filter  map[string]interface{} `json:"filter,omitempty"`
+	PerPage int                    `json:"perPage,omitempty"`
+	Order   string                 `json:"order,omitempty"`
+}
+
 func NewYaTrackerRepository() *YaTrackerRepository {
 	return &YaTrackerRepository{
 		client: &http.Client{},
 	}
 }
 
-func (r *YaTrackerRepository) CreateTas(ctx context.Context, task *task.Task) (string, string, error) {
+func (r *YaTrackerRepository) CreateTask(ctx context.Context, task *task.Task) (*Issue, error) {
 	cfg := config.GetYaTrackerConfig()
 	token := config.GetYaTrackerToken()
 
@@ -53,13 +69,13 @@ func (r *YaTrackerRepository) CreateTas(ctx context.Context, task *task.Task) (s
 	// Сериализуем в JSON
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to marshal request: %w", err)
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	// Создаем HTTP запрос
 	req, err := http.NewRequestWithContext(ctx, "POST", cfg.APIURL+"/issues", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Устанавливаем заголовки
@@ -70,23 +86,69 @@ func (r *YaTrackerRepository) CreateTas(ctx context.Context, task *task.Task) (s
 	// Выполняем запрос
 	resp, err := r.client.Do(req)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to execute request: %w", err)
+		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Проверяем статус ответа
 	if resp.StatusCode != http.StatusCreated {
-		return "", "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	// Парсим ответ
-	var response CreateTaskResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return "", "", fmt.Errorf("failed to decode response: %w", err)
+	// Парсим ответ в объект Issue
+	var issue Issue
+	if err := json.NewDecoder(resp.Body).Decode(&issue); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	// Формируем название задачи в формате "key: summary"
-	taskTitle := fmt.Sprintf("%s: %s", response.Key, response.Summary)
+	return &issue, nil
+}
 
-	return response.Self, taskTitle, nil
+// SearchTasksByName выполняет поиск задач по имени (summary),
+// используя текст из переданной задачи (task.Text)
+func (r *YaTrackerRepository) SearchTasksByName(ctx context.Context, t *task.Task) ([]Issue, error) {
+	slog.Info("Search task in yandex tracker", "task", t)
+	cfg := config.GetYaTrackerConfig()
+	token := config.GetYaTrackerToken()
+
+	// Формируем тело запроса: фильтрация по полю summary
+	searchReq := SearchIssuesRequest{
+		Filter: map[string]interface{}{
+			"summary": t.Text,
+		},
+	}
+
+	jsonData, err := json.Marshal(searchReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal search request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", cfg.APIURL+"/issues/_search?perPage=50", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create search request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "OAuth "+token)
+	req.Header.Set("X-Cloud-Org-Id", cfg.OrgID)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := r.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute search request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	var issues []Issue
+	if err := json.NewDecoder(resp.Body).Decode(&issues); err != nil {
+		return nil, fmt.Errorf("failed to decode search response: %w", err)
+	}
+
+	slog.Info("Found task in yandex tracker", "issues", issues)
+
+	return issues, nil
 }

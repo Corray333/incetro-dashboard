@@ -3,9 +3,11 @@ package message
 import (
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 	"unicode"
 
+	"github.com/corray333/tg-task-parser/internal/entities/task"
 	"github.com/corray333/tg-task-parser/internal/errs"
 )
 
@@ -82,4 +84,38 @@ func ParseMessage(mainText, replyText string) (*Message, error) {
 	task.Raw = fullText
 
 	return task, nil
+}
+
+// ParseTask parses a message and returns a *task.Task if HashtagTask is present, otherwise returns nil
+func ParseTask(mainText, replyText string) (*task.Task, error) {
+	parsedMessage, err := ParseMessage(mainText, replyText)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if HashtagTask is present
+	if !slices.Contains(parsedMessage.Hashtags, HashtagTask) {
+		return nil, nil
+	}
+
+	// Convert message.Message to task.Task
+	taskEntity := &task.Task{
+		Text: parsedMessage.Text,
+		Hashtags: func() []task.Tag {
+			res := make([]task.Tag, 0, len(parsedMessage.Hashtags))
+			for _, h := range parsedMessage.Hashtags {
+				res = append(res, task.Tag(h))
+			}
+			return res
+		}(),
+		Mentions: func() []task.Mention {
+			res := make([]task.Mention, 0, len(parsedMessage.Mentions))
+			for _, m := range parsedMessage.Mentions {
+				res = append(res, task.Mention(m))
+			}
+			return res
+		}(),
+	}
+
+	return taskEntity, nil
 }

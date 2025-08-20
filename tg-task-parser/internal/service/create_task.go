@@ -2,15 +2,26 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
-	"slices"
+	"strings"
 
 	"github.com/corray333/tg-task-parser/internal/entities/message"
+	"github.com/corray333/tg-task-parser/internal/entities/task"
+	"github.com/corray333/tg-task-parser/internal/repositories/yatracker"
 	"github.com/google/uuid"
 )
 
 type taskCreator interface {
-	CreateTask(ctx context.Context, task *message.Message, projectID uuid.UUID) (string, error)
+	CreateTask(ctx context.Context, task *task.Task, projectID uuid.UUID) (string, error)
+}
+
+type yaTrackerTaskCreator interface {
+	CreateTask(ctx context.Context, task *task.Task) (*yatracker.Issue, error)
+}
+
+type yaTrackerTaskSearcher interface {
+	SearchTasksByName(ctx context.Context, t *task.Task) ([]yatracker.Issue, error)
 }
 
 type projectByChatIDGetter interface {
@@ -23,19 +34,57 @@ func (s *Service) CreateTask(ctx context.Context, chatID int64, msg string, repl
 		return "", err
 	}
 
-	newTask, err := message.ParseMessage(msg, replyMessage)
+	newTask, err := message.ParseTask(msg, replyMessage)
+	if err != nil {
+		return "", err
+	}
+	if newTask == nil {
+		return "", nil
+	}
+
+	trackerProjectID, err := uuid.Parse("183dd045-c92a-42c3-83ba-5030fbb3451f")
 	if err != nil {
 		return "", err
 	}
 
-	if !slices.Contains(newTask.Hashtags, message.HashtagTask) {
-		return "", nil
+	// We'll capture a YaTracker issue (existing or newly created) to build a proper response later if needed
+	var trackerIssue *yatracker.Issue
+
+	if projectID == trackerProjectID {
+		// try to find task in ya tracker
+		tasks, err := s.yaTrackerTaskSearcher.SearchTasksByName(ctx, newTask)
+		if err != nil {
+			return "", err
+		}
+		if len(tasks) == 0 {
+			// create task in ya tracker
+			created, err := s.yaTrackerTaskCreator.CreateTask(ctx, newTask)
+			if err != nil {
+				return "", err
+			}
+			trackerIssue = created
+		} else {
+			// use the first matching issue
+			issue := tasks[0]
+			trackerIssue = &issue
+		}
 	}
+
 	pageID, err := s.taskCreator.CreateTask(ctx, newTask, projectID)
 	if err != nil {
 		slog.Error("error while creating task in repository", "error", err)
 		return "", err
 	}
 
-	return pageID, nil
+	notionLink := "https://notion.so/" + strings.ReplaceAll(pageID, "-", "")
+
+	// Build response text
+	if projectID == trackerProjectID && trackerIssue != nil {
+		yaLink := fmt.Sprintf("https://tracker.yandex.ru/%s", trackerIssue.Key)
+		text := fmt.Sprintf("Задача \"%s: %s\" создана:\n\n- Яндекс.Трекер: %s\n- Notion: %s", trackerIssue.Key, trackerIssue.Summary, yaLink, notionLink)
+		return text, nil
+	}
+
+	// General case: only Notion link
+	return fmt.Sprintf("Задача создана: %s", notionLink), nil
 }

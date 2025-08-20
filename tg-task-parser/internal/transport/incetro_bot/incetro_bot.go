@@ -266,18 +266,18 @@ func (t *IncetroTelegramBot) registerHandlers() {
 		}
 
 		if slices.Contains(parsedMsg.Hashtags, message.HashtagTask) {
-			pageID, err := t.service.CreateTask(context.Background(), msg.Chat.Id, msg.Text, reply)
+			text, err := t.service.CreateTask(context.Background(), msg.Chat.Id, msg.Text, reply)
 			if err != nil {
 				slog.Error("Error creating task", "error", err)
 				_, _ = msg.Reply(bot, "Не удалось создать задачу", nil)
 				return nil
 			}
 
-			if pageID == "" {
+			if text == "" {
 				return nil
 			}
 
-			_, err = msg.Reply(bot, fmt.Sprintf("Задача создана: https://notion.so/%s", strings.ReplaceAll(pageID, "-", "")), nil)
+			_, err = msg.Reply(bot, text, nil)
 			if err != nil {
 				slog.Error("Error sending confirmation", "error", err)
 			}

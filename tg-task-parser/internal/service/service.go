@@ -34,6 +34,11 @@ type notionRepo interface {
 	employeesWithIncorrectTimeGetter
 }
 
+type yaTrackerRepo interface {
+	yaTrackerTaskCreator
+	yaTrackerTaskSearcher
+}
+
 type Service struct {
 	taskCreator           taskCreator
 	projectsGetter        projectsGetter
@@ -51,6 +56,9 @@ type Service struct {
 	employeeTgIDByIDGetter          employeeTgIDByIDGetter
 	incorrectTimeNotificationSender incorrectTimeNotificationSender
 
+	yaTrackerTaskCreator  yaTrackerTaskCreator
+	yaTrackerTaskSearcher yaTrackerTaskSearcher
+
 	repository repository
 	notionRepo notionRepo
 	tgRepo     tgMessageSender
@@ -64,6 +72,13 @@ func New(options ...option) *Service {
 		opt(s)
 	}
 	return s
+}
+
+func WithYaTrackerRepo(yaTrackerRepo yaTrackerRepo) option {
+	return func(s *Service) {
+		s.yaTrackerTaskCreator = yaTrackerRepo
+		s.yaTrackerTaskSearcher = yaTrackerRepo
+	}
 }
 
 func WithProjectByChatIDGetter(projectByChatIDGetter projectByChatIDGetter) option {
