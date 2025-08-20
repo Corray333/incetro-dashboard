@@ -1,0 +1,5 @@
+yatracker:
+  queue_id: 7
+  project_id: 9
+  org_id: "bpf1otv7a0h9nmvd7ktt"
+  api_url: "https://api.tracker.yandex.net/v3"

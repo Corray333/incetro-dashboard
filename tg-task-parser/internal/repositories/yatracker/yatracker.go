@@ -120,11 +120,13 @@ func (r *YaTrackerRepository) SearchTasksByName(ctx context.Context, t *task.Tas
 
 	jsonData, err := json.Marshal(searchReq)
 	if err != nil {
+		slog.Error("Failed to marshal search request in yandex tracker", "error", err)
 		return nil, fmt.Errorf("failed to marshal search request: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", cfg.APIURL+"/issues/_search?perPage=50", bytes.NewBuffer(jsonData))
 	if err != nil {
+		slog.Error("Failed to create search request in yandex tracker", "error", err)
 		return nil, fmt.Errorf("failed to create search request: %w", err)
 	}
 
@@ -134,17 +136,20 @@ func (r *YaTrackerRepository) SearchTasksByName(ctx context.Context, t *task.Tas
 
 	resp, err := r.client.Do(req)
 	if err != nil {
+		slog.Error("Failed to execute search request in yandex tracker", "error", err)
 		return nil, fmt.Errorf("failed to execute search request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		slog.Error("Unexpected status code while searching issue in yandex tracker", "status", resp.StatusCode, "body", string(body))
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
 	}
 
 	var issues []Issue
 	if err := json.NewDecoder(resp.Body).Decode(&issues); err != nil {
+		slog.Error("Failed to decode search issues in yandex tracker response", "error", err)
 		return nil, fmt.Errorf("failed to decode search response: %w", err)
 	}
 
