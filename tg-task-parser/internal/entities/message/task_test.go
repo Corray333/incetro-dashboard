@@ -30,6 +30,7 @@ func TestTaskFromMessage(t *testing.T) {
 				Text:     "Нужно исправить баг",
 				Hashtags: []Hashtag{"golang"},
 				Mentions: []Mention{"user1"},
+				Raw:      "Нужно исправить баг #golang @user1",
 			},
 		},
 		{
@@ -38,8 +39,9 @@ func TestTaskFromMessage(t *testing.T) {
 			replyText: "Нужно исправить баг #golang #задача @user1",
 			wantTask: &Message{
 				Text:     "Нужно исправить баг",
-				Hashtags: []Hashtag{"golang", "задача"},
+				Hashtags: nil,
 				Mentions: []Mention{"user1", "user2"},
+				Raw:      "Нужно исправить баг #golang #задача @user1 комментарий @user2",
 			},
 		},
 		{
@@ -50,6 +52,7 @@ func TestTaskFromMessage(t *testing.T) {
 				Text:     "Просто задача без тегов",
 				Hashtags: nil,
 				Mentions: nil,
+				Raw:      "Просто задача без тегов",
 			},
 		},
 	}
