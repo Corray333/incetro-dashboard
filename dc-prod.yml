@@ -20,7 +20,7 @@ services:
     volumes:
       - ./tg-task-parser:/app
       - .env:/app/.env
-      - ./configs/notion-manager-api:/app/configs
+      - ./configs/tg-task-parser:/app/configs
     command: make run
     restart: unless-stopped
   
