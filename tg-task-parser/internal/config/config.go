@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -26,6 +27,7 @@ func MustInit() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic("error while reading config file: " + err.Error())
 	}
+	fmt.Println(viper.AllKeys())
 	SetupLogger()
 }
 
