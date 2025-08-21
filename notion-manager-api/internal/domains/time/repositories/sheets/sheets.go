@@ -39,70 +39,87 @@ func (r *TimeSheetsRepository) getSheetIDByName(ctx context.Context, spreadsheet
 }
 
 func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, sheetID string, times []entity_time.Time) error {
+	// Имя листа из конфигурации
+	sheetName := viper.GetString("sheets.time_sheet")
+
+	// Если данных нет, очищаем редактируемые столбцы и выходим
 	if len(times) == 0 {
+		rowLen := len(entityToSheetsTime(&entity_time.Time{}))
+		lastColLetter := string(rune('A' + rowLen - 1))
+		clearRange := sheetName + "!A2:" + lastColLetter
+		if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, clearRange, &sheets.ClearValuesRequest{}).Do(); err != nil {
+			slog.Error("Error clearing old values (empty times)", "error", err)
+			return err
+		}
 		return nil
 	}
 
-	sheetName := viper.GetString("sheets.time_sheet")
-	appendRange := viper.GetString("sheets.time_sheet") + "!A3:"
-	rowLen := len(entityToSheetsTime(&times[0]))
-	lastColLetter := string(rune('A' + rowLen - 1))
-	appendRange += lastColLetter
+	writeRange := sheetName + "!A2" // запись со 2-й строки
 
-	// Get the actual sheet ID by name
+	// Формируем значения для записи
+	var vr sheets.ValueRange
+	vr.MajorDimension = "ROWS"
+	for _, t := range times {
+		vr.Values = append(vr.Values, entityToSheetsTime(&t))
+	}
+
+	// Получаем фактический ID листа по имени
 	actualSheetID, err := r.getSheetIDByName(ctx, sheetID, sheetName)
 	if err != nil {
 		slog.Error("Error getting sheet ID by name", "error", err, "sheetName", sheetName)
-		// Fallback to sheet ID 0 if we can't find the sheet
 		actualSheetID = 0
 	}
 
-	clearValues := &sheets.ClearValuesRequest{}
-	if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, sheetName+"!A2:"+lastColLetter, clearValues).Do(); err != nil {
-		slog.Error("Error clearing old values", "error", err)
-		return err
-	}
-
-	// Get current sheet data to determine how many rows exist
-	readRange := sheetName + "!A:A"
-	resp, err := r.client.Svc().Spreadsheets.Values.Get(sheetID, readRange).Do()
+	// Убедимся, что в листе достаточно строк, чтобы записать все данные
+	spreadsheet, err := r.client.Svc().Spreadsheets.Get(sheetID).Do()
 	if err != nil {
-		slog.Error("Error getting current sheet data", "error", err)
+		slog.Error("Error getting spreadsheet properties", "error", err)
 		return err
 	}
 
-	// Calculate how many rows currently exist (excluding header rows)
-	currentRowCount := len(resp.Values)
-	if currentRowCount > 2 { // Only delete if there are data rows (more than 2 header rows)
-		deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
+	var currentRowCapacity int64
+	for _, sh := range spreadsheet.Sheets {
+		if sh.Properties.Title == sheetName {
+			if sh.Properties.GridProperties != nil {
+				currentRowCapacity = sh.Properties.GridProperties.RowCount
+			}
+			break
+		}
+	}
+
+	// Требуемое количество строк = 1 (шапка) + количество строк с данными
+	requiredRows := int64(1 + len(vr.Values))
+	if currentRowCapacity < requiredRows {
+		missing := requiredRows - currentRowCapacity
+		appendReq := &sheets.BatchUpdateSpreadsheetRequest{
 			Requests: []*sheets.Request{
 				{
-					DeleteDimension: &sheets.DeleteDimensionRequest{
-						Range: &sheets.DimensionRange{
-							SheetId:    actualSheetID,
-							Dimension:  "ROWS",
-							StartIndex: 2,                      // Row 3 (0-indexed)
-							EndIndex:   int64(currentRowCount), // Delete only existing data rows
-						},
+					AppendDimension: &sheets.AppendDimensionRequest{
+						SheetId:   actualSheetID,
+						Dimension: "ROWS",
+						Length:    missing,
 					},
 				},
 			},
 		}
 
-		_, err = r.client.Svc().Spreadsheets.BatchUpdate(sheetID, deleteRequest).Do()
-		if err != nil {
-			slog.Error("Error deleting old rows", "error", err)
+		if _, err := r.client.Svc().Spreadsheets.BatchUpdate(sheetID, appendReq).Do(); err != nil {
+			slog.Error("Error appending rows", "error", err)
 			return err
 		}
 	}
 
-	var vr sheets.ValueRange
-
-	for _, time := range times {
-		vr.Values = append(vr.Values, entityToSheetsTime(&time))
+	// Очистка диапазона A2:lastCol в редактируемых столбцах перед записью
+	rowLen := len(entityToSheetsTime(&times[0]))
+	lastColLetter := string(rune('A' + rowLen - 1))
+	clearRange := sheetName + "!A2:" + lastColLetter
+	if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, clearRange, &sheets.ClearValuesRequest{}).Do(); err != nil {
+		slog.Error("Error clearing old values", "error", err)
+		return err
 	}
 
-	_, err = r.client.Svc().Spreadsheets.Values.Append(sheetID, appendRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
+	// Перезаписываем значения без удаления строк
+	_, err = r.client.Svc().Spreadsheets.Values.Update(sheetID, writeRange, &vr).ValueInputOption("USER_ENTERED").Do()
 	if err != nil {
 		slog.Error("Error updating Google Sheets", "error", err)
 		return err
