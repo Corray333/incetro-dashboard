@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -125,7 +124,6 @@ func (r *TaskPostgresRepository) ListTasks(ctx context.Context, filter task.Filt
 		if err := r.DB().GetContext(ctx, &childDates, childQuery, t.ID); err != nil {
 			slog.Error("Ошибка при получении дат дочерних задач", "error", err, "task_id", t.ID)
 		} else {
-			fmt.Printf("Child dates: %v\n for task %v\n", childDates, t.ID)
 			// Устанавливаем ChildCount всегда
 			t.ChildCount = childDates.ChildCount
 

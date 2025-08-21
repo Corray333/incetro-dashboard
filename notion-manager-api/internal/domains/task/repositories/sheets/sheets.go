@@ -62,7 +62,6 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 
 	// Основные строки задач
 	for _, t := range tasks {
-		fmt.Printf("Task: %v\n", entityToSheetsTask(&t))
 		vr.Values = append(vr.Values, entityToSheetsTask(&t))
 	}
 
