@@ -40,17 +40,45 @@ func (r *TaskSheetsRepository) getSheetIDByName(ctx context.Context, spreadsheet
 }
 
 func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID string, tasks []task.Task) error {
+	sheetName := viper.GetString("sheets.task_sheet")
+
+	// Если задач нет, очищаем редактируемые столбцы и выходим
 	if len(tasks) == 0 {
+		rowLen := len(entityToSheetsTask(&task.Task{}))
+		lastColLetter := string(rune('A' + rowLen - 1))
+		clearRange := sheetName + "!A2:" + lastColLetter
+		if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, clearRange, &sheets.ClearValuesRequest{}).Do(); err != nil {
+			slog.Error("Error clearing old values (empty tasks)", "error", err)
+			return err
+		}
 		return nil
 	}
 
-	sheetName := viper.GetString("sheets.task_sheet")
-	appendRange := sheetName + "!A3:"
-	rowLen := len(entityToSheetsTask(&tasks[0]))
-	lastColLetter := string(rune('A' + rowLen - 1))
-	appendRange += lastColLetter
+	writeRange := sheetName + "!A2" // Start writing from the 2nd row
 
-	// Get the actual sheet ID by name
+	// Build all rows to write (main tasks + additional generated rows)
+	var vr sheets.ValueRange
+	vr.MajorDimension = "ROWS"
+
+	// Основные строки задач
+	for _, t := range tasks {
+		fmt.Printf("Task: %v\n", entityToSheetsTask(&t))
+		vr.Values = append(vr.Values, entityToSheetsTask(&t))
+	}
+
+	// Дополнительные строки по статусам и месяцам
+	monthStatusRows := generateMonthStatusRows(tasks)
+	for _, row := range monthStatusRows {
+		vr.Values = append(vr.Values, row)
+	}
+
+	// Дополнительные строки для родительских задач
+	parentTaskRows := generateParentTaskRows(tasks)
+	for _, row := range parentTaskRows {
+		vr.Values = append(vr.Values, row)
+	}
+
+	// Получаем фактический ID листа по имени
 	actualSheetID, err := r.getSheetIDByName(ctx, sheetID, sheetName)
 	if err != nil {
 		slog.Error("Error getting sheet ID by name", "error", err, "sheetName", sheetName)
@@ -58,61 +86,56 @@ func (r *TaskSheetsRepository) UpdateSheetsTasks(ctx context.Context, sheetID st
 		actualSheetID = 0
 	}
 
-	// Get current sheet data to determine how many rows exist
-	readRange := sheetName + "!A:A"
-	resp, err := r.client.Svc().Spreadsheets.Values.Get(sheetID, readRange).Do()
+	// Убедимся, что в листе достаточно строк, чтобы записать все данные
+	spreadsheet, err := r.client.Svc().Spreadsheets.Get(sheetID).Do()
 	if err != nil {
-		slog.Error("Error getting current sheet data", "error", err)
+		slog.Error("Error getting spreadsheet properties", "error", err)
 		return err
 	}
 
-	// Calculate how many rows currently exist (excluding header rows)
-	currentRowCount := len(resp.Values)
-	if currentRowCount > 2 { // Only delete if there are data rows (more than 2 header rows)
-		deleteRequest := &sheets.BatchUpdateSpreadsheetRequest{
+	var currentRowCapacity int64
+	for _, sh := range spreadsheet.Sheets {
+		if sh.Properties.Title == sheetName {
+			if sh.Properties.GridProperties != nil {
+				currentRowCapacity = sh.Properties.GridProperties.RowCount
+			}
+			break
+		}
+	}
+
+	// Требуемое количество строк = 1 (шапка) + количество строк с данными
+	requiredRows := int64(1 + len(vr.Values))
+	if currentRowCapacity < requiredRows {
+		missing := requiredRows - currentRowCapacity
+		appendReq := &sheets.BatchUpdateSpreadsheetRequest{
 			Requests: []*sheets.Request{
 				{
-					DeleteDimension: &sheets.DeleteDimensionRequest{
-						Range: &sheets.DimensionRange{
-							SheetId:    actualSheetID,
-							Dimension:  "ROWS",
-							StartIndex: 2,                      // Row 3 (0-indexed)
-							EndIndex:   int64(currentRowCount), // Delete only existing data rows
-						},
+					AppendDimension: &sheets.AppendDimensionRequest{
+						SheetId:   actualSheetID,
+						Dimension: "ROWS",
+						Length:    missing,
 					},
 				},
 			},
 		}
 
-		_, err = r.client.Svc().Spreadsheets.BatchUpdate(sheetID, deleteRequest).Do()
-		if err != nil {
-			slog.Error("Error deleting old rows", "error", err)
+		if _, err := r.client.Svc().Spreadsheets.BatchUpdate(sheetID, appendReq).Do(); err != nil {
+			slog.Error("Error appending rows", "error", err)
 			return err
 		}
 	}
 
-	// Now append new data
-	var vr sheets.ValueRange
-
-	// Добавляем основные строки задач
-	for _, t := range tasks {
-		fmt.Printf("Task: %v\n", entityToSheetsTask(&t))
-		vr.Values = append(vr.Values, entityToSheetsTask(&t))
+	// Очистка "хвоста" (и текущих данных) в редактируемых столбцах перед записью, чтобы сохранить только актуальные строки
+	rowLen := len(entityToSheetsTask(&tasks[0]))
+	lastColLetter := string(rune('A' + rowLen - 1))
+	clearRange := sheetName + "!A2:" + lastColLetter
+	if _, err := r.client.Svc().Spreadsheets.Values.Clear(sheetID, clearRange, &sheets.ClearValuesRequest{}).Do(); err != nil {
+		slog.Error("Error clearing old values", "error", err)
+		return err
 	}
 
-	// Генерируем дополнительные строки по статусам и месяцам
-	monthStatusRows := generateMonthStatusRows(tasks)
-	for _, row := range monthStatusRows {
-		vr.Values = append(vr.Values, row)
-	}
-
-	// Генерируем дополнительные строки для родительских задач
-	parentTaskRows := generateParentTaskRows(tasks)
-	for _, row := range parentTaskRows {
-		vr.Values = append(vr.Values, row)
-	}
-
-	_, err = r.client.Svc().Spreadsheets.Values.Append(sheetID, appendRange, &vr).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Do()
+	// Обновляем значения (перезаписываем существующие ячейки, без удаления строк)
+	_, err = r.client.Svc().Spreadsheets.Values.Update(sheetID, writeRange, &vr).ValueInputOption("USER_ENTERED").Do()
 	if err != nil {
 		slog.Error("Error updating Google Sheets", "error", err)
 		return err
