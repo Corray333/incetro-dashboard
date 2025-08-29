@@ -43,7 +43,7 @@ func New() *app {
 		panic(err)
 	}
 
-	// 	openaiRepo.ParseMessage(context.Background(), `#задача
+	// openaiRepo.ParseMessage(context.Background(), `#задача
 	// Прошу еще посмотреть возможность подключения мобильной метрики от Яндекса для нашего приложения.
 
 	// Так как судя по инструменту, он может полностью покрыть запросы маркетинга по сбору метрик.
