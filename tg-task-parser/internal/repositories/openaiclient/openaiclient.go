@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -41,9 +43,26 @@ func NewOpenAIRepository() (*OpenAIRepository, error) {
 		return nil, fmt.Errorf("openai.prompt configuration is required")
 	}
 
-	client := openai.NewClient(apiKey)
+	// Create HTTP client with proxy if PROXY_URL is set
+	httpClient := &http.Client{}
+	proxyURL := os.Getenv("PROXY_URL")
+	if proxyURL != "" {
+		parsedProxyURL, err := url.Parse(proxyURL)
+		if err != nil {
+			slog.Error("Failed to parse proxy URL", "proxy_url", proxyURL, "error", err)
+			return nil, fmt.Errorf("failed to parse proxy URL: %w", err)
+		}
+		httpClient.Transport = &http.Transport{
+			Proxy: http.ProxyURL(parsedProxyURL),
+		}
+		slog.Info("Using proxy for OpenAI client", "proxy_url", proxyURL)
+	}
 
-	slog.Info("OpenAI repository initialized", "model", model, "prompt", prompt)
+	config := openai.DefaultConfig(apiKey)
+	config.HTTPClient = httpClient
+	client := openai.NewClientWithConfig(config)
+
+	slog.Info("OpenAI repository initialized", "model", model, "prompt", prompt, "proxy_enabled", proxyURL != "")
 
 	return &OpenAIRepository{
 		client: client,
