@@ -75,12 +75,6 @@ openai:
               "content": "Finish Q3 goals",
               "link": null
             }
-          }],
-          "checked": false,
-          "color": "default",
-          "children":[{
-            "type": "paragraph"
-            // ..other keys excluded
           }]
         }
       }
