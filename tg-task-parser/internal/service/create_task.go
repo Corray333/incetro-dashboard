@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/corray333/tg-task-parser/internal/entities/message"
 	"github.com/corray333/tg-task-parser/internal/entities/task"
 	"github.com/corray333/tg-task-parser/internal/repositories/yatracker"
 	"github.com/google/uuid"
@@ -34,7 +33,7 @@ func (s *Service) CreateTask(ctx context.Context, chatID int64, msg string, repl
 		return "", err
 	}
 
-	newTask, err := message.ParseTask(msg, replyMessage)
+	newTask, err := s.taskMsgParser.ParseMessage(ctx, msg)
 	if err != nil {
 		return "", err
 	}
