@@ -90,7 +90,7 @@ func (s *Service) CreateTask(ctx context.Context, chatID int64, msg string, repl
 	// Build response text
 	if projectID == trackerProjectID && trackerIssue != nil {
 		yaLink := fmt.Sprintf("https://tracker.yandex.ru/%s", trackerIssue.Key)
-		text := fmt.Sprintf("Задача *%s: %s* создана:\n\n• Яндекс\\.Трекер: [%s](%s)\n• Notion: %s\n\n%s", escapeMarkdownV2(trackerIssue.Key), escapeMarkdownV2(trackerIssue.Summary), escapeMarkdownV2(trackerIssue.Key), yaLink, notionHyperlink, quote)
+		text := fmt.Sprintf("Задача *%s: %s* создана:\n\n• Яндекс\\.Трекер: [%s](%s)\n• Notion: %s\n\n%s", escapeMarkdownV2(newTask.Title), escapeMarkdownV2(trackerIssue.Summary), escapeMarkdownV2(trackerIssue.Key), yaLink, notionHyperlink, quote)
 		return text, nil
 	}
 
