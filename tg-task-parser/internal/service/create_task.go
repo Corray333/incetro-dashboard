@@ -85,7 +85,7 @@ func (s *Service) CreateTask(ctx context.Context, chatID int64, msg string, repl
 
 	notionLink := "https://notion.so/" + strings.ReplaceAll(pageID, "-", "")
 	notionHyperlink := fmt.Sprintf("[%s](%s)", escapeMarkdownV2(newTask.Title), notionLink)
-	quote := fmt.Sprintf("*Тело задачи:*\n\n >>> %s\n", newTask.PlainBody)
+	quote := fmt.Sprintf(">*Тело задачи:*\n>%s", escapeMarkdownV2(newTask.PlainBody))
 
 	// Build response text
 	if projectID == trackerProjectID && trackerIssue != nil {
