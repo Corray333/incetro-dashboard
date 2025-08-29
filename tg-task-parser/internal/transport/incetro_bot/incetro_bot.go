@@ -278,7 +278,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			}
 
 			_, err = msg.Reply(bot, text, &gotgbot.SendMessageOpts{
-				ParseMode: gotgbot.ParseModeMarkdown,
+				ParseMode: gotgbot.ParseModeMarkdownV2,
 			})
 			if err != nil {
 				slog.Error("Error sending confirmation", "error", err)
