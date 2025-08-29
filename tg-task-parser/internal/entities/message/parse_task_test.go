@@ -26,15 +26,15 @@ func TestParseTask_WithHashtag(t *testing.T) {
 		t.Fatalf("expected non-nil task")
 	}
 	// First rune should be uppercased according to ParseMessage
-	if tsk.Text != "Сделать что-то" {
-		t.Fatalf("unexpected text: %q", tsk.Text)
+	if tsk.Title != "Сделать что-то" {
+		t.Fatalf("unexpected text: %q", tsk.Title)
 	}
 	wantTags := []task.Tag{"задача", "golang"}
 	if !reflect.DeepEqual(tsk.Hashtags, wantTags) {
 		t.Fatalf("unexpected tags: got %#v want %#v", tsk.Hashtags, wantTags)
 	}
 	wantMentions := []task.Mention{"user"}
-	if !reflect.DeepEqual(tsk.Mentions, wantMentions) {
-		t.Fatalf("unexpected mentions: got %#v want %#v", tsk.Mentions, wantMentions)
+	if !reflect.DeepEqual(tsk.Executors, wantMentions) {
+		t.Fatalf("unexpected mentions: got %#v want %#v", tsk.Executors, wantMentions)
 	}
 }

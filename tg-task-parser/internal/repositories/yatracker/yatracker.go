@@ -59,7 +59,7 @@ func (r *YaTrackerRepository) CreateTask(ctx context.Context, task *task.Task) (
 
 	// Создаем запрос
 	reqBody := CreateTaskRequest{
-		Summary: task.Text,
+		Summary: task.Title,
 		Queue:   cfg.QueueID,
 		Project: Project{
 			Primary: cfg.ProjectID,
@@ -114,7 +114,7 @@ func (r *YaTrackerRepository) SearchTasksByName(ctx context.Context, t *task.Tas
 	// Формируем тело запроса: фильтрация по полю summary
 	searchReq := SearchIssuesRequest{
 		Filter: map[string]interface{}{
-			"summary": t.Text,
+			"summary": t.Title,
 		},
 	}
 

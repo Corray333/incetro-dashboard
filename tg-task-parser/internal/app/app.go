@@ -1,14 +1,12 @@
 package app
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
 	"os"
 
-	"github.com/corray333/tg-task-parser/internal/entities/task"
 	"github.com/corray333/tg-task-parser/internal/repositories/base_service"
 	"github.com/corray333/tg-task-parser/internal/repositories/notion"
+	"github.com/corray333/tg-task-parser/internal/repositories/openaiclient"
 	"github.com/corray333/tg-task-parser/internal/repositories/storage"
 	"github.com/corray333/tg-task-parser/internal/repositories/tg_repository"
 	"github.com/corray333/tg-task-parser/internal/repositories/yatracker"
@@ -36,9 +34,25 @@ func New() *app {
 	// fmt.Println(yaTrackerRepo.CreateTas(context.Background(), &task.Task{
 	// 	Text: "Test task",
 	// }))
-	fmt.Println(yaTrackerRepo.SearchTasksByName(context.Background(), &task.Task{
-		Text: "Test task",
-	}))
+	// fmt.Println(yaTrackerRepo.SearchTasksByName(context.Background(), &task.Task{
+	// 	Title: "Test task",
+	// }))
+	openaiRepo, err := openaiclient.NewOpenAIRepository()
+	if err != nil {
+		slog.Error("Failed to create openai repository", "error", err)
+		panic(err)
+	}
+
+	// 	openaiRepo.ParseMessage(context.Background(), `#задача
+	// Прошу еще посмотреть возможность подключения мобильной метрики от Яндекса для нашего приложения.
+
+	// Так как судя по инструменту, он может полностью покрыть запросы маркетинга по сбору метрик.
+
+	// Сайт app метрики - https://appmetrica.yandex.ru/about
+	// Документация - https://appmetrica.yandex.ru/docs/ru/
+	// 1. Ознакомиться с сайтом
+	// 2. Проверить документацию`)
+
 	notionClient := notion_api.NewClient()
 	notionRepo := notion.NewNotionRepository(notionClient)
 
@@ -56,6 +70,7 @@ func New() *app {
 		service.WithNotionRepo(notionRepo),
 		service.WithTgRepo(tgRepo),
 		service.WithYaTrackerRepo(yaTrackerRepo),
+		service.WithTaskMsgParser(openaiRepo),
 	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 

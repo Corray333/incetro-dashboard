@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/corray333/tg-task-parser/internal/entities/employee"
+	"github.com/corray333/tg-task-parser/internal/entities/task"
 	"github.com/google/uuid"
 )
 
@@ -39,6 +40,10 @@ type yaTrackerRepo interface {
 	yaTrackerTaskSearcher
 }
 
+type taskMsgParser interface {
+	ParseMessage(ctx context.Context, message string) (*task.Task, error)
+}
+
 type Service struct {
 	taskCreator           taskCreator
 	projectsGetter        projectsGetter
@@ -62,6 +67,8 @@ type Service struct {
 	repository repository
 	notionRepo notionRepo
 	tgRepo     tgMessageSender
+
+	taskMsgParser taskMsgParser
 }
 
 type option func(*Service)
@@ -72,6 +79,12 @@ func New(options ...option) *Service {
 		opt(s)
 	}
 	return s
+}
+
+func WithTaskMsgParser(taskMsgParser taskMsgParser) option {
+	return func(s *Service) {
+		s.taskMsgParser = taskMsgParser
+	}
 }
 
 func WithYaTrackerRepo(yaTrackerRepo yaTrackerRepo) option {

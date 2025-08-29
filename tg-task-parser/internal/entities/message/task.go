@@ -100,7 +100,7 @@ func ParseTask(mainText, replyText string) (*task.Task, error) {
 
 	// Convert message.Message to task.Task
 	taskEntity := &task.Task{
-		Text: parsedMessage.Text,
+		Title: parsedMessage.Text,
 		Hashtags: func() []task.Tag {
 			res := make([]task.Tag, 0, len(parsedMessage.Hashtags))
 			for _, h := range parsedMessage.Hashtags {
@@ -108,7 +108,7 @@ func ParseTask(mainText, replyText string) (*task.Task, error) {
 			}
 			return res
 		}(),
-		Mentions: func() []task.Mention {
+		Executors: func() []task.Mention {
 			res := make([]task.Mention, 0, len(parsedMessage.Mentions))
 			for _, m := range parsedMessage.Mentions {
 				res = append(res, task.Mention(m))

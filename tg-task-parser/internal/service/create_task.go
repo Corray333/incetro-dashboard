@@ -77,14 +77,16 @@ func (s *Service) CreateTask(ctx context.Context, chatID int64, msg string, repl
 	}
 
 	notionLink := "https://notion.so/" + strings.ReplaceAll(pageID, "-", "")
+	notionHyperlink := fmt.Sprintf("[%s](%s)", newTask.Title, notionLink)
+	quote := fmt.Sprintf("> %s", newTask.PlainBody)
 
 	// Build response text
 	if projectID == trackerProjectID && trackerIssue != nil {
 		yaLink := fmt.Sprintf("https://tracker.yandex.ru/%s", trackerIssue.Key)
-		text := fmt.Sprintf("Задача \"%s: %s\" создана:\n\n- Яндекс.Трекер: %s\n- Notion: %s", trackerIssue.Key, trackerIssue.Summary, yaLink, notionLink)
+		text := fmt.Sprintf("Задача \"%s: %s\" создана:\n\n- Яндекс.Трекер: %s\n- Notion: %s\n\n%s", trackerIssue.Key, trackerIssue.Summary, yaLink, notionHyperlink, quote)
 		return text, nil
 	}
 
 	// General case: only Notion link
-	return fmt.Sprintf("Задача создана: %s", notionLink), nil
+	return fmt.Sprintf("Задача создана: %s\n\n%s", notionHyperlink, quote), nil
 }

@@ -23,7 +23,7 @@ func (r *BaseService) CreateTask(ctx context.Context, t *task.Task, projectID uu
 				{
 					"type": "text",
 					"text": map[string]interface{}{
-						"content": t.Text,
+						"content": t.Title,
 					},
 				},
 			},
@@ -32,7 +32,7 @@ func (r *BaseService) CreateTask(ctx context.Context, t *task.Task, projectID uu
 			"type": "people",
 			"people": func() []map[string]interface{} {
 				executor := []map[string]interface{}{}
-				for _, user := range t.Mentions {
+				for _, user := range t.Executors {
 					employeeID, err := r.GetEmployeeByTgUsername(ctx, string(user))
 					if err != nil {
 						slog.Error("Notion error while getting employee ID: " + err.Error())
@@ -68,7 +68,7 @@ func (r *BaseService) CreateTask(ctx context.Context, t *task.Task, projectID uu
 	}
 
 	// Создаем страницу задачи в Notion
-	res, err := notion.CreatePage(viper.GetString("notion.databases.tasks"), req, nil, "")
+	res, err := notion.CreatePage(viper.GetString("notion.databases.tasks"), req, t.Body, "")
 	if err != nil {
 		slog.Error("Notion error while creating task: " + err.Error())
 		return "", err
