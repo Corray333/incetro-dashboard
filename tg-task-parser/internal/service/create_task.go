@@ -41,6 +41,8 @@ func (s *Service) CreateTask(ctx context.Context, chatID int64, msg string, repl
 		return "", err
 	}
 
+	msg += "\n\n" + replyMessage
+
 	newTask, err := s.taskMsgParser.ParseMessage(ctx, msg)
 	if err != nil {
 		return "", err
