@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/corray333/tg-task-parser/pkg/tg"
 	"github.com/google/uuid"
 )
 
@@ -114,7 +115,7 @@ func (mp *MessageProcessor) sendMessageWithButtons(ctx context.Context, chatID i
 	}
 
 	// Формируем текст сообщения
-	messageText := fmt.Sprintf("📝 **Объединенное сообщение:**\n\n%s\n\n⏰ Выберите действие:", text)
+	messageText := fmt.Sprintf("📝 **Объединенное сообщение:**\n\n%s\n\n⏰ Выберите действие:", tg.EscapeMarkdownV2(text))
 
 	// Отправляем сообщение
 	_, err := mp.bot.SendMessage(chatID, messageText, &gotgbot.SendMessageOpts{
