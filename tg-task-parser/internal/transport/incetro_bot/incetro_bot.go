@@ -520,6 +520,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 
 	t.dispatcher.AddHandler(handlers.NewCommand("getmodel", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		currentModel := viper.GetString("openai.model")
+		slog.Info("getmodel command received", "model", currentModel)
 		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Текущая модель: %s", currentModel), nil)
 		if sendErr != nil {
 			slog.Error("Error sending model info", "error", sendErr)
@@ -549,6 +550,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 		}
 
 		newModel := strings.TrimSpace(strings.TrimPrefix(ctx.Message.Text, "/setmodel"))
+		slog.Info("setmodel command received", "model", newModel)
 		if newModel == "" {
 			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Пожалуйста, укажите название модели. Например: /setmodel gpt-4.1", nil)
 			if sendErr != nil {
