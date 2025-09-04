@@ -89,7 +89,14 @@ func NewIncetroBot(service service) *IncetroTelegramBot {
 
 func (t *IncetroTelegramBot) registerHandlers() {
 	t.dispatcher.AddHandler(handlers.NewCommand("gettaskprompt", func(b *gotgbot.Bot, ctx *ext.Context) error {
-		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, viper.GetString("openai.prompt"), nil)
+		fullPrompt := viper.GetString("openai.prompt")
+		// Обрезаем промпт до блока "Примеры."
+		examplesIndex := strings.Index(fullPrompt, "Примеры.")
+		promptToSend := fullPrompt
+		if examplesIndex != -1 {
+			promptToSend = strings.TrimSpace(fullPrompt[:examplesIndex])
+		}
+		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, promptToSend, nil)
 		if sendErr != nil {
 			slog.Error("Error sending error message", "error", sendErr)
 		}
@@ -97,7 +104,23 @@ func (t *IncetroTelegramBot) registerHandlers() {
 	}))
 
 	t.dispatcher.AddHandler(handlers.NewCommand("settaskprompt", func(b *gotgbot.Bot, ctx *ext.Context) error {
-		if err := config.SetConfigValue("openai.prompt", strings.TrimPrefix(ctx.Message.Text, "/settaskprompt")); err != nil {
+		newPromptPart := strings.TrimSpace(strings.TrimPrefix(ctx.Message.Text, "/settaskprompt"))
+		fullPrompt := viper.GetString("openai.prompt")
+
+		// Находим блок "Примеры." и сохраняем его
+		examplesIndex := strings.Index(fullPrompt, "Примеры.")
+		examplesPart := ""
+		if examplesIndex != -1 {
+			examplesPart = fullPrompt[examplesIndex:]
+		}
+
+		// Объединяем новую часть с сохраненными примерами
+		finalPrompt := newPromptPart
+		if examplesPart != "" {
+			finalPrompt = newPromptPart + "\n\n" + examplesPart
+		}
+
+		if err := config.SetConfigValue("openai.prompt", finalPrompt); err != nil {
 			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Произошла ошибка при установке промпта. Пожалуйста, попробуйте еще раз.", nil)
 			if sendErr != nil {
 				slog.Error("Error sending error message", "error", sendErr)
