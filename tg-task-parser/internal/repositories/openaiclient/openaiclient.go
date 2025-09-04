@@ -17,8 +17,6 @@ import (
 
 type OpenAIRepository struct {
 	client *openai.Client
-	prompt string
-	model  string
 }
 
 // NewOpenAIRepository creates a new OpenAI repository with configuration from environment variables and viper
@@ -28,19 +26,6 @@ func NewOpenAIRepository() (*OpenAIRepository, error) {
 	if apiKey == "" {
 		slog.Error("OPENAI_API_KEY environment variable is not set")
 		return nil, fmt.Errorf("OPENAI_API_KEY environment variable is required")
-	}
-
-	// Get non-sensitive configuration from viper
-	model := viper.GetString("openai.model")
-	if model == "" {
-		slog.Error("openai.model configuration is not set")
-		return nil, fmt.Errorf("openai.model configuration is required")
-	}
-
-	prompt := viper.GetString("openai.prompt")
-	if prompt == "" {
-		slog.Error("openai.prompt configuration is not set")
-		return nil, fmt.Errorf("openai.prompt configuration is required")
 	}
 
 	// Create HTTP client with proxy if PROXY_URL is set
@@ -62,12 +47,10 @@ func NewOpenAIRepository() (*OpenAIRepository, error) {
 	config.HTTPClient = httpClient
 	client := openai.NewClientWithConfig(config)
 
-	slog.Info("OpenAI repository initialized", "model", model, "prompt", prompt, "proxy_enabled", proxyURL != "")
+	slog.Info("OpenAI repository initialized", "model", viper.GetString("openai.model"), "prompt", viper.GetString("openai.prompt"), "proxy_enabled", proxyURL != "")
 
 	return &OpenAIRepository{
 		client: client,
-		prompt: prompt,
-		model:  model,
 	}, nil
 }
 
@@ -79,13 +62,13 @@ func (r *OpenAIRepository) ParseMessage(ctx context.Context, message string) (*t
 		return nil, fmt.Errorf("message cannot be empty")
 	}
 
-	slog.Info("Starting message parsing", "message_length", len(message), "model", r.model)
+	slog.Info("Starting message parsing", "message_length", len(message), "model", viper.GetString("openai.model"))
 
 	// Prepare the prompt with message
-	content := fmt.Sprintf("%s\n\nВсе, что было написано до этого - инструкция. Далее идет текст сообщения, для которого необходимо выполнить условия, описанные выше:\n%s", r.prompt, message)
+	content := fmt.Sprintf("%s\n\nВсе, что было написано до этого - инструкция. Далее идет текст сообщения, для которого необходимо выполнить условия, описанные выше:\n%s", viper.GetString("openai.prompt"), message)
 
 	req := openai.ChatCompletionRequest{
-		Model: r.model,
+		Model: viper.GetString("openai.model"),
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
