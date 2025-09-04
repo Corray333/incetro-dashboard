@@ -421,8 +421,14 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			// Определяем ID отправителя (всегда используем ID того, кто отправил сообщение)
 			senderID := msg.From.Id
 
+			text := msg.Text
+
+			if msg.ReplyToMessage != nil {
+				text += "\n\n" + strings.ReplaceAll(msg.ReplyToMessage.Text, string(message.HashtagTask), "")
+			}
+
 			// Отправляем сообщение в систему временного хранилища
-			if err := t.messageProcessor.ProcessMessage(context.Background(), senderID, msg.Chat.Id, msg.Text); err != nil {
+			if err := t.messageProcessor.ProcessMessage(context.Background(), senderID, msg.Chat.Id, text); err != nil {
 				slog.Error("Error processing message", "error", err)
 				_, _ = msg.Reply(bot, "Не удалось обработать сообщение", nil)
 				return nil
