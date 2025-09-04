@@ -36,6 +36,8 @@ const (
 const (
 	CallbackTypeChooseProject  = "0"
 	CallbackTypeChooseFeedback = "1"
+	CallbackTypeAcceptMessage  = "accept"
+	CallbackTypeRejectMessage  = "reject"
 )
 
 type service interface {
