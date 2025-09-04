@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/corray333/tg-task-parser/internal/entities/message"
 	"github.com/corray333/tg-task-parser/pkg/tg"
 	"github.com/google/uuid"
 )
@@ -68,6 +69,10 @@ func (mp *MessageProcessor) processAfterDelay(ctx context.Context, senderID, cha
 
 	// Объединяем тексты сообщений
 	combinedText := mp.combineMessages(messages)
+
+	if !strings.Contains(combinedText, string(message.HashtagTask)) {
+		return
+	}
 
 	// Создаем объединенное сообщение
 	combinedMsg := &CombinedMessage{

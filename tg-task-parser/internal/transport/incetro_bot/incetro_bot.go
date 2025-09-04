@@ -295,17 +295,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			return nil
 		}
 
-		if slices.Contains(parsedMsg.Hashtags, message.HashtagTask) {
-			// Определяем ID отправителя (всегда используем ID того, кто отправил сообщение)
-			senderID := msg.From.Id
-
-			// Отправляем сообщение в систему временного хранилища
-			if err := t.messageProcessor.ProcessMessage(context.Background(), senderID, msg.Chat.Id, msg.Text); err != nil {
-				slog.Error("Error processing message", "error", err)
-				_, _ = msg.Reply(bot, "Не удалось обработать сообщение", nil)
-				return nil
-			}
-		} else if slices.Contains(parsedMsg.Hashtags, message.HashtagFeedback) {
+		if slices.Contains(parsedMsg.Hashtags, message.HashtagFeedback) {
 			feedbacks, err := t.service.RequestActiveFeedbacks(context.Background(), msg.Chat.Id, msg.MessageId, parsedMsg)
 			if err != nil {
 				slog.Error("Error listing feedbacks", "error", err)
@@ -337,6 +327,16 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			})
 			if err != nil {
 				slog.Error("Error sending feedbacks", "error", err)
+			}
+		} else {
+			// Определяем ID отправителя (всегда используем ID того, кто отправил сообщение)
+			senderID := msg.From.Id
+
+			// Отправляем сообщение в систему временного хранилища
+			if err := t.messageProcessor.ProcessMessage(context.Background(), senderID, msg.Chat.Id, msg.Text); err != nil {
+				slog.Error("Error processing message", "error", err)
+				_, _ = msg.Reply(bot, "Не удалось обработать сообщение", nil)
+				return nil
 			}
 		}
 
