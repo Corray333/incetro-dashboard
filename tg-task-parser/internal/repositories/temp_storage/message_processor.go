@@ -113,11 +113,11 @@ func (mp *MessageProcessor) sendMessageWithButtons(ctx context.Context, chatID i
 			{
 				{
 					Text:         "✅ Принять",
-					CallbackData: fmt.Sprintf("accept_%s", combinedMsgID.String()),
+					CallbackData: fmt.Sprintf("accept|%s", combinedMsgID.String()),
 				},
 				{
 					Text:         "❌ Отклонить",
-					CallbackData: fmt.Sprintf("reject_%s", combinedMsgID.String()),
+					CallbackData: fmt.Sprintf("reject|%s", combinedMsgID.String()),
 				},
 			},
 		},
