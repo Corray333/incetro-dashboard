@@ -41,6 +41,8 @@ func (mp *MessageProcessor) ProcessMessage(ctx context.Context, senderID, chatID
 		Timestamp: time.Now(),
 	}
 
+	slog.Info("Received message", "message", msg)
+
 	// Сохраняем сообщение во временное хранилище
 	mp.storage.StorePendingMessage(msg)
 
