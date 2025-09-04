@@ -62,6 +62,8 @@ func (mp *MessageProcessor) processAfterDelay(ctx context.Context, senderID, cha
 	// Извлекаем все сообщения от этого отправителя в указанном диапазоне
 	messages := mp.storage.GetAndRemoveMessagesBySender(senderID, fromTime, toTime)
 
+	slog.Info("Processing messages", "messages", messages)
+
 	// Если сообщений нет (уже обработаны другим таймером), завершаем
 	if len(messages) == 0 {
 		return
