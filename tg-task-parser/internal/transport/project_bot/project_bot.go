@@ -252,6 +252,70 @@ func (t *ProjectBot) registerHandlers() {
 		fmt.Println(cbData)
 
 		switch cbData[0] {
+		case CallbackTypeAcceptMessage:
+			if len(cbData) != 2 {
+				slog.Error("Invalid callback data for accept", "data", cb.Data)
+				return nil
+			}
+			combinedMsgID, err := uuid.Parse(cbData[1])
+			if err != nil {
+				slog.Error("Invalid combined message UUID", "data", cb.Data)
+				return nil
+			}
+
+			// Принимаем сообщение и получаем объединенный текст
+			combinedMsg, err := t.messageProcessor.AcceptMessage(context.Background(), combinedMsgID)
+			if err != nil {
+				slog.Error("Error accepting message", "error", err)
+				_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+					Text: "Ошибка при обработке сообщения",
+				})
+				return nil
+			}
+
+			// Обрабатываем объединенное сообщение через стандартный алгоритм
+			text, err := t.service.CreateTask(context.Background(), combinedMsg.ChatID, combinedMsg.CombinedText, "")
+			if err != nil {
+				slog.Error("Error creating task from combined message", "error", err)
+				_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+					Text: "Не удалось создать задачу",
+				})
+				return nil
+			}
+
+			_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+				Text: "Сообщение принято и обработано",
+			})
+
+			// Отправляем результат обработки, если есть
+			if text != "" {
+				_, err = bot.SendMessage(combinedMsg.ChatID, text, &gotgbot.SendMessageOpts{
+					ParseMode: gotgbot.ParseModeMarkdownV2,
+				})
+				if err != nil {
+					slog.Error("Error sending task confirmation", "error", err)
+				}
+			}
+
+		case CallbackTypeRejectMessage:
+			if len(cbData) != 2 {
+				slog.Error("Invalid callback data for reject", "data", cb.Data)
+				return nil
+			}
+			combinedMsgID, err := uuid.Parse(cbData[1])
+			if err != nil {
+				slog.Error("Invalid combined message UUID", "data", cb.Data)
+				return nil
+			}
+
+			// Отклоняем сообщение
+			if err := t.messageProcessor.RejectMessage(context.Background(), combinedMsgID); err != nil {
+				slog.Error("Error rejecting message", "error", err)
+			}
+
+			_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+				Text: "Сообщение отклонено",
+			})
 		case CallbackTypeChooseProject:
 			projectID, err := uuid.Parse(cbData[1])
 			if err != nil {
