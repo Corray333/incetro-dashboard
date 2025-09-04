@@ -16,14 +16,16 @@ import (
 	"github.com/corray333/tg-task-parser/internal/entities/feedback"
 	message "github.com/corray333/tg-task-parser/internal/entities/message"
 	"github.com/corray333/tg-task-parser/internal/entities/project"
+	"github.com/corray333/tg-task-parser/internal/repositories/temp_storage"
 	"github.com/google/uuid"
 )
 
 type ProjectBot struct {
-	service    service
-	bot        *gotgbot.Bot
-	dispatcher *ext.Dispatcher
-	updater    *ext.Updater
+	service          service
+	bot              *gotgbot.Bot
+	dispatcher       *ext.Dispatcher
+	updater          *ext.Updater
+	messageProcessor *temp_storage.MessageProcessor
 }
 
 const (
@@ -62,12 +64,14 @@ func NewProjectBot(service service) *ProjectBot {
 	})
 
 	updater := ext.NewUpdater(dispatcher, nil)
+	messageProcessor := temp_storage.NewMessageProcessor(bot)
 
 	tr := &ProjectBot{
-		service:    service,
-		bot:        bot,
-		dispatcher: dispatcher,
-		updater:    updater,
+		service:          service,
+		bot:              bot,
+		dispatcher:       dispatcher,
+		updater:          updater,
+		messageProcessor: messageProcessor,
 	}
 
 	tr.registerHandlers()
@@ -187,22 +191,14 @@ func (t *ProjectBot) registerHandlers() {
 		}
 
 		if slices.Contains(parsedMsg.Hashtags, message.HashtagTask) {
-			text, err := t.service.CreateTask(context.Background(), msg.Chat.Id, msg.Text, reply)
-			if err != nil {
-				slog.Error("Error creating task", "error", err)
-				_, _ = msg.Reply(bot, "Не удалось создать задачу", nil)
-				return nil
-			}
+			// Определяем ID отправителя (всегда используем ID того, кто отправил сообщение)
+			senderID := msg.From.Id
 
-			if text == "" {
+			// Отправляем сообщение в систему временного хранилища
+			if err := t.messageProcessor.ProcessMessage(context.Background(), senderID, msg.Chat.Id, msg.Text); err != nil {
+				slog.Error("Error processing message", "error", err)
+				_, _ = msg.Reply(bot, "Не удалось обработать сообщение", nil)
 				return nil
-			}
-
-			_, err = msg.Reply(bot, text, &gotgbot.SendMessageOpts{
-				ParseMode: gotgbot.ParseModeMarkdownV2,
-			})
-			if err != nil {
-				slog.Error("Error sending confirmation", "error", err)
 			}
 		} else if slices.Contains(parsedMsg.Hashtags, message.HashtagFeedback) {
 			feedbacks, err := t.service.RequestActiveFeedbacks(context.Background(), msg.Chat.Id, msg.MessageId, parsedMsg)
