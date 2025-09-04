@@ -82,7 +82,7 @@ func (r *OpenAIRepository) ParseMessage(ctx context.Context, message string) (*t
 	slog.Info("Starting message parsing", "message_length", len(message), "model", r.model)
 
 	// Prepare the prompt with message
-	content := fmt.Sprintf("%s\n\nMessage: %s", r.prompt, message)
+	content := fmt.Sprintf("%s\n\nВсе, что было написано до этого - инструкция. Далее идет текст сообщения, для которого необходимо выполнить условия, описанные выше:\n%s", r.prompt, message)
 
 	req := openai.ChatCompletionRequest{
 		Model: r.model,
