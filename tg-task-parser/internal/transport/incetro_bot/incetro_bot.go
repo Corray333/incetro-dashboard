@@ -88,6 +88,72 @@ func NewIncetroBot(service service) *IncetroTelegramBot {
 }
 
 func (t *IncetroTelegramBot) registerHandlers() {
+
+	t.dispatcher.AddHandler(handlers.NewCommand("getmodel", func(b *gotgbot.Bot, ctx *ext.Context) error {
+		currentModel := viper.GetString("openai.model")
+		slog.Info("getmodel command received", "model", currentModel)
+		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Текущая модель: %s", currentModel), nil)
+		if sendErr != nil {
+			slog.Error("Error sending model info", "error", sendErr)
+		}
+		return nil
+	}))
+
+	t.dispatcher.AddHandler(handlers.NewCommand("setmodel", func(b *gotgbot.Bot, ctx *ext.Context) error {
+		var textModels = []string{
+			"gpt-5",
+			"gpt-5-mini",
+			"gpt-5-nano",
+			"gpt-5-chat-latest",
+			"gpt-4.1",
+			"gpt-4.1-mini",
+			"gpt-4.1-nano",
+			"gpt-4o",
+			"gpt-4o-2024-05-13",
+			"gpt-4o-mini",
+			"o1",
+			"o1-pro",
+			"o3-pro",
+			"o3",
+			"o4-mini",
+			"o3-mini",
+			"o1-mini",
+		}
+
+		newModel := strings.TrimSpace(strings.TrimPrefix(ctx.Message.Text, "/setmodel"))
+		slog.Info("setmodel command received", "model", newModel)
+		if newModel == "" {
+			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Пожалуйста, укажите название модели. Например: /setmodel gpt-4.1", nil)
+			if sendErr != nil {
+				slog.Error("Error sending validation message", "error", sendErr)
+			}
+			return nil
+		}
+
+		// Проверяем, что модель есть в списке допустимых
+		if !slices.Contains(textModels, newModel) {
+			validModels := strings.Join(textModels, ", ")
+			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Недопустимая модель. Доступные модели: %s", validModels), nil)
+			if sendErr != nil {
+				slog.Error("Error sending validation message", "error", sendErr)
+			}
+			return nil
+		}
+
+		if err := config.SetConfigValue("openai.model", newModel); err != nil {
+			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Произошла ошибка при установке модели. Пожалуйста, попробуйте еще раз.", nil)
+			if sendErr != nil {
+				slog.Error("Error sending error message", "error", sendErr)
+			}
+			return nil
+		}
+		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Модель успешно установлена: [%s](https://platform.openai.com/docs/pricing)", newModel), &gotgbot.SendMessageOpts{ParseMode: "Markdown"})
+		if sendErr != nil {
+			slog.Error("Error sending success message", "error", sendErr)
+		}
+		return nil
+	}))
+
 	t.dispatcher.AddHandler(handlers.NewCommand("gettaskprompt", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		fullPrompt := viper.GetString("openai.prompt")
 		// Обрезаем промпт до блока "Примеры."
@@ -515,71 +581,6 @@ func (t *IncetroTelegramBot) registerHandlers() {
 		}
 
 		_, _ = bot.DeleteMessage(cb.Message.GetChat().Id, cb.Message.GetMessageId(), nil)
-		return nil
-	}))
-
-	t.dispatcher.AddHandler(handlers.NewCommand("getmodel", func(b *gotgbot.Bot, ctx *ext.Context) error {
-		currentModel := viper.GetString("openai.model")
-		slog.Info("getmodel command received", "model", currentModel)
-		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Текущая модель: %s", currentModel), nil)
-		if sendErr != nil {
-			slog.Error("Error sending model info", "error", sendErr)
-		}
-		return nil
-	}))
-
-	t.dispatcher.AddHandler(handlers.NewCommand("setmodel", func(b *gotgbot.Bot, ctx *ext.Context) error {
-		var textModels = []string{
-			"gpt-5",
-			"gpt-5-mini",
-			"gpt-5-nano",
-			"gpt-5-chat-latest",
-			"gpt-4.1",
-			"gpt-4.1-mini",
-			"gpt-4.1-nano",
-			"gpt-4o",
-			"gpt-4o-2024-05-13",
-			"gpt-4o-mini",
-			"o1",
-			"o1-pro",
-			"o3-pro",
-			"o3",
-			"o4-mini",
-			"o3-mini",
-			"o1-mini",
-		}
-
-		newModel := strings.TrimSpace(strings.TrimPrefix(ctx.Message.Text, "/setmodel"))
-		slog.Info("setmodel command received", "model", newModel)
-		if newModel == "" {
-			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Пожалуйста, укажите название модели. Например: /setmodel gpt-4.1", nil)
-			if sendErr != nil {
-				slog.Error("Error sending validation message", "error", sendErr)
-			}
-			return nil
-		}
-
-		// Проверяем, что модель есть в списке допустимых
-		if !slices.Contains(textModels, newModel) {
-			validModels := strings.Join(textModels, ", ")
-			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Недопустимая модель. Доступные модели: %s", validModels), nil)
-			if sendErr != nil {
-				slog.Error("Error sending validation message", "error", sendErr)
-			}
-			return nil
-		}
-
-		if err := config.SetConfigValue("openai.model", newModel); err != nil {
-			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Произошла ошибка при установке модели. Пожалуйста, попробуйте еще раз.", nil)
-			if sendErr != nil {
-				slog.Error("Error sending error message", "error", sendErr)
-			}
-			return nil
-		}
-		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, fmt.Sprintf("Модель успешно установлена: [%s](https://platform.openai.com/docs/pricing)", newModel), &gotgbot.SendMessageOpts{ParseMode: "Markdown"})
-		if sendErr != nil {
-			slog.Error("Error sending success message", "error", sendErr)
-		}
 		return nil
 	}))
 }
