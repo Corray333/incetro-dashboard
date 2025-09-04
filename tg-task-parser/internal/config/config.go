@@ -48,3 +48,17 @@ func GetYaTrackerConfig() YaTrackerConfig {
 func GetYaTrackerToken() string {
 	return os.Getenv("YA_TRACKER_TOKEN")
 }
+
+// SetConfigValue устанавливает значение по пути и сохраняет в файл
+func SetConfigValue(configPath, value string) error {
+
+	// Устанавливаем значение
+	viper.Set(configPath, value)
+
+	// Сохраняем изменения в файл
+	if err := viper.WriteConfig(); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+
+	return nil
+}

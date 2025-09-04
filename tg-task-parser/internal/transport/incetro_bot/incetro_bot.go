@@ -12,19 +12,23 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
+	"github.com/spf13/viper"
 
+	"github.com/corray333/tg-task-parser/internal/config"
 	"github.com/corray333/tg-task-parser/internal/entities/feedback"
 	message "github.com/corray333/tg-task-parser/internal/entities/message"
 	"github.com/corray333/tg-task-parser/internal/entities/project"
 	"github.com/corray333/tg-task-parser/internal/entities/topic"
+	"github.com/corray333/tg-task-parser/internal/repositories/temp_storage"
 	"github.com/google/uuid"
 )
 
 type IncetroTelegramBot struct {
-	service    service
-	bot        *gotgbot.Bot
-	dispatcher *ext.Dispatcher
-	updater    *ext.Updater
+	service          service
+	bot              *gotgbot.Bot
+	dispatcher       *ext.Dispatcher
+	updater          *ext.Updater
+	messageProcessor *temp_storage.MessageProcessor
 }
 
 const (
@@ -35,6 +39,8 @@ const (
 const (
 	CallbackTypeChooseProject  = "0"
 	CallbackTypeChooseFeedback = "1"
+	CallbackTypeAcceptMessage  = "accept"
+	CallbackTypeRejectMessage  = "reject"
 )
 
 type service interface {
@@ -66,12 +72,14 @@ func NewIncetroBot(service service) *IncetroTelegramBot {
 	})
 
 	updater := ext.NewUpdater(dispatcher, nil)
+	messageProcessor := temp_storage.NewMessageProcessor(bot)
 
 	tr := &IncetroTelegramBot{
-		service:    service,
-		bot:        bot,
-		dispatcher: dispatcher,
-		updater:    updater,
+		service:          service,
+		bot:              bot,
+		dispatcher:       dispatcher,
+		updater:          updater,
+		messageProcessor: messageProcessor,
 	}
 
 	tr.registerHandlers()
@@ -80,6 +88,28 @@ func NewIncetroBot(service service) *IncetroTelegramBot {
 }
 
 func (t *IncetroTelegramBot) registerHandlers() {
+	t.dispatcher.AddHandler(handlers.NewCommand("gettaskprompt", func(b *gotgbot.Bot, ctx *ext.Context) error {
+		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, viper.GetString("openai.prompt"), nil)
+		if sendErr != nil {
+			slog.Error("Error sending error message", "error", sendErr)
+		}
+		return nil
+	}))
+
+	t.dispatcher.AddHandler(handlers.NewCommand("settaskprompt", func(b *gotgbot.Bot, ctx *ext.Context) error {
+		if err := config.SetConfigValue("openai.prompt", strings.TrimPrefix(ctx.Message.Text, "/settaskprompt")); err != nil {
+			_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Произошла ошибка при установке промпта. Пожалуйста, попробуйте еще раз.", nil)
+			if sendErr != nil {
+				slog.Error("Error sending error message", "error", sendErr)
+			}
+			return nil
+		}
+		_, sendErr := b.SendMessage(ctx.EffectiveChat.Id, "Промпт успешно установлен!", nil)
+		if sendErr != nil {
+			slog.Error("Error sending success message", "error", sendErr)
+		}
+		return nil
+	}))
 
 	t.dispatcher.AddHandler(handlers.NewCommand("start", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		user := ctx.EffectiveUser
@@ -266,22 +296,14 @@ func (t *IncetroTelegramBot) registerHandlers() {
 		}
 
 		if slices.Contains(parsedMsg.Hashtags, message.HashtagTask) {
-			text, err := t.service.CreateTask(context.Background(), msg.Chat.Id, msg.Text, reply)
-			if err != nil {
-				slog.Error("Error creating task", "error", err)
-				_, _ = msg.Reply(bot, "Не удалось создать задачу", nil)
-				return nil
-			}
+			// Определяем ID отправителя (всегда используем ID того, кто отправил сообщение)
+			senderID := msg.From.Id
 
-			if text == "" {
+			// Отправляем сообщение в систему временного хранилища
+			if err := t.messageProcessor.ProcessMessage(context.Background(), senderID, msg.Chat.Id, msg.Text); err != nil {
+				slog.Error("Error processing message", "error", err)
+				_, _ = msg.Reply(bot, "Не удалось обработать сообщение", nil)
 				return nil
-			}
-
-			_, err = msg.Reply(bot, text, &gotgbot.SendMessageOpts{
-				ParseMode: gotgbot.ParseModeMarkdownV2,
-			})
-			if err != nil {
-				slog.Error("Error sending confirmation", "error", err)
 			}
 		} else if slices.Contains(parsedMsg.Hashtags, message.HashtagFeedback) {
 			feedbacks, err := t.service.RequestActiveFeedbacks(context.Background(), msg.Chat.Id, msg.MessageId, parsedMsg)
@@ -333,6 +355,71 @@ func (t *IncetroTelegramBot) registerHandlers() {
 		fmt.Println(cbData)
 
 		switch cbData[0] {
+		case CallbackTypeAcceptMessage:
+			if len(cbData) != 2 {
+				slog.Error("Invalid callback data for accept", "data", cb.Data)
+				return nil
+			}
+			combinedMsgID, err := uuid.Parse(cbData[1])
+			if err != nil {
+				slog.Error("Invalid combined message UUID", "data", cb.Data)
+				return nil
+			}
+
+			// Принимаем сообщение и получаем объединенный текст
+			combinedMsg, err := t.messageProcessor.AcceptMessage(context.Background(), combinedMsgID)
+			if err != nil {
+				slog.Error("Error accepting message", "error", err)
+				_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+					Text: "Ошибка при обработке сообщения",
+				})
+				return nil
+			}
+
+			// Обрабатываем объединенное сообщение через стандартный алгоритм
+			text, err := t.service.CreateTask(context.Background(), combinedMsg.ChatID, combinedMsg.CombinedText, "")
+			if err != nil {
+				slog.Error("Error creating task from combined message", "error", err)
+				_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+					Text: "Не удалось создать задачу",
+				})
+				return nil
+			}
+
+			_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+				Text: "Сообщение принято и обработано",
+			})
+
+			// Отправляем результат обработки, если есть
+			if text != "" {
+				_, err = bot.SendMessage(combinedMsg.ChatID, text, &gotgbot.SendMessageOpts{
+					ParseMode: gotgbot.ParseModeMarkdownV2,
+				})
+				if err != nil {
+					slog.Error("Error sending task confirmation", "error", err)
+				}
+			}
+
+		case CallbackTypeRejectMessage:
+			if len(cbData) != 2 {
+				slog.Error("Invalid callback data for reject", "data", cb.Data)
+				return nil
+			}
+			combinedMsgID, err := uuid.Parse(cbData[1])
+			if err != nil {
+				slog.Error("Invalid combined message UUID", "data", cb.Data)
+				return nil
+			}
+
+			// Отклоняем сообщение
+			if err := t.messageProcessor.RejectMessage(context.Background(), combinedMsgID); err != nil {
+				slog.Error("Error rejecting message", "error", err)
+			}
+
+			_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
+				Text: "Сообщение отклонено",
+			})
+
 		case CallbackTypeChooseProject:
 			projectID, err := uuid.Parse(cbData[1])
 			if err != nil {
