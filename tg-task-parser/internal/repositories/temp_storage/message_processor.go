@@ -74,7 +74,7 @@ func (mp *MessageProcessor) processAfterDelay(ctx context.Context, senderID, cha
 	// Объединяем тексты сообщений
 	combinedText := mp.combineMessages(messages)
 
-	if !strings.Contains(combinedText, string(message.HashtagTask)) {
+	if !strings.Contains(combinedText, "#"+string(message.HashtagTask)) {
 		return
 	}
 
@@ -152,7 +152,7 @@ func (mp *MessageProcessor) AcceptMessage(ctx context.Context, combinedMsgID uui
 
 	// TODO: add worker to remove old messages from temp storage
 	// Удаляем сообщение из хранилища
-	// mp.storage.RemoveCombinedMessage(combinedMsgID)
+	mp.storage.RemoveCombinedMessage(combinedMsgID)
 
 	return combinedMsg, nil
 }

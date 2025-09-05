@@ -428,7 +428,7 @@ func (t *IncetroTelegramBot) registerHandlers() {
 			text := msg.Text
 
 			if msg.ReplyToMessage != nil {
-				text += "\n\n" + strings.ReplaceAll(msg.ReplyToMessage.Text, string(message.HashtagTask), "")
+				text += "\n\n" + strings.ReplaceAll(msg.ReplyToMessage.Text, "#"+string(message.HashtagTask), "")
 			}
 
 			// Отправляем сообщение в систему временного хранилища
