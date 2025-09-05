@@ -28,6 +28,7 @@ func NewGeminiRepository() (*GeminiRepository, error) {
 		slog.Error("GEMINI_API_KEY environment variable is not set")
 		return nil, fmt.Errorf("GEMINI_API_KEY environment variable is required")
 	}
+	slog.Info("Gemini API key loaded successfully", "key", apiKey)
 
 	ctx := context.Background()
 
