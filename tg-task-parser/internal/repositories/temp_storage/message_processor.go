@@ -123,8 +123,15 @@ func (mp *MessageProcessor) sendMessageWithButtons(ctx context.Context, chatID i
 		},
 	}
 
-	// Формируем текст сообщения
-	messageText := fmt.Sprintf("📝 **Задача будет создана из следующего сообщения:**\n\n>%s\n\n⏰ Выберите действие:", tg.EscapeMarkdownV2(text))
+	// Формируем текст сообщения с цитатой для каждой строки
+	escapedText := tg.EscapeMarkdownV2(text)
+	lines := strings.Split(escapedText, "\n")
+	quotedLines := make([]string, len(lines))
+	for i, line := range lines {
+		quotedLines[i] = ">" + line
+	}
+	quotedText := strings.Join(quotedLines, "\n")
+	messageText := fmt.Sprintf("📝 **Задача будет создана из следующего сообщения:**\n\n%s\n\n⏰ Выберите действие:", quotedText)
 
 	// Отправляем сообщение
 	_, err := mp.bot.SendMessage(chatID, messageText, &gotgbot.SendMessageOpts{
