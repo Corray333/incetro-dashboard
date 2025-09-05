@@ -143,8 +143,9 @@ func (mp *MessageProcessor) AcceptMessage(ctx context.Context, combinedMsgID uui
 		return nil, fmt.Errorf("combined message not found")
 	}
 
+	// TODO: add worker to remove old messages from temp storage
 	// Удаляем сообщение из хранилища
-	mp.storage.RemoveCombinedMessage(combinedMsgID)
+	// mp.storage.RemoveCombinedMessage(combinedMsgID)
 
 	return combinedMsg, nil
 }
