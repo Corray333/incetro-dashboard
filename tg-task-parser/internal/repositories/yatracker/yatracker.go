@@ -18,9 +18,10 @@ type YaTrackerRepository struct {
 }
 
 type CreateTaskRequest struct {
-	Summary string  `json:"summary"`
-	Queue   int     `json:"queue"`
-	Project Project `json:"project"`
+	Summary     string  `json:"summary"`
+	Queue       int     `json:"queue"`
+	Description string  `json:"description"`
+	Project     Project `json:"project"`
 }
 
 type Project struct {
@@ -64,6 +65,7 @@ func (r *YaTrackerRepository) CreateTask(ctx context.Context, task *task.Task) (
 		Project: Project{
 			Primary: cfg.ProjectID,
 		},
+		Description: task.PlainBody,
 	}
 
 	// Сериализуем в JSON
