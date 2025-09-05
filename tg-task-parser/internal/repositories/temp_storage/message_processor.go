@@ -124,7 +124,7 @@ func (mp *MessageProcessor) sendMessageWithButtons(ctx context.Context, chatID i
 	}
 
 	// Формируем текст сообщения
-	messageText := fmt.Sprintf("📝 **Объединенное сообщение:**\n\n%s\n\n⏰ Выберите действие:", tg.EscapeMarkdownV2(text))
+	messageText := fmt.Sprintf("📝 **Задача будет создана из следующего сообщения:**\n\n>%s\n\n⏰ Выберите действие:", tg.EscapeMarkdownV2(text))
 
 	// Отправляем сообщение
 	_, err := mp.bot.SendMessage(chatID, messageText, &gotgbot.SendMessageOpts{
