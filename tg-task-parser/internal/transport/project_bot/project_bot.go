@@ -65,7 +65,11 @@ func NewProjectBot(service service) *ProjectBot {
 		},
 	})
 
-	updater := ext.NewUpdater(dispatcher, nil)
+	updater := ext.NewUpdater(dispatcher, &ext.UpdaterOpts{
+		UnhandledErrFunc: func(err error) {
+			// slog.Error("Unhandled error", "error", err)
+		},
+	})
 	messageProcessor := temp_storage.NewMessageProcessor(bot)
 
 	tr := &ProjectBot{
