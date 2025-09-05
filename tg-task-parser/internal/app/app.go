@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/corray333/tg-task-parser/internal/repositories/base_service"
-	"github.com/corray333/tg-task-parser/internal/repositories/geminiclient"
 	"github.com/corray333/tg-task-parser/internal/repositories/notion"
+	"github.com/corray333/tg-task-parser/internal/repositories/openaiclient"
 	"github.com/corray333/tg-task-parser/internal/repositories/storage"
 	"github.com/corray333/tg-task-parser/internal/repositories/tg_repository"
 	"github.com/corray333/tg-task-parser/internal/repositories/yatracker"
@@ -37,15 +37,9 @@ func New() *app {
 	// fmt.Println(yaTrackerRepo.SearchTasksByName(context.Background(), &task.Task{
 	// 	Title: "Test task",
 	// }))
-	// openaiRepo, err := openaiclient.NewOpenAIRepository()
-	// if err != nil {
-	// 	slog.Error("Failed to create openai repository", "error", err)
-	// 	panic(err)
-	// }
-
-	geminiRepo, err := geminiclient.NewGeminiRepository()
+	openaiRepo, err := openaiclient.NewOpenAIRepository()
 	if err != nil {
-		slog.Error("Failed to create gemini repository", "error", err)
+		slog.Error("Failed to create openai repository", "error", err)
 		panic(err)
 	}
 
@@ -76,7 +70,7 @@ func New() *app {
 		service.WithNotionRepo(notionRepo),
 		service.WithTgRepo(tgRepo),
 		service.WithYaTrackerRepo(yaTrackerRepo),
-		service.WithTaskMsgParser(geminiRepo),
+		service.WithTaskMsgParser(openaiRepo),
 	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 
