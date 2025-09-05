@@ -58,14 +58,16 @@ func (r *YaTrackerRepository) CreateTask(ctx context.Context, task *task.Task) (
 	cfg := config.GetYaTrackerConfig()
 	token := config.GetYaTrackerToken()
 
+	slog.Info("Create task in yandex tracker", "task", task, "config", cfg, "token", token)
+
 	// Создаем запрос
 	reqBody := CreateTaskRequest{
-		Summary: task.Title,
-		Queue:   cfg.QueueID,
+		Summary:     task.Title,
+		Queue:       cfg.QueueID,
+		Description: task.PlainBody,
 		Project: Project{
 			Primary: cfg.ProjectID,
 		},
-		Description: task.PlainBody,
 	}
 
 	// Сериализуем в JSON
