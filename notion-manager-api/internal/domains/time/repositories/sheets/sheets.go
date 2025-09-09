@@ -60,7 +60,10 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, sheetID st
 	var vr sheets.ValueRange
 	vr.MajorDimension = "ROWS"
 	for _, t := range times {
-		vr.Values = append(vr.Values, entityToSheetsTime(&t))
+		// vr.Values = append(vr.Values, entityToSheetsTime(&t))
+		temp := entityToSheetsTime(&t)
+		slog.Info("Loading time to sheets", "time", temp)
+		vr.Values = append(vr.Values, temp)
 	}
 
 	// Получаем фактический ID листа по имени
