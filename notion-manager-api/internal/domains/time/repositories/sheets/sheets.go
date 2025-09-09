@@ -62,6 +62,7 @@ func (r *TimeSheetsRepository) UpdateSheetsTimes(ctx context.Context, sheetID st
 	for _, t := range times {
 		// vr.Values = append(vr.Values, entityToSheetsTime(&t))
 		temp := entityToSheetsTime(&t)
+		fmt.Println("Time: ", temp)
 		slog.Info("Loading time to sheets", "time", temp)
 		vr.Values = append(vr.Values, temp)
 	}
