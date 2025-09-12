@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"log/slog"
 
+	"github.com/Corray333/employee_dashboard/internal/domains/weekday/entities/weekday"
 	"github.com/Corray333/employee_dashboard/internal/postgres"
+	"github.com/spf13/viper"
 )
 
 type WeekdayService struct {
@@ -14,6 +17,7 @@ type WeekdayService struct {
 	newWeekdayNotifier          newWeekdayNotifier
 	weekdaywLister              weekdaywLister
 	weekdayNotifiedMaker        weekdayNotifiedMaker
+	sheetsRepository            sheetsRepository
 }
 
 type postgresRepository interface {
@@ -33,6 +37,28 @@ type telegramRepository interface {
 
 type option func(*WeekdayService)
 
+type sheetsRepository interface {
+	UpdateSheetsWeekdays(ctx context.Context, sheetID string, weekdays []weekday.Weekday) error
+}
+
+func (s *WeekdayService) AcceptUpdate(ctx context.Context) {
+	go s.updateSheets(ctx)
+}
+
+func (s *WeekdayService) updateSheets(ctx context.Context) {
+
+	tasks, err := s.weekdaywLister.ListWeekdays(ctx, &weekday.Filter{})
+	if err != nil {
+		slog.Error("Error getting tasks", "error", err)
+		return
+	}
+
+	if err := s.sheetsRepository.UpdateSheetsWeekdays(ctx, viper.GetString("sheets.id"), tasks); err != nil {
+		slog.Error("Error updating sheets", "error", err)
+		return
+	}
+}
+
 func NewWeekdayService(opts ...option) *WeekdayService {
 	service := &WeekdayService{}
 
@@ -50,6 +76,12 @@ func WithPostgresRepository(repository postgresRepository) option {
 		s.weekdayLastUpdateTimeGetter = repository
 		s.weekdaywLister = repository
 		s.weekdayNotifiedMaker = repository
+	}
+}
+
+func WithSheetsRepository(repository sheetsRepository) option {
+	return func(s *WeekdayService) {
+		s.sheetsRepository = repository
 	}
 }
 

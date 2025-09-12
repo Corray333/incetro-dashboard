@@ -68,7 +68,7 @@ func New() *app {
 	taskController := task.NewTaskController(router, store, notionClient, sheetsClient, projectController.GetService())
 	app.controllers = append(app.controllers, taskController)
 
-	weekdayController := weekday.NewWeekdayController(store, notionClient, telegramClient, employeeController.GetService())
+	weekdayController := weekday.NewWeekdayController(store, notionClient, telegramClient, employeeController.GetService(), sheetsClient)
 	app.controllers = append(app.controllers, weekdayController)
 
 	// Update client controller with project service after project controller is created

@@ -39,3 +39,4 @@ sheets:
   task_sheet: "Task"
   clients_sheet: "Clients"
   projects_sheet: "Project"
+  weekday_sheet: "Day off"
