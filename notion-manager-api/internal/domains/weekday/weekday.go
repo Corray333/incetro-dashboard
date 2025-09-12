@@ -39,6 +39,10 @@ func NewWeekdayController(store *postgres.PostgresClient, notionClient *notion.C
 	}
 }
 
+func (c *WeekdayController) GetService() *service.WeekdayService {
+	return c.service
+}
+
 func (c *WeekdayController) Build() {
 	// c.transport.RegisterRoutes()
 }

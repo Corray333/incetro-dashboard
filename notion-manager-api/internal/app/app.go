@@ -83,6 +83,7 @@ func New() *app {
 	service := service.New(storage, external)
 	service.AddUpdateSubscriber(timeController.GetService())
 	service.AddUpdateSubscriber(taskController.GetService())
+	service.AddUpdateSubscriber(weekdayController.GetService())
 
 	// Set task and time services for deletion operations
 	service.SetTaskService(taskController.GetService())
