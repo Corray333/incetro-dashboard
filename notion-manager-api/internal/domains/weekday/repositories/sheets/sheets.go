@@ -131,11 +131,15 @@ func (r *WeekdaySheetsRepository) UpdateSheetsWeekdays(ctx context.Context, shee
 }
 
 func entityToSheetsWeekday(weekday *weekday.Weekday) []interface{} {
+	weekdayEnd := ""
+	if !weekday.PeriodEnd.IsZero() {
+		weekdayEnd = weekday.PeriodEnd.Format("02/01/2006")
+	}
 	return []interface{}{
 		fmt.Sprintf(`=HYPERLINK("%s"; "%s")`, fmt.Sprintf("https://notion.so/%s", strings.ReplaceAll(weekday.ID.String(), "-", "")), strings.ReplaceAll(weekday.Reason, "\"", "\"\"")),
 		weekday.Employee.Username,
 		weekday.Category,
 		weekday.PeriodStart.Format("02/01/2006"),
-		weekday.PeriodEnd.Format("02/01/2006"),
+		weekdayEnd,
 	}
 }
