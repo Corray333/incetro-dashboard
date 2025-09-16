@@ -20,7 +20,6 @@ func (s *Service) ProcessTgMessage(ctx context.Context, msg *gotgbot.Message) er
 		return nil
 	}
 
-	s.tgButtonSender.SendMessage(ctx, msg.From.Id, "Hello, world!")
 
 	// Определяем ID отправителя
 	senderID := msg.From.Id
