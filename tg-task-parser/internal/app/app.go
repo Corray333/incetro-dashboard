@@ -83,6 +83,7 @@ func New() *app {
 		service.WithTaskMsgParser(openaiRepo),
 		service.WithTempStorageRepo(temp_storage),
 		service.WithTgButtonSender(tgRepo),
+		service.WithTgFileDownloader(tgRepo),
 	)
 
 	projectService := service.New(
@@ -94,6 +95,7 @@ func New() *app {
 		service.WithTaskMsgParser(openaiRepo),
 		service.WithTempStorageRepo(temp_storage),
 		service.WithTgButtonSender(projectTgRepo),
+		service.WithTgFileDownloader(projectTgRepo),
 	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 
