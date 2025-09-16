@@ -75,6 +75,7 @@ func New() *app {
 		service.WithYaTrackerRepo(yaTrackerRepo),
 		service.WithTaskMsgParser(openaiRepo),
 		service.WithTempStorageRepo(temp_storage),
+		service.WithTgButtonSender(tgRepo),
 	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 

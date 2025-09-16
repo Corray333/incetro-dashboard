@@ -27,7 +27,6 @@ func MustInit() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic("error while reading config file: " + err.Error())
 	}
-	fmt.Println(viper.AllKeys())
 	SetupLogger()
 }
 
