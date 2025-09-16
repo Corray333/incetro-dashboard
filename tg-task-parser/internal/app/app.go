@@ -65,7 +65,7 @@ func New() *app {
 	}
 	tgRepo := tg_repository.NewTgRepository(bot)
 
-	projectBot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+	projectBot, err := tgbotapi.NewBotAPI(os.Getenv("TASK_PARSER_BOT_TOKEN"))
 	if err != nil {
 		slog.Error("Failed to create telegram bot", "error", err)
 		panic(err)
