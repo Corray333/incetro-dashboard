@@ -8,6 +8,7 @@ import (
 	"github.com/corray333/tg-task-parser/internal/repositories/notion"
 	"github.com/corray333/tg-task-parser/internal/repositories/openaiclient"
 	"github.com/corray333/tg-task-parser/internal/repositories/storage"
+	"github.com/corray333/tg-task-parser/internal/repositories/temp_storage"
 	"github.com/corray333/tg-task-parser/internal/repositories/tg_repository"
 	"github.com/corray333/tg-task-parser/internal/repositories/yatracker"
 	"github.com/corray333/tg-task-parser/internal/service"
@@ -64,6 +65,8 @@ func New() *app {
 	}
 	tgRepo := tg_repository.NewTgRepository(bot)
 
+	temp_storage := temp_storage.NewTempStorage()
+
 	service := service.New(
 		service.WithBaseService(baseService),
 		service.WithRepository(repository),
@@ -71,6 +74,7 @@ func New() *app {
 		service.WithTgRepo(tgRepo),
 		service.WithYaTrackerRepo(yaTrackerRepo),
 		service.WithTaskMsgParser(openaiRepo),
+		service.WithTempStorageRepo(temp_storage),
 	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 
