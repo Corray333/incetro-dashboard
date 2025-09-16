@@ -58,6 +58,7 @@ type tempStorageRepository interface {
 
 type tgMessageSenderWithButtons interface {
 	SendMessageWithButtons(chatID int64, text string, keyboard gotgbot.InlineKeyboardMarkup) error
+	SendMessage(ctx context.Context, tgID int64, text string) error
 }
 
 type fileManager interface {
