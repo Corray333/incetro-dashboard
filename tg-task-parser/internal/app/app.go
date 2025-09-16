@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/corray333/tg-task-parser/internal/files"
 	"github.com/corray333/tg-task-parser/internal/repositories/base_service"
 	"github.com/corray333/tg-task-parser/internal/repositories/notion"
 	"github.com/corray333/tg-task-parser/internal/repositories/openaiclient"
@@ -74,6 +75,8 @@ func New() *app {
 
 	temp_storage := temp_storage.NewTempStorage()
 
+	fileManager := files.MustNewFileManager()
+
 	svc := service.New(
 		service.WithBaseService(baseService),
 		service.WithRepository(repository),
@@ -84,6 +87,7 @@ func New() *app {
 		service.WithTempStorageRepo(temp_storage),
 		service.WithTgButtonSender(tgRepo),
 		service.WithTgFileDownloader(tgRepo),
+		service.WithFileManager(fileManager),
 	)
 
 	projectService := service.New(
@@ -96,6 +100,7 @@ func New() *app {
 		service.WithTempStorageRepo(temp_storage),
 		service.WithTgButtonSender(projectTgRepo),
 		service.WithTgFileDownloader(projectTgRepo),
+		service.WithFileManager(fileManager),
 	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 
