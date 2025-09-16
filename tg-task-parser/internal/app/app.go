@@ -65,9 +65,16 @@ func New() *app {
 	}
 	tgRepo := tg_repository.NewTgRepository(bot)
 
+	projectBot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+	if err != nil {
+		slog.Error("Failed to create telegram bot", "error", err)
+		panic(err)
+	}
+	projectTgRepo := tg_repository.NewTgRepository(projectBot)
+
 	temp_storage := temp_storage.NewTempStorage()
 
-	service := service.New(
+	svc := service.New(
 		service.WithBaseService(baseService),
 		service.WithRepository(repository),
 		service.WithNotionRepo(notionRepo),
@@ -77,17 +84,28 @@ func New() *app {
 		service.WithTempStorageRepo(temp_storage),
 		service.WithTgButtonSender(tgRepo),
 	)
+
+	projectService := service.New(
+		service.WithBaseService(baseService),
+		service.WithRepository(repository),
+		service.WithNotionRepo(notionRepo),
+		service.WithTgRepo(projectTgRepo),
+		service.WithYaTrackerRepo(yaTrackerRepo),
+		service.WithTaskMsgParser(openaiRepo),
+		service.WithTempStorageRepo(temp_storage),
+		service.WithTgButtonSender(tgRepo),
+	)
 	// fmt.Println(service.SendIncorrectTimeNotifications(context.Background()))
 
-	incetroBotTransport := incetro_bot.NewIncetroBot(service)
-	projectTransport := project_bot.NewProjectBot(service)
+	incetroBotTransport := incetro_bot.NewIncetroBot(svc)
+	projectTransport := project_bot.NewProjectBot(projectService)
 
 	// Инициализируем cron сервис
-	cronService := cron.NewCronService(service)
+	cronService := cron.NewCronService(svc)
 
 	app := &app{
 		baseService: baseService,
-		service:     service,
+		service:     svc,
 		incetro_bot: incetroBotTransport,
 		project_bot: projectTransport,
 		cronService: cronService,
