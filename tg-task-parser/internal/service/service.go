@@ -2,9 +2,12 @@ package service
 
 import (
 	"context"
+	"time"
 
+	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/corray333/tg-task-parser/internal/entities/employee"
 	"github.com/corray333/tg-task-parser/internal/entities/task"
+	"github.com/corray333/tg-task-parser/internal/repositories/temp_storage"
 	"github.com/google/uuid"
 )
 
@@ -44,6 +47,28 @@ type taskMsgParser interface {
 	ParseMessage(ctx context.Context, message string) (*task.Task, error)
 }
 
+type tempStorageRepository interface {
+	StorePendingMessage(msg *temp_storage.PendingMessage)
+	GetMessagesBySender(senderID int64, fromTime, toTime time.Time) []*temp_storage.PendingMessage
+	RemoveMessagesBySender(senderID int64, fromTime, toTime time.Time)
+	StoreCombinedMessage(msg *temp_storage.CombinedMessage)
+	GetCombinedMessage(id uuid.UUID) (*temp_storage.CombinedMessage, bool)
+	RemoveCombinedMessage(id uuid.UUID)
+}
+
+type tgMessageSenderWithButtons interface {
+	SendMessageWithButtons(chatID int64, text string, keyboard gotgbot.InlineKeyboardMarkup) error
+}
+
+type fileManager interface {
+	SaveFile(ctx context.Context, file []byte, name string) error
+	GetFileURL(ctx context.Context, name string) (string, error)
+}
+
+type telegramFileDownloader interface {
+	DownloadFile(ctx context.Context, fileID string) ([]byte, error)
+}
+
 type Service struct {
 	taskCreator           taskCreator
 	projectsGetter        projectsGetter
@@ -68,7 +93,11 @@ type Service struct {
 	notionRepo notionRepo
 	tgRepo     tgMessageSender
 
-	taskMsgParser taskMsgParser
+	taskMsgParser       taskMsgParser
+	tempStorageRepo     tempStorageRepository
+	tgButtonSender      tgMessageSenderWithButtons
+	fileManager         fileManager
+	tgFileDownloader    telegramFileDownloader
 }
 
 type option func(*Service)
@@ -181,5 +210,29 @@ func WithNotionRepo(notionRepo notionRepo) option {
 func WithTgRepo(tgRepo tgMessageSender) option {
 	return func(s *Service) {
 		s.tgRepo = tgRepo
+	}
+}
+
+func WithTempStorageRepo(tempStorageRepo tempStorageRepository) option {
+	return func(s *Service) {
+		s.tempStorageRepo = tempStorageRepo
+	}
+}
+
+func WithTgButtonSender(tgButtonSender tgMessageSenderWithButtons) option {
+	return func(s *Service) {
+		s.tgButtonSender = tgButtonSender
+	}
+}
+
+func WithFileManager(fileManager fileManager) option {
+	return func(s *Service) {
+		s.fileManager = fileManager
+	}
+}
+
+func WithTgFileDownloader(tgFileDownloader telegramFileDownloader) option {
+	return func(s *Service) {
+		s.tgFileDownloader = tgFileDownloader
 	}
 }

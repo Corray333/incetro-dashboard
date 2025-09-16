@@ -16,4 +16,5 @@ type Task struct {
 	Hashtags  []Tag           `json:"hashtags"`
 	Executors []Mention       `json:"executors"`
 	Assignee  Mention         `json:"assignee"`
+	Images    []string        `json:"images"`
 }

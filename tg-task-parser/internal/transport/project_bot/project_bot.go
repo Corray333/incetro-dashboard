@@ -25,7 +25,6 @@ type ProjectBot struct {
 	bot              *gotgbot.Bot
 	dispatcher       *ext.Dispatcher
 	updater          *ext.Updater
-	messageProcessor *temp_storage.MessageProcessor
 }
 
 const (
@@ -42,6 +41,7 @@ const (
 
 type service interface {
 	CreateTask(ctx context.Context, chatID int64, message string, replyMessage string) (string, error)
+	CreateTaskFromCombinedMessage(ctx context.Context, chatID int64, msg string, replyMessage string, images []temp_storage.ImageInfo) (string, error)
 	GetProjects(ctx context.Context) ([]project.Project, error)
 	LinkChatToProject(ctx context.Context, chatID int64, projectID uuid.UUID) error
 
@@ -49,6 +49,10 @@ type service interface {
 	AnswerFeedback(ctx context.Context, chatID, messageID int64, feedbackID uuid.UUID) error
 	CreateFeedback(ctx context.Context, chatID, messageID int64) (uuid.UUID, error)
 	SaveTgMessage(ctx context.Context, msg message.Message) error
+
+	ProcessTgMessage(ctx context.Context, msg *gotgbot.Message) error
+	AcceptMessage(ctx context.Context, combinedMsgID uuid.UUID) (*temp_storage.CombinedMessage, error)
+	RejectMessage(ctx context.Context, combinedMsgID uuid.UUID) error
 }
 
 func NewProjectBot(service service) *ProjectBot {
@@ -70,14 +74,12 @@ func NewProjectBot(service service) *ProjectBot {
 			// slog.Error("Unhandled error", "error", err)
 		},
 	})
-	messageProcessor := temp_storage.NewMessageProcessor(bot)
 
 	tr := &ProjectBot{
 		service:          service,
 		bot:              bot,
 		dispatcher:       dispatcher,
 		updater:          updater,
-		messageProcessor: messageProcessor,
 	}
 
 	tr.registerHandlers()
@@ -231,7 +233,6 @@ func (t *ProjectBot) registerHandlers() {
 			}
 		} else {
 			// Определяем ID отправителя (всегда используем ID того, кто отправил сообщение)
-			senderID := msg.From.Id
 
 			text := msg.Text
 
@@ -240,7 +241,7 @@ func (t *ProjectBot) registerHandlers() {
 			}
 
 			// Отправляем сообщение в систему временного хранилища
-			if err := t.messageProcessor.ProcessMessage(context.Background(), senderID, msg.Chat.Id, text); err != nil {
+			if err := t.service.ProcessTgMessage(context.Background(), msg); err != nil {
 				slog.Error("Error processing message", "error", err)
 				_, _ = msg.Reply(bot, "Не удалось обработать сообщение", nil)
 				return nil
@@ -272,7 +273,7 @@ func (t *ProjectBot) registerHandlers() {
 			}
 
 			// Принимаем сообщение и получаем объединенный текст
-			combinedMsg, err := t.messageProcessor.AcceptMessage(context.Background(), combinedMsgID)
+			combinedMsg, err := t.service.AcceptMessage(context.Background(), combinedMsgID)
 			if err != nil {
 				slog.Error("Error accepting message", "error", err)
 				_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
@@ -281,8 +282,8 @@ func (t *ProjectBot) registerHandlers() {
 				return nil
 			}
 
-			// Обрабатываем объединенное сообщение через стандартный алгоритм
-			text, err := t.service.CreateTask(context.Background(), combinedMsg.ChatID, combinedMsg.CombinedText, "")
+			// Обрабатываем объединенное сообщение через алгоритм с поддержкой изображений
+			text, err := t.service.CreateTaskFromCombinedMessage(context.Background(), combinedMsg.ChatID, combinedMsg.CombinedText, "", combinedMsg.Images)
 			if err != nil {
 				slog.Error("Error creating task from combined message", "error", err)
 				_, _ = bot.AnswerCallbackQuery(cb.Id, &gotgbot.AnswerCallbackQueryOpts{
@@ -317,7 +318,7 @@ func (t *ProjectBot) registerHandlers() {
 			}
 
 			// Отклоняем сообщение
-			if err := t.messageProcessor.RejectMessage(context.Background(), combinedMsgID); err != nil {
+			if err := t.service.RejectMessage(context.Background(), combinedMsgID); err != nil {
 				slog.Error("Error rejecting message", "error", err)
 			}
 

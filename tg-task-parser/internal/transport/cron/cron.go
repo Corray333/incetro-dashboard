@@ -25,7 +25,7 @@ func NewCronService(service service) *CronService {
 
 func (c *CronService) Start() error {
 	// Добавляем задачу на каждый день в 9:30 утра
-	_, err := c.cron.AddFunc("30 6 * * *", func() {
+	_, err := c.cron.AddFunc("30 6 * * 1-5", func() {
 		ctx := context.Background()
 		if err := c.service.SendIncorrectTimeNotifications(ctx); err != nil {
 			slog.Error("Failed to send incorrect time notifications", "error", err)
