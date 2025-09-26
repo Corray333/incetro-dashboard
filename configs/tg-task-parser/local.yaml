@@ -16,7 +16,13 @@ notion:
     weekday: "7e37b765927a4df3935834a738f2b9bd"
     topics: "22127b05040480a49b6ce654dbf66be9"
     client: "19ac829c5a9c42c5ac6a23bd83847aa6"
-  
+
+s3:
+  bucket: "ab10b114-ee4b28d2-258b-40a4-a034-68af28ffdc7d"
+  file_lifetime: 15 # minutes
+  region: "ru-1"
+  endpoint: "https://s3.timeweb.cloud"
+
 openai:
   model: "gpt-4.1-nano"  # или "gpt-3.5-turbo"
   prompt: |

@@ -4,3 +4,4 @@
 **/main
 backup.sql
 prod.yml
+.DS_Store
